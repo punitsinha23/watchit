@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'watchit_app',
-    'django_vite',
     'whitenoise',
+    'whitenoise.runserver_nostatic'
 ]
 
 MIDDLEWARE = [
