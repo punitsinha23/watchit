@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'watchit_app',
+    'django_vite',
 ]
 
 MIDDLEWARE = [
@@ -117,11 +118,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
-
-
+# For local development, you can use this, but Vercel will handle it for you
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Static files settings for Vercel
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
 
 
 # Default primary key field type
