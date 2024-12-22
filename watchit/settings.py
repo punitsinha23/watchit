@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'watchit_app',
     'django_vite',
+    'whitenoise',
 ]
 
 MIDDLEWARE = [
