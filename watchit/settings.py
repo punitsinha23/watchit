@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,17 +119,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'
-
-# For local development, you can use this, but Vercel will handle it for you
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Static files settings for Vercel
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
+# URL to serve static files
+STATIC_URL = '/static/'
 
-
+# WhiteNoise settings for efficient file handling
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
