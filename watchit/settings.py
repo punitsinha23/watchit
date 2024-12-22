@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'watchit_app',
-    'whitenoise',
     'whitenoise.runserver_nostatic'
 ]
 
