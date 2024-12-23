@@ -6,26 +6,22 @@
     <title>WATCHIT</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
-     body, html {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
+      body, html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-img {
-    width: 100%;  
-    height: 100%;
-    object-fit: cover;
-}
-
+      /* Card styling */
       .card {
         border: 1px solid #ccc;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        height: 100%;
       }
 
       .card:hover {
@@ -33,11 +29,24 @@ img {
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
       }
 
+      /* Image styling */
+      .card img {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+
+      /* Card body styling */
       .card-body {
         padding: 15px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        background: white;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
       }
 
       .card-title {
@@ -52,16 +61,29 @@ img {
         text-align: center;
       }
 
-      /* Adjust responsiveness */
+      /* Adjust responsiveness for the cards */
+      .card {
+        width: 100%;
+        max-width: 300px; /* Adjust max width of the card */
+        margin: 0 auto;
+      }
+
+      /* Add responsiveness for smaller screens */
       @media (max-width: 576px) {
-        .card img {
-          height: 200px;
+        .card {
+          max-width: 100%;
         }
       }
 
       @media (min-width: 576px) and (max-width: 768px) {
-        .card img {
-          height: 250px;
+        .card {
+          max-width: 100%;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .card {
+          max-width: 300px;
         }
       }
     </style>
@@ -91,10 +113,10 @@ img {
             <div class="col">
               <div class="card h-100">
                 <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
-                <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
-              </a>
+                  <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
+                </a>
                 <div class="card-body">
-                  <h5 class="card-title">{{ movie.Title }}({{ movie.Year }})</h5>
+                  <h5 class="card-title">{{ movie.Title }} ({{ movie.Year }})</h5>
                 </div>
               </div>
             </div>
