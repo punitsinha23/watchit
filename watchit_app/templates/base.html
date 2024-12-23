@@ -26,7 +26,7 @@
     <div>
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-          <a class="navbar-brand">WATCHIT</a>
+          <a class="navbar-brand" style="color: rgb(129, 221, 38);"><strong>WATCHIT</strong></a>
           <form class="d-flex" role="search" method="POST" action="{% url 'dashboard' %}">
             {% csrf_token %}
             <input class="form-control me-2" type="text" name="title" id="title" placeholder="Search for a movie" aria-label="Search">
