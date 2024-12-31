@@ -1,6 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 import requests
+from django.contrib.auth.hashers import make_password
 from datetime import datetime
+from django.contrib import messages
+from django.contrib.auth.hashers import check_password
 
 api_key = '593db72e'
 
