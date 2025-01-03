@@ -10,36 +10,21 @@ from watchit_app.views import dashboard
 import requests
 
 api_key = '593db72e'
-api_key2 = 'd1c8334e29a743cbaf491761dd691774'
-
-def verify_email(email):
-    try:
-        response = requests.get(f"https://api.zerobounce.net/v2/validate?email={email}&api_key={api_key2}")
-        response.raise_for_status()
-        result = response.json()
-        return result.get('status') == 'valid'
-    except requests.RequestException as e: 
-        print(f"Error verfying email:{e}")
-        return False   
-
 
 def signup_view(request):
     if request.method == "POST":
-        form = myform(request.POST) 
+        form = myform(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            if verify_email(user.email):
-                user.save()
-                login(request, user) 
-                messages.success(request, "Signup successful!")
-                return redirect(reverse('user', kwargs={'username': user.username}))
-            else:
-                form.add_error("email", "The email adress could not be verfied.")    
-
+            user = form.save()
+            login(request, user)  
+            messages.success(request, "Signup successful!")
+            return redirect(reverse('user', kwargs={'username': user.username}))  
+        else:
+            form.add_error("email", "The email address could not be verified.")
     else:
-        form = myform()
-    return render(request, 'signup.html', {'form': form})
+        form = myform()  
 
+    return render(request, 'signup.html', {'form': form}) 
 
 def login_view(request):
     if request.method == "POST":
