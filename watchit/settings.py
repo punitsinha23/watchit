@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'watchit_app'
+    'watchit_app',
+    'account_app'
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db' 
+
+LOGIN_REDIRECT_URL = '/dashboard/'  # Replace with your desired redirect URL
+LOGOUT_REDIRECT_URL = '/'  # Redirect after logout
+

@@ -17,11 +17,17 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from watchit_app import views
+from watchit_app import views as watchit_views
+from account_app import views as account_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.base, name='base'),  
-    path('dashboard/', views.dashboard, name='dashboard'),  
-]
+    path('', watchit_views.base, name='base'),  
+    path('dashboard/', watchit_views.dashboard, name='dashboard'),  
+    path('signup/', account_views.signup_view, name='signup'),
+    path('login/', account_views.login_view, name='login'),
+    path('logout/', account_views.logout_view, name='logout'),
+    path('user/<str:username>/', account_views.user, name='user'),
+    path('dashboard/<str:username>/', account_views.search, name='dashboard')
 
+]
