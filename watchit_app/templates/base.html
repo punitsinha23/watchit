@@ -141,21 +141,21 @@
 
       <div class="container mt-4">
         <h2 class="text-center mb-4" style="color: rgb(129, 221, 38);"><b>POPULAR MOVIES</b></h2>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-4">
-          {% for movie in movies %}
-            <div class="col">
-              <div class="card h-100">
-                <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
-                  <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
-                </a>
-                <div class="card-body">
-                  <h5 class="card-title">{{ movie.Title }} ({{ movie.Year }})</h5>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for movie in movies %}
+                <div class="col">
+                    <div class="card h-100">
+                        <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
+                            <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" class="card-img-top">
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.Title }} ({{ movie.Year }})</h5>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          {% endfor %}
+            {% endfor %}
         </div>
-      </div>
+    </div>
     {% endblock %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
