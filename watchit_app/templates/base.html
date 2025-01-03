@@ -137,7 +137,10 @@
 
     {% load static %}
     {% block content %}
-      <img src="{% static 'WATCHIT.png' %}" alt="WATCHIT Logo">
+    <div class="container">
+      <img src="{% static 'WATCHIT.png' %}" alt="WATCHIT Logo" class="img-fluid mx-auto d-block">
+    </div>
+  
 
       <div class="container mt-4">
         <h2 class="text-center mb-4" style="color: rgb(129, 221, 38);"><b>POPULAR MOVIES</b></h2>
