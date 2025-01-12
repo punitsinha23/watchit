@@ -1,0 +1,6 @@
+Django
+gunicorn
+whitenoise
+django-vite
+requests  
+python-dotenv

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+   {% if movie_data %}
+       <h2 style="text-align: center; margin-bottom: 30px; margin-top: 10px;">HERE YOU GO!</h2>  
+       <div class="container">
+           <div class="row justify-content-center">
+               {% for movie in movie_data %}
+                   <div class="col-6 col-md-2 mb-4">
+                       <div class="card h-100 d-flex flex-column" >
+                           {% if movie.Type == "series" %}
+                               <a href="https://vidsrc.dev/embed/tv/{{movie.imdbID}}/1/1" target="_blank">
+                           {% else %}
+                               <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
+                           {% endif %}
+                               <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
+                                    class="card-img-top" 
+                                    alt="Movie Poster" 
+                                    style="height: 250px; object-fit: cover;">
+                           </a>
+                       </div>
+                   </div>
+                   {% if forloop.counter|divisibleby:6 and not forloop.last %}
+                       </div><div class="row justify-content-center">
+                   {% endif %}
+               {% endfor %}
+           </div>
+       </div>
+   {% else %}
+       <p style="color:red;">No data available</p>
+   {% endif %}
+
+   {% if error %}
+       <p style="color:red; text-align:center;">Error: {{ error }}</p>
+   {% endif %}
+{% endblock %}
