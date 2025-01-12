@@ -3,4 +3,5 @@ gunicorn
 whitenoise
 django-vite
 requests  
-python-dotenv
+python-decouple
+psycopg2
