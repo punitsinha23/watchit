@@ -144,3 +144,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 LOGIN_REDIRECT_URL = '/dashboard/'  # Replace with your desired redirect URL
 LOGOUT_REDIRECT_URL = '/'  # Redirect after logout
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://400c-43-230-106-53.ngrok-free.app',
+    'http://400c-43-230-106-53.ngrok-free.app',  # Add HTTP if you're testing in both modes
+]
