@@ -19,8 +19,6 @@ def signup_view(request):
             login(request, user)  
             messages.success(request, "Signup successful!")
             return redirect(reverse('user', kwargs={'username': user.username}))  
-        else:
-            form.add_error("email", "The email address could not be verified.")
     else:
         form = myform()  
 
