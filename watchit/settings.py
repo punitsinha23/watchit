@@ -33,6 +33,10 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
+print("DB Name:", os.getenv('DJANGO_DB_NAME'))
+print("DB User:", os.getenv('DJANGO_DB_USER'))
+print("DB Password:", os.getenv('DJANGO_DB_PASSWORD'))
+print("DB Host:", os.getenv('DJANGO_DB_HOST'))
 
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
@@ -82,11 +86,14 @@ WSGI_APPLICATION = 'watchit.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',  # Database name (default is 'postgres' for PostgreSQL)
+        'USER': 'postgres',  # The username you set in Docker
+        'PASSWORD': 'postgres',  # The password you set in Docker
+        'HOST': 'db',  # Use the service name from docker-compose.yml
+        'PORT': '5432',  # Port where PostgreSQL is exposed
     }
 }
-
 
 
 # Password validation

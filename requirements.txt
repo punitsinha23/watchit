@@ -4,4 +4,4 @@ whitenoise
 django-vite
 requests  
 python-decouple
-psycopg2
+psycopg2-binary
