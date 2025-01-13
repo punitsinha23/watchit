@@ -4,4 +4,7 @@ whitenoise
 django-vite
 requests  
 python-decouple
+<<<<<<< HEAD
 psycopg2-binary
+=======
+>>>>>>> 5f650d8a1f50f2d4d25489263d298d6dbfff1bfb
