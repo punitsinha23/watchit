@@ -87,11 +87,14 @@ WSGI_APPLICATION = 'watchit.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Database name (default is 'postgres' for PostgreSQL)
-        'USER': 'postgres',  # The username you set in Docker
-        'PASSWORD': 'postgres',  # The password you set in Docker
-        'HOST': 'db',  # Use the service name from docker-compose.yml
-        'PORT': '5432',  # Port where PostgreSQL is exposed
+        'NAME': config('POSTGRES_DATABASE'),
+        'USER': config('POSTGRES_USER'),
+        'PASSWORD': config('POSTGRES_PASSWORD'),
+        'HOST': config('POSTGRES_HOST'),
+        'PORT': config('POSTGRES_PORT', default='5432'),  
+        'OPTIONS': {
+            'sslmode': config('POSTGRES_SSLMODE', default='require'), 
+        },
     }
 }
 
