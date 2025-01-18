@@ -189,37 +189,46 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'dashboard' username=username %}"><strong>WATCHIT</strong></a>
-        <form class="d-flex search-bar" method="POST" action="{% url 'dashboard' username=username %}">
-          {% csrf_token %}
-          <input type="text" class="form-control" name="title" id="title" placeholder="Search for a movie" aria-label="Search">
-          <button class="btn" type="submit">Search</button>
-        </form>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+        
+        <!-- Move search bar and navbar toggler inside the container to ensure right positioning on mobile -->
+        <div class="d-flex w-100 justify-content-between align-items-center">
+          <!-- Search Bar -->
+          <form class="d-flex search-bar" method="POST" action="{% url 'dashboard' username=username %}">
+            {% csrf_token %}
+            <input type="text" class="form-control" name="title" id="title" placeholder="Search for a movie" aria-label="Search">
+            <button class="btn" type="submit">Search</button>
+          </form>
+          
+          <!-- Navbar Toggler (visible on mobile) -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </div>
+    
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto mx-0"> <!-- Remove ms-auto to prevent auto margin on the right -->
-              <li class="nav-item">
-                  <a class="nav-link" href="{% url 'logout' %}"><strong>Logout</strong></a>
-              </li>
-              <li class="nav-item">
-                  <a class="nav-link" href="#"><strong>Watchlist</strong></a>
-              </li>
-              <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" class="profile-img" alt="Profile Picture">
-                      {{ username }}
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                      <li><a class="dropdown-item" href="#">View Profile</a></li>
-                      <li><a class="dropdown-item" href="#">Edit Profile</a></li>
-                      <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-                  </ul>
-              </li>
+          <ul class="navbar-nav ms-auto"> <!-- Navbar links aligned to the right -->
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'logout' %}"><strong>Logout</strong></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"><strong>Watchlist</strong></a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" class="profile-img" alt="Profile Picture">
+                {{ username }}
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="#">View Profile</a></li>
+                <li><a class="dropdown-item" href="#">Edit Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+              </ul>
+            </li>
           </ul>
+        </div>
       </div>
-    </div>
     </nav>
+    
 
     <!-- Messages -->
     {% if messages %}
