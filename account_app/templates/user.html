@@ -14,7 +14,7 @@
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         margin: 0;
         padding: 0;
-        overflow-x: hidden; /* Prevent horizontal overflow */
+        overflow-x: hidden;
       }
 
       /* Navbar Styling */
@@ -82,67 +82,75 @@
       }
 
       /* Movie Section Styling */
-      .movie-section {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 20px;
-        gap: 20px; /* Adds space between rows and columns */
-      }
+      .movie-box {
+            width: 100%;
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
 
-      .movie-card-container {
-        flex: 0 0 calc(16.66% - 15px); /* Six movies per row */
-        max-width: calc(16.66% - 15px);
-        box-sizing: border-box;
-      }
+        .movie-box:hover {
+            transform: scale(1); 
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); /* Shadow effect */
+        }
 
-      .movie-card {
-        background-color: #222;
-        border: none;
-        border-radius: 10px;
-        overflow: hidden;
-        height: 350px; /* Fixed height for all cards */
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover */
-      }
+        .movie-box img {
+            border-radius: 8px;
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
 
-      .movie-card:hover {
-        transform: scale(1.05); /* Slight zoom on hover */
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5); /* Add a shadow effect */
-      }
+        .movie-box:hover img {
+            transform: scale(1.1); /* Zoom in image on hover */
+        }
 
-      .movie-card-img {
-        width: 100%;
-        height: 250px; /* Fixed height for images */
-        object-fit: cover; /* Maintain aspect ratio and fill space */
-        border-bottom: 2px solid #e50914;
-      }
+        .movie-title {
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 10px 0 5px;
+        }
 
-      .movie-card .card-body {
-        text-align: center;
-        padding: 10px;
-      }
+        .movie-year {
+            color: #999;
+            font-size: 11px;
+        }
 
-      .movie-card .card-title {
-        font-size: 1rem;
-        color: white;
-        margin: 5px 0;
-      }
+        /* Headings */
+        h2 {
+            color: #e50914;
+            font-size: 2rem;
+            font-weight: bold;
+        }
 
-      .movie-card .card-text {
-        font-size: 0.9rem;
-        color: #b3b3b3;
-      }
-      .alert {
-        width: 100%;
-        margin-top: 15px;
-      }
+        /* Footer */
+        footer {
+            background-color: #141414;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
 
       .dropdown-menu {
         background-color: #222;
         border-radius: 10px;
+        
       }
 
       .dropdown-item {
@@ -153,10 +161,27 @@
         background-color: #e50914;
         color: black;
       }
+
       #title::placeholder {
-      color: #b3b3b3;
-      opacity: 1;
+        color: #b3b3b3;
+        opacity: 1;
       }
+
+      /* Align navbar items to the left on mobile */
+@media (max-width: 768px) {
+    .navbar-collapse {
+        text-align: left; /* Align the items to the left */
+    }
+
+    .navbar-nav {
+        margin-left: 0; /* Remove any right-side margin */
+    }
+
+    .navbar-nav .nav-item {
+        padding-left: 10px; /* Optional: Add padding for spacing */
+    }
+  }
+
     </style>
   </head>
   <body>
@@ -169,28 +194,31 @@
           <input type="text" class="form-control" name="title" id="title" placeholder="Search for a movie" aria-label="Search">
           <button class="btn" type="submit">Search</button>
         </form>
-        <div class="collapse navbar-collapse">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'logout' %}"><strong>Logout</strong></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#"><strong>Watchlist</strong></a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" class="profile-img" alt="Profile Picture">
-                {{ username }}
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="#">View Profile</a></li>
-                <li><a class="dropdown-item" href="#">Edit Profile</a></li>
-                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-              </ul>
-            </li>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto mx-0"> <!-- Remove ms-auto to prevent auto margin on the right -->
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'logout' %}"><strong>Logout</strong></a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="#"><strong>Watchlist</strong></a>
+              </li>
+              <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" class="profile-img" alt="Profile Picture">
+                      {{ username }}
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <li><a class="dropdown-item" href="#">View Profile</a></li>
+                      <li><a class="dropdown-item" href="#">Edit Profile</a></li>
+                      <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                  </ul>
+              </li>
           </ul>
-        </div>
       </div>
+    </div>
     </nav>
 
     <!-- Messages -->
@@ -207,19 +235,16 @@
     <!-- Main Content -->
     <div class="container-fluid">
       {% block content %}
-      <div class="movie-section">
+      <div class="row justify-content-center">
         {% for movie in movies %}
-          <div class="movie-card-container">
-            <div class="card movie-card">
-              <img src="{{ movie.Poster }}" class="card-img-top movie-card-img" alt="{{ movie.Title }}">
-              <div class="card-body">
-                <h5 class="card-title">{{ movie.Title }}</h5>
-                <p class="card-text">{{ movie.Year }}</p>
-              </div>
+          <div class="col-md-2 col-sm-6 mb-4">
+            <div class="movie-box">
+              <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
+              <div class="movie-title">{{ movie.Title }}</div>
+              <div class="movie-year">{{ movie.Year }}</div>
             </div>
           </div>
         {% endfor %}
-
         {% if error %}
           <div class="alert alert-danger mt-4 w-100 text-center">{{ error }}</div>
         {% endif %}
