@@ -5,125 +5,176 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>WATCHIT</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9305410766455907" crossorigin="anonymous"></script>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({
-        google_ad_client: "ca-pub-9305410766455907",
-        enable_page_level_ads: true
-      });
-    </script>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
-      body, html {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+        /* Base Styles */
+        body {
+            background-color: #141414; /* Netflix-like dark background */
+            color: #fff;
+            font-family: 'Helvetica Neue', Arial, sans-serif; /* Netflix font style */
+        }
 
-      /* Card styling */
-      .card {
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
+        /* Navbar */
+        .navbar {
+            background-color: #000; /* Dark navbar */
+            border-bottom: 1px solid #333;
+        }
+
+        .navbar-brand {
+            color: #e50914 !important; /* Netflix red */
+            font-weight: bold;
+            font-size: 1.75rem;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            margin-right: 15px;
+            transition: color 0.3s;
+            font-size: 1rem;
+        }
+
+        .nav-link:hover {
+            color: #e50914 !important;
+        }
+
+        .btn-outline-success {
+            border-color: #e50914;
+            color: #e50914;
+            font-size: 1rem;
+        }
+
+        .btn-outline-success:hover {
+            background-color: #e50914;
+            color: #fff;
+        }
+
+        /* Movie Boxes */
+        .movie-box {
+            width: 150px;
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+
+        .movie-box:hover {
+            transform: scale(1.05); /* Slight zoom */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); /* Shadow effect */
+        }
+
+        .movie-box img {
+            border-radius: 8px;
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .movie-box:hover img {
+            transform: scale(1.1); /* Zoom in image on hover */
+        }
+
+        .movie-title {
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 10px 0 5px;
+        }
+
+        .movie-year {
+            color: #999;
+            font-size: 11px;
+        }
+
+        /* Headings */
+        h2 {
+            color: #e50914;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #141414;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+        .search-bar {
         display: flex;
-        flex-direction: column;
-        height: 100%;
+        justify-content: center;
+        align-items: center;
       }
 
-      .card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      .search-bar input {
+        width: 300px;
+        padding: 10px;
+        border-radius: 20px;
+        border: 1px solid #e50914;
+        background-color: #333;
+        color: white;
+        margin-right: 10px;
       }
 
-      /* Image styling */
-      .card img {
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+      .search-bar button {
+        background-color: #e50914;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        color: white;
+        cursor: pointer;
       }
 
-      /* Card body styling */
-      .card-body {
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background: white;
-        border-bottom-left-radius: 10px;
-        border-bottom-right-radius: 10px;
+      .search-bar button:hover {
+        background-color: #ff4a4a;
       }
-
-      .card-title {
-        font-size: 1rem;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 0.5rem;
-      }
-
-      .card-text {
-        font-size: 0.9rem;
-        text-align: center;
-      }
-
-      /* Adjust responsiveness for the cards */
-      .card {
-        width: 100%;
-        max-width: 300px; /* Adjust max width of the card */
-        margin: 0 auto;
-      }
-
-      /* Add responsiveness for smaller screens */
-      @media (max-width: 576px) {
-        .card {
-          max-width: 100%;
-        }
-      }
-
-      @media (min-width: 576px) and (max-width: 768px) {
-        .card {
-          max-width: 100%;
-        }
-      }
-
-      @media (min-width: 768px) {
-        .card {
-          max-width: 300px;
-        }
+      #title::placeholder {
+      color: #b3b3b3;
+      opacity: 1;
       }
     </style>
   </head>
   <body>
     <div>
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: rgb(129, 221, 38);"><strong>WATCHIT</strong></a>
+            <a class="navbar-brand"><strong>WATCHIT</strong></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <form class="d-flex ms-auto" role="search" method="POST" action="{% url 'dashboard' %}">
+                <form class="d-flex ms-auto search-bar" role="search" method="POST" action="{% url 'dashboard' %}">
                     {% csrf_token %}
                     <input class="form-control me-2" type="text" name="title" id="title" placeholder="Search for a movie" aria-label="Search">
                     <button class="btn btn-outline-success" type="submit">Search</button>
                 </form>
-                <ul class="navbar-nav ms-auto"> <!-- ms-auto pushes links to the right -->
+                <ul class="navbar-nav ms-auto"> 
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'signup'%}" style="color: rgb(129, 221, 38);">Signup</a>
+                        <a class="nav-link" href="{% url 'signup'%}"><strong>Signup</strong></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login'%}" style="color: rgb(129, 221, 38);">Login</a>
+                        <a class="nav-link" href="{% url 'login'%}"><strong>Login</strong></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout'%}" style="color: rgb(129, 221, 38);">Logout</a>
+                        <a class="nav-link" href="{% url 'about'%}"><strong>About</strong></a>
                     </li>
                 </ul>
             </div>
         </div>
-    </nav>
+      </nav>
       {% if messages %}
       <div class="container mt-3">
           {% for message in messages %}
@@ -138,22 +189,20 @@
     {% load static %}
     {% block content %}
     <div class="container">
-      <img src="{% static 'WATCHIT.png' %}" alt="WATCHIT Logo" class="img-fluid mx-auto d-block">
-    </div>
-  
-
-      <div class="container mt-4">
-        <h2 class="text-center mb-4" style="color: rgb(129, 221, 38);"><b>POPULAR MOVIES</b></h2>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        <img src="https://i.postimg.cc/HsnKByBB/WATCHIT-2.png" alt="WATCHIT Logo" class="img-fluid mx-auto d-block">
+      </div>
+      
+    <div class="container mt-4">
+        <h2 class="text-center mb-4"><b>POPULAR MOVIES</b></h2>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
             {% for movie in movies %}
-                <div class="col">
-                    <div class="card h-100">
-                        <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
-                            <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" class="card-img-top">
-                        </a>
-                        <div class="card-body">
-                            <h5 class="card-title">{{ movie.Title }} ({{ movie.Year }})</h5>
-                        </div>
+                <div class="movie-box">
+                    <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
+                    </a>
+                    <div>
+                        <div class="movie-title">{{ movie.Title }}</div>
+                        <div class="movie-year">{{ movie.Year }}</div>
                     </div>
                 </div>
             {% endfor %}

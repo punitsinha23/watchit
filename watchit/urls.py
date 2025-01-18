@@ -22,7 +22,8 @@ from account_app import views as account_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', watchit_views.base, name='base'),  
+    path('', watchit_views.base, name='base'),
+    path('about/', watchit_views.about_view , name='about'),  
     path('dashboard/', watchit_views.dashboard, name='dashboard'),  
     path('signup/', account_views.signup_view, name='signup'),
     path('login/', account_views.login_view, name='login'),

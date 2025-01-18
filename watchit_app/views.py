@@ -16,7 +16,7 @@ def base(request):
         "Se7en",
         "Parasite",
         "The Lion King",
-        "Back to the Future",
+        "Breaking bad",
         "The Pianist",
         "The Prestige",
         "Whiplash",
@@ -24,7 +24,7 @@ def base(request):
         "Avengers: Endgame",
         "The Great Dictator",
         "Coco",
-        "Your Name",
+        "inside out 2",
         "Joker",
         "WALL-E",
         "Oldboy",
@@ -43,9 +43,12 @@ def base(request):
         "La La Land",
         "The Pursuit of Happyness",
         "Zootopia",
+        "squid game"
+        "la la land"
+        "Breaking bad"
     ]
     
-    # Initialize an empty list for storing movie data
+   
     movies = []
     
     # Loop through the movie titles and fetch data from OMDb API
@@ -56,9 +59,9 @@ def base(request):
         if response.status_code == 200:
             data = response.json()
             if data.get("Response") == "True":
-                movies.append(data)  # Append movie data to the list
+                movies.append(data) 
     
-    # Pass the movie data to the template
+    
     context = {
         'movies': movies,
     }
@@ -91,3 +94,6 @@ def dashboard(request):
             error = f"An error occurred: {str(e)}"
 
     return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
+
+def about_view(request):
+    return render(request , 'about.html')    
