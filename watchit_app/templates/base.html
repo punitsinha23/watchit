@@ -59,7 +59,7 @@
         }
 
         .movie-box:hover {
-            transform: scale(1.05); /* Slight zoom */
+            transform: scale(1.05); 
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); /* Shadow effect */
         }
 
@@ -88,7 +88,7 @@
 
         /* Headings */
         h2 {
-            color: #e50914;
+            color: white;
             font-size: 2rem;
             font-weight: bold;
         }
@@ -103,7 +103,6 @@
             font-size: 1rem;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .navbar-brand {
                 font-size: 1.5rem;
@@ -190,11 +189,13 @@
     {% block content %}
     <div class="container">
         <img src="https://i.postimg.cc/HsnKByBB/WATCHIT-2.png" alt="WATCHIT Logo" class="img-fluid mx-auto d-block">
+        <hr style="border: 1px solid white; width: 99%; margin: 20px auto;">
+
       </div>
-      
-    <div class="container mt-4">
+    <br>
+    <div class="container mt-3">
         <h2 class="text-center mb-4"><b>POPULAR MOVIES</b></h2>
-        <div class="d-flex flex-wrap justify-content-center gap-3">
+        <div class="d-flex flex-wrap justify-content-center gap-2">
             {% for movie in movies %}
                 <div class="movie-box">
                     <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
@@ -208,6 +209,27 @@
             {% endfor %}
         </div>
     </div>
+    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
+
+<br>
+
+    <div class="container mt-4">
+        <h2 class="text-center mb-4"><b>POPULAR SHOWS</b></h2>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% for show in shows %}
+                <div class="movie-box">
+                    <a href="https://vidsrc.dev/embed/tv/{{show.imdbID}}/1/1" target="_blank">
+                        <img src="{{ show.Poster }}" alt="{{ show.Title }}">
+                    </a>
+                    <div>
+                        <div class="movie-title">{{ show.Title }}</div>
+                        <div class="movie-year">{{ show.Year }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
     {% endblock %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>

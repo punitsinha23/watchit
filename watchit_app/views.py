@@ -10,29 +10,20 @@ api_key = '593db72e'
 def base(request):
     keyword = [
         "Fight Club",
-        "Forrest Gump",
         "Inception",
         "Interstellar",
         "Se7en",
         "Parasite",
-        "The Lion King",
-        "Breaking bad",
-        "The Pianist",
-        "The Prestige",
+        "The truman show",
         "Whiplash",
         "Grave of the Fireflies",
         "Avengers: Endgame",
         "The Great Dictator",
         "Coco",
         "inside out 2",
-        "Joker",
-        "WALL-E",
         "Oldboy",
         "Avengers: Infinity War",
         "The Wolf of Wall Street",
-        "Memento",
-        "The Truman Show",
-        "The Social Network",
         "Eternal Sunshine of the Spotless Mind",
         "Taxi Driver",
         "Blade Runner 2049",
@@ -43,15 +34,47 @@ def base(request):
         "La La Land",
         "The Pursuit of Happyness",
         "Zootopia",
-        "squid game"
-        "la la land"
-        "Breaking bad"
+        "squid game",
+        "la la land",
+        "harry potter",
+        
     ]
+
+    shows = [
+         "Breaking Bad",
+        "Better call saul",
+        "The Wire",
+        "Stranger Things",
+        "Friends",
+        "The Office (US)",
+        "Sherlock",
+        "Narcos",
+        "Chernobyl",
+        "Black Mirror",
+        "Game of Thrones",
+        "The Mandalorian",
+        "Rick and Morty",
+        "True Detective",
+        "Peaky Blinders",
+        "The Simpsons",
+        "House of Cards",
+        "Money Heist",
+        "The Witcher",
+        "Fleabag",
+        "Vikings",
+        "The Boys",
+        "The Queen's Gambit",
+        "How I Met Your Mother",
+        "The Haunting of Hill House",
+        "Dark",
+        "Supernatural",
+        "The Marvelous Mrs. Maisel",
+        "BoJack Horseman"
+        ]
     
-   
+    shows_list = []
     movies = []
     
-    # Loop through the movie titles and fetch data from OMDb API
     for title in keyword:
         url = f"http://www.omdbapi.com/?apikey={api_key}&t={title}"  # Search for individual movies by title
         response = requests.get(url)
@@ -61,9 +84,20 @@ def base(request):
             if data.get("Response") == "True":
                 movies.append(data) 
     
+    for title in shows:
+        url = f"http://www.omdbapi.com/?apikey={api_key}&t={title}"
+        response = requests.get(url)
+
+        if response.status_code == 200: 
+            data = response.json()
+            if data.get("Response") == "True":
+                shows_list.append(data)
+
+
     
     context = {
         'movies': movies,
+        'shows' : shows_list,
     }
 
     return render(request, 'base.html', context)

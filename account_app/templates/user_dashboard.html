@@ -1,36 +1,82 @@
 {% extends 'user.html' %}
 
 {% block content %}
-   {% if movie_data %}
-       <h2 style="text-align: center; margin-bottom: 30px; margin-top: 10px;"><strong>HERE YOU GO!</strong></h2>  
-       <div class="container">
-           <div class="row justify-content-center">
-               {% for movie in movie_data %}
-                   <div class="col-6 col-md-2 mb-4">
-                       <div class="card h-100 d-flex flex-column" >
-                           {% if movie.Type == "series" %}
-                               <a href="https://vidsrc.dev/embed/tv/{{movie.imdbID}}/1/1" target="_blank">
-                           {% else %}
-                               <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank">
-                           {% endif %}
-                               <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
-                                    class="card-img-top" 
-                                    alt="Movie Poster" 
-                                    style="height: 250px; object-fit: cover;">
-                           </a>
-                       </div>
-                   </div>
-                   {% if forloop.counter|divisibleby:6 and not forloop.last %}
-                       </div><div class="row justify-content-center">
-                   {% endif %}
-               {% endfor %}
-           </div>
-       </div>
-   {% else %}
-       <p style="color:red;">No data available</p>
-   {% endif %}
+<div class="container my-5">
+    <h2 class="text-center mb-4"><strong>Search for Movies</strong></h2>
 
-   {% if error %}
-       <p style="color:red; text-align:center;">Error: {{ error }}</p>
-   {% endif %}
+    <!-- Display Error Message -->
+    {% if error %}
+        <div class="alert alert-danger text-center" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- Display Movie Results -->
+    {% if movie_data %}
+        <h3 class="text-center mb-4"><strong>Search Results</strong></h3>
+        <div class="row justify-content-center">
+            {% for movie in movie_data %}
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card shadow-lg h-100">
+                        <!-- Conditional Link for Movies and Series -->
+                        {% if movie.Type == "series" %}
+                            <a href="https://vidsrc.dev/embed/tv/{{ movie.imdbID }}/1/1" target="_blank">
+                        {% else %}
+                            <a href="https://vidsrc.dev/embed/movie/{{ movie.imdbID }}" target="_blank">
+                        {% endif %}
+                            <img 
+                                src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
+                                class="card-img-top" 
+                                alt="{{ movie.Title }}" 
+                                style="height: 250px; object-fit: cover;">
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-center">{{ movie.Title }}</h5>
+                            <p class="text-center text-muted mb-2">{{ movie.Year }}</p>
+                            <form method="POST" action="{% url 'dashboard' username %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
+                                <input type="hidden" name="title" value="{{ movie.Title }}">
+                                <input type="hidden" name="year" value="{{ movie.Year }}">
+                                <input type="hidden" name="poster" value="{{ movie.Poster }}">
+                                <button type="submit" class="btn btn-success w-100 mt-auto" id="add_to_watchlist" name="add_to_watchlist">Add to Watchlist</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:4 and not forloop.last %}
+                    </div><div class="row justify-content-center">
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center" style="color:#e50914;">No results found. Use the search bar above to find movies or series.</p>
+    {% endif %}
+</div>
+
+
+<style>
+    .card {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-img-top {
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    @media (max-width: 767px) {
+        .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
 {% endblock %}

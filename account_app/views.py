@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required 
 from watchit_app.views import dashboard 
 import requests
-
+from .models import Watchlist
 api_key = '593db72e'
 
 def signup_view(request):
@@ -73,9 +73,8 @@ def user(request, username):
     "Back to the Future", "The Good, the Bad and the Ugly", "12 Angry Men", "Citizen Kane", "Jaws",
     "Star Wars: Episode V - The Empire Strikes Back", "Pulp Fiction", "Se7en", "The Silence of the Lambs",
     "The Revenant", "The Wolf of Wall Street", "Memento", "La La Land", "The Grand Budapest Hotel",
-    "Goodfellas", "Oldboy", "WALL-E", "Her", "Arrival", "The Pianist", "The Dark Knight Rises",
-    "Spider-Man: Into the Spider-Verse", "The Truman Show", "Blade Runner 2049", "Coco", "Your Name",
-    "Joker", "Avengers: Endgame", "Mad Max: Fury Road", "Zootopia"
+    "Goodfellas", "Oldboy","Her", "Arrival", "The Pianist", "The Dark Knight Rises",
+    "Spider-Man: Into the Spider-Verse", "Blade Runner 2049",
 ]
     
     
@@ -101,30 +100,63 @@ def user(request, username):
     return render(request, 'user.html', context)
 
 @login_required
-def search(request , username):
+def search(request, username):
     movie_data = None
     error = None
+
     if request.method == "POST":
-        movie_title = request.POST.get('title')
+        if 'add_to_watchlist' in request.POST:
+            imdb_id = request.POST.get('imdb_id')
+            title = request.POST.get('title')
+            year = request.POST.get('year')
+            poster = request.POST.get('poster')
 
-        if not movie_title:
-            error = "Please enter a movie title."
-            return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
-
-        try:
-            api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"  
-            response = requests.get(api_url)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("Response") == "True":
-                    movie_data = data.get("Search", [])
-                else:
-                    error = data.get("Error", "No movies or series found matching the title.")
+           
+            if not Watchlist.objects.filter(user=request.user, imdb_id=imdb_id).exists():
+                Watchlist.objects.create(
+                    user=request.user,
+                    movie_title=title,
+                    movie_year=year,
+                    imdb_id=imdb_id,
+                    poster=poster,
+                )
+                messages.success(request, f"'{title}' added to your watchlist!")
+                return redirect('watchlist' , username=request.user.username)
             else:
-                error = "Failed to fetch data from OMDb API. Please try again later."
-        except Exception as e:
-            error = f"An error occurred: {str(e)}"
+                messages.info(request, f"'{title}' is already in your watchlist.")
 
-    return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error , 'username':username})
+        else:
+            movie_title = request.POST.get('title')
+            if not movie_title:
+                error = "Please enter a movie title."
+                return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error, 'username': username})
 
+            try:
+                api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"
+                response = requests.get(api_url)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("Response") == "True":
+                        movie_data = data.get("Search", [])
+                    else:
+                        error = data.get("Error", "No movies or series found matching the title.")
+                else:
+                    error = "Failed to fetch data from OMDb API. Please try again later."
+            except Exception as e:
+                error = f"An error occurred: {str(e)}"
 
+    return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error, 'username': username})
+
+@login_required
+def watchlist_view(request, username):
+    if request.user.username != username:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('login')
+
+    if request.method == "POST" and 'remove_from_watchlist' in request.POST:
+        imdb_id = request.POST.get('imdb_id')
+        Watchlist.objects.filter(user=request.user, imdb_id=imdb_id).delete()
+        messages.success(request, "Movie removed from your watchlist.")
+
+    watchlist = Watchlist.objects.filter(user=request.user)
+    return render(request, 'watchlist.html', {'watchlist': watchlist, 'username': username})

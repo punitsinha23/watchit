@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.urls import path
 from watchit_app import views as watchit_views
 from account_app import views as account_views
+from . import settings 
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +31,10 @@ urlpatterns = [
     path('login/', account_views.login_view, name='login'),
     path('logout/', account_views.logout_view, name='logout'),
     path('user/<str:username>/', account_views.user, name='user'),
-    path('dashboard/<str:username>/', account_views.search, name='dashboard')
+    path('dashboard/<str:username>/', account_views.search, name='dashboard'),
+    path('watchlist/<str:username>/', account_views.watchlist_view , name='watchlist')
+    
+] 
 
-]
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

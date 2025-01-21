@@ -1,32 +1,41 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    {% if messages %}
-        <div class="alert-container mb-4">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card" style="width: 30rem; padding: 0;">
+        <div class="card-body" style="padding: 1rem; background-color: rgb(34, 34, 34); border-radius: 5px;">
+            <h1 class="text-center" style="margin-bottom: 2rem; color: #ff4a4a; font-weight:bold;">Login</h1>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="d-flex align-items-center mb-2" style="margin-bottom: 0.5rem;">
+                            <label for="id_email" class="form-label me-2" style="width: 30%; color: white; font-weight: bold;">Email</label>
+                            <input type="email" class="form-control" id="id_email" name="email" value="{{ form.email.value }}" required style="width: 70%; height: 40px;">
+                        </div>
+                        {% if form.email.errors %}
+                        <div class="alert alert-warning mt-2" role="alert">
+                            {{ form.email.errors|striptags }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex align-items-center mb-2" style="margin-bottom: 0.5rem;">
+                            <label for="id_password" class="form-label me-2" style="width: 30%; color: white; font-weight: bold;">Password</label>
+                            <input type="password" class="form-control" id="id_password" name="password" value="{{ form.password.value }}" required style="width: 70%; height: 40px;">
+                        </div>
+                        {% if form.password.errors %}
+                        <div class="alert alert-warning mt-2" role="alert">
+                            {{ form.password.errors|striptags }}
+                        </div>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary w-100 mt-3" style="height: 45px;">Login</button>
+                        <p style="color:white; display: inline;">Don't have an Account</p>
+                        <a href="{% url 'signup' %}" class="d-inline">Create one here!</a>
+                        
+                    </form>
                 </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <h2 class="text-center mb-4">Login</h2>
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="id_email" class="form-label">Email</label>
-                    <input type="email" class="form-control custom-width" id="id_email" name="email" value="{{ form.email.value }}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="id_password" class="form-label">Password</label>
-                    <input type="password" class="form-control custom-width" id="id_password" name="password" value="{{ form.password.value }}" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block mt-3">Login</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
