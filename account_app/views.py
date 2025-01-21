@@ -105,6 +105,7 @@ def search(request, username):
     error = None
 
     if request.method == "POST":
+        
         if 'add_to_watchlist' in request.POST:
             imdb_id = request.POST.get('imdb_id')
             title = request.POST.get('title')
