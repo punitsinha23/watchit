@@ -6,8 +6,8 @@
        <div class="container">
            <div class="row justify-content-center">
                {% for movie in movie_data %}
-                   <div class="col-6 col-md-2 mb-4">
-                       <div class="card h-100 d-flex flex-column" >
+                   <div class="col-6 col-md-2 mb-4 fade-in">
+                       <div class="card h-100 d-flex flex-column">
                            {% if movie.Type == "series" %}
                                <a href="https://vidsrc.dev/embed/tv/{{movie.imdbID}}/1/1" target="_blank">
                            {% else %}
@@ -33,4 +33,45 @@
    {% if error %}
        <p style="color:red; text-align:center;">Error: {{ error }}</p>
    {% endif %}
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Fade-in animation */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 1s ease-out, transform 1s ease-out;
+    }
+
+    .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fadeElements = document.querySelectorAll('.fade-in');  // Get all movie/show boxes with the fade-in class
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Add 'visible' class when the element is in view
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Stop observing once it's visible
+                }
+            });
+        }, {
+            threshold: 0.1  // Trigger when 10% of the element is visible
+        });
+
+        // Start observing each fade-in element
+        fadeElements.forEach(element => {
+            observer.observe(element);
+        });
+    });
+</script>
 {% endblock %}

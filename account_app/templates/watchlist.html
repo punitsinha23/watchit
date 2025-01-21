@@ -1,7 +1,7 @@
 {% extends 'user.html' %}
 
 {% block content %}
-<div class="container my-5">
+<div class="container my-5 fade-left">
   <h1 class="text-center mb-4">
     <span style="color: #e50914; font-weight: bold;">{{ username }}'s</span>
     <span style="color: white; font-weight: bold;">Watchlist</span>
@@ -10,7 +10,7 @@
     {% if watchlist %}
         <div class="row justify-content-center">
             {% for movie in watchlist %}
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 fade-left">
                     <div class="card shadow-lg h-100" style="background-color: rgb(37, 35, 35);">
                         <!-- Conditional Link for Movies and Series -->
                         {% if movie.Type == "series" %}
@@ -30,7 +30,7 @@
                             <form method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ movie.imdb_id }}">
-                                <button type="submit" name="remove_from_watchlist" class="btn btn-danger w-100 mt-auto">Remove from Watchlist</button>
+                                <button type="submit" name="remove_from_watchlist" class="btn btn-danger w-100 mt-auto" style="font-weight: 900;">Remove from Watchlist</button>
                             </form>
                         </div>
                     </div>
@@ -43,6 +43,22 @@
 </div>
 
 <style>
+    /* Fade-in Left-to-Right Animation */
+    @keyframes fadeLeft {
+        0% {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .fade-left {
+        animation: fadeLeft 1s ease-out;
+    }
+
     .card {
         transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
     }
