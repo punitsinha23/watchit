@@ -10,57 +10,45 @@
     <style>
       body {
         background-color: #141414;
-        color: white;
+        color: #f5f5f5;
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         margin: 0;
         padding: 0;
         overflow-x: hidden;
       }
 
-      /* Navbar Styling */
       .navbar {
         background-color: #141414;
         border-bottom: 1px solid #333;
       }
 
-      .navbar .navbar-brand {
+      .navbar-brand {
         color: #e50914;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         font-weight: bold;
-        margin-left: 10px;
       }
 
-      .navbar .nav-link {
-        color: white;
-        padding: 8px 15px;
+      .navbar-nav .nav-link {
+        color: #f5f5f5;
+        padding: 10px 15px;
       }
 
-      .navbar .nav-link:hover {
-        color: white;
-      }
-
-      .navbar .nav-item.active .nav-link {
+      .navbar-nav .nav-item.active .nav-link,
+      .navbar-nav .nav-link:hover {
         color: #e50914;
       }
 
       .profile-img {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         object-fit: cover;
-        margin-right: 8px;
-      }
-
-      /* Search Bar Styling */
-      .search-bar {
-        display: flex;
-        justify-content: center;
-        align-items: center;
       }
 
       .search-bar input {
-        width: 200px;
-        padding: 10px;
+        width: 100%;
+        max-width: 250px;
+        padding: 8px 12px;
         border-radius: 20px;
         border: 1px solid #e50914;
         background-color: #333;
@@ -71,162 +59,103 @@
       .search-bar button {
         background-color: #e50914;
         border: none;
-        padding: 10px 20px;
+        padding: 8px 16px;
         border-radius: 20px;
         color: white;
         cursor: pointer;
+        transition: background-color 0.3s;
       }
 
       .search-bar button:hover {
         background-color: #ff4a4a;
       }
 
-      /* Movie Section Styling */
-      .movie-box {
-            width: 100%;
-            background: #222;
-            padding: 10px;
-            border-radius: 8px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-align: center;
-        }
-
-        .movie-box:hover {
-            transform: scale(1); 
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); /* Shadow effect */
-        }
-
-        .movie-box img {
-            border-radius: 8px;
-            width: 100%;
-            height: auto;
-            transition: transform 0.3s ease;
-        }
-
-        .movie-box:hover img {
-            transform: scale(1.1); /* Zoom in image on hover */
-        }
-
-        .movie-title {
-            color: #fff;
-            font-size: 11px;
-            font-weight: bold;
-            margin: 10px 0 5px;
-        }
-
-        .movie-year {
-            color: #999;
-            font-size: 11px;
-        }
-
-        /* Headings */
-        h2 {
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-
-        /* Footer */
-        footer {
-            background-color: #141414;
-            color: #666;
-            text-align: center;
-            padding: 20px;
-            margin-top: 20px;
-            font-size: 1rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1.5rem;
-            }
-        }
-
-      .dropdown-menu {
-        background-color: #222;
+      .card {
+        border: 1px solid #333;
         border-radius: 10px;
+        background-color: #1e1e1e;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
       }
 
-      .dropdown-item {
-        color: white;
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
       }
 
-      .dropdown-item:hover {
-        background-color: #e50914;
-        color: black;
+      .card-img-top {
+        height: 500px;
+        object-fit: cover;
+        border-bottom: 2px solid #e50914;
       }
 
-      #title::placeholder {
-        color: #b3b3b3;
-        opacity: 1;
+      .card-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #e50914;
+        margin-top: 10px;
+        margin-bottom: 5px; /* Reduced space under the title */
       }
 
-      /* Align navbar items to the left on mobile */
+      footer {
+        background-color: #141414;
+        color: #666;
+        text-align: center;
+        padding: 10px 0; /* Reduced footer height */
+        font-size: 0.9rem;
+      }
+
       @media (max-width: 768px) {
-          .navbar-collapse {
-              text-align: left; /* Align the items to the left */
-          }
+        .card-img-top {
+          height: 200px;
+        }
 
-          .navbar-nav {
-              margin-left: 0; /* Remove any right-side margin */
-          }
-
-          .navbar-nav .nav-item {
-              padding-left: 10px; /* Optional: Add padding for spacing */
-          }
+        .card-title {
+          font-size: 1rem;
+        }
       }
 
-      /* Fade-in animation */
-      .fade-in {
-          opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 1s ease-out, transform 1s ease-out;
-      }
+      @media (max-width: 576px) {
+        .search-bar input {
+          max-width: 180px;
+        }
 
-      .fade-in.visible {
-          opacity: 1;
-          transform: translateY(0);
+        .card-img-top {
+          height: 150px;
+        }
+
+        .card-title {
+          font-size: 0.9rem;
+        }
       }
     </style>
   </head>
   <body>
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid">
-        <a class="navbar-brand"><strong>WATCHIT</strong></a>
-      
-        <div class="d-flex w-100 justify-content-between align-items-center">
-          <form class="d-flex search-bar" method="POST" action="{% url 'dashboard' username=username %}">
-            {% csrf_token %}
-            <input type="text" class="form-control" name="title" id="title" placeholder="Search for a movie" aria-label="Search">
-            <button class="btn" type="submit">Search</button>
-          </form>
-          
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-        </div>
-    
+        <a class="navbar-brand" href="#">WATCHIT</a>
+        <form class="d-flex search-bar me-auto" method="POST" action="{% url 'dashboard' username=username %}">
+          {% csrf_token %}
+          <input type="text" name="title" id="title" placeholder="Search for a movie" class="form-control">
+          <button type="submit" class="btn">Search</button>
+        </form>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto"> 
+          <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'logout' %}" style="color: #e50914;"><strong>Logout</strong></a>
+              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'watchlist' username=username %}"><strong>Watchlist</strong></a>
+              <a class="nav-link" href="{% url 'watchlist' username=username %}">Watchlist</a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" class="profile-img" alt="Profile Picture">
+                <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" alt="Profile Picture" class="profile-img">
                 {{ username }}
               </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                 <li><a class="dropdown-item" href="#">View Profile</a></li>
                 <li><a class="dropdown-item" href="#">Edit Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
@@ -241,57 +170,44 @@
     {% if messages %}
     <div class="container mt-3">
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-          {{ message }}
-        </div>
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+      </div>
       {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Main Content -->
-    <div class="container-fluid">
+    <!-- Content -->
+    <div class="container-fluid mt-4">
       {% block content %}
-      <h2 style="text-align:center;">Recommended for <span style="color:#e50914;">{{ username }}</span></h2>
-      <div class="row justify-content-center">
+      <h2 class="text-center mb-4" style="font-weight:bold;">Recommended for <span style="color:#e50914;">{{ username }}</span></h2>
+      <div class="row g-4">
         {% for movie in movies %}
-          <div class="col-md-2 col-sm-6 mb-4 fade-in">
-            <div class="movie-box">
-              <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
-              <div class="movie-title">{{ movie.Title }}</div>
-              <div class="movie-year">{{ movie.Year }}</div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <div class="card h-100">
+            <a href="https://vidsrc.dev/embed/{{ movie.imdbID }}/" target="_blank">
+              <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" class="card-img-top" alt="{{ movie.Title }}">
+            </a>
+            <div class="card-body text-center">
+              <h6 class="card-title">{{ movie.Title }}</h6>
             </div>
           </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+          <p class="text-muted">No movies found.</p>
+        </div>
         {% endfor %}
-        {% if error %}
-          <div class="alert alert-danger mt-4 w-100 text-center">{{ error }}</div>
-        {% endif %}
       </div>
       {% endblock %}
     </div>
 
+    <!-- Footer -->
+    <footer>
+      &copy; {{ year|date:"Y" }} WATCHIT. All Rights Reserved.
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-          const fadeElements = document.querySelectorAll('.fade-in');  // Get all movie/show boxes with the fade-in class
-
-          const observer = new IntersectionObserver((entries, observer) => {
-              entries.forEach(entry => {
-                  if (entry.isIntersecting) {
-                      // Add 'visible' class when the element is in view
-                      entry.target.classList.add('visible');
-                      observer.unobserve(entry.target); // Stop observing once it's visible
-                  }
-              });
-          }, {
-              threshold: 0.1  // Trigger when 10% of the element is visible
-          });
-
-          // Start observing each fade-in element
-          fadeElements.forEach(element => {
-              observer.observe(element);
-          });
-      });
-    </script>
   </body>
 </html>
