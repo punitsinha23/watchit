@@ -124,26 +124,28 @@ def search(request, username):
     error = None
 
     if request.method == "POST":
-        
         if 'add_to_watchlist' in request.POST:
             imdb_id = request.POST.get('imdb_id')
             title = request.POST.get('title')
             year = request.POST.get('year')
             poster = request.POST.get('poster')
 
-           
-            if not Watchlist.objects.filter(user=request.user, imdb_id=imdb_id).exists():
-                Watchlist.objects.create(
-                    user=request.user,
-                    movie_title=title,
-                    movie_year=year,
-                    imdb_id=imdb_id,
-                    poster=poster,
-                )
+            # Use get_or_create to avoid IntegrityError
+            watchlist_item, created = Watchlist.objects.get_or_create(
+                user=request.user,
+                imdb_id=imdb_id,
+                defaults={
+                    'movie_title': title,
+                    'movie_year': year,
+                    'poster': poster,
+                }
+            )
+            if created:
                 messages.success(request, f"'{title}' added to your watchlist!")
-                return redirect('watchlist' , username=request.user.username)
             else:
                 messages.info(request, f"'{title}' is already in your watchlist.")
+            return redirect('watchlist', username=request.user.username)
+
 
         else:
             movie_title = request.POST.get('title')

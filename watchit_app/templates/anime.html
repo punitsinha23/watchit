@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+/* Pagination container */
+.pagination {
+    display: flex;
+    justify-content: space-between; /* Align buttons to the left and right */
+    align-items: center; /* Vertically center the content */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Styling the page links */
+.page-link {
+    font-size: 16px;
+    padding: 8px 15px;
+    color: #fff;
+    background-color: #E50914; /* Netflix-like red */
+    border: 1px solid #E50914;
+    border-radius: 4px;
+    margin: 0 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #B50712; /* Darker red when hovered */
+    border-color: #B50712;
+}
+
+/* Disable link when on first/last page */
+.page-link:disabled {
+    background-color: #555;
+    border-color: #555;
+    cursor: not-allowed;
+}
+
+/* Styling the "current" page text */
+.current {
+    font-size: 16px;
+    color: #E50914;
+    font-weight: bold;
+    margin: 0 auto; /* Center align the current page text */
+}
+
+/* Styling for the "First" and "Last" links */
+.page-link:first-child {
+    border-left: none;
+}
+
+.page-link:last-child {
+    border-right: none;
+}
+</style>
+
+<div class="container mt-3">
+    <br>
+    <h2 class="text-center mb-4"><b>TOP ANIMES</b></h2>
+    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
+    <br>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        {% for anime in animes %}
+            {% if anime.Poster != 'N/A' and anime.Poster %}
+                <div class="movie-box fade-in">
+                    <a href="https://vidsrc.dev/embed/movie/{{ movie.imdbID }}" target="_blank">
+                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}">
+                    </a>
+                    <div>
+                        <div class="movie-title">{{ anime.Title }}</div>
+                        <div class="movie-year">{{ anime.Year }}</div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a class="page-link" href="?page=1">&laquo; First</a>
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span class="current">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+    </span>
+
+    {% if page_obj.has_next %}
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -21,10 +21,13 @@ from watchit_app import views as watchit_views
 from account_app import views as account_views
 from . import settings 
 from django.conf.urls.static import static
+from django.contrib.auth.decorators import login_required 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', watchit_views.base, name='base'),
+    path('movies/', watchit_views.movie_view, name='movies'),
+    path('anime/', watchit_views.anime_view , name='anime' ),
     path('about/', watchit_views.about_view , name='about'),  
     path('dashboard/', watchit_views.dashboard, name='dashboard'),  
     path('signup/', account_views.signup_view, name='signup'),
@@ -35,6 +38,9 @@ urlpatterns = [
     path('watchlist/<str:username>/', account_views.watchlist_view , name='watchlist')
     
 ] 
+
+
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

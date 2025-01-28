@@ -1,82 +1,20 @@
 from django.shortcuts import render,redirect
 import requests
-from django.contrib.auth.hashers import make_password
-from datetime import datetime
-from django.contrib import messages
-from django.contrib.auth.hashers import check_password
+from .data import keyword, shows, top_100_movies, animes , anime_ids
+from django.core.paginator import Paginator
+
+
+
 
 api_key = '593db72e'
 
 def base(request):
-    keyword = [
-        "Fight Club",
-        "Inception",
-        "Interstellar",
-        "Se7en",
-        "Parasite",
-        "The truman show",
-        "Whiplash",
-        "Grave of the Fireflies",
-        "Avengers: Endgame",
-        "The Great Dictator",
-        "Coco",
-        "inside out 2",
-        "Oldboy",
-        "Avengers: Infinity War",
-        "The Wolf of Wall Street",
-        "Eternal Sunshine of the Spotless Mind",
-        "Taxi Driver",
-        "Blade Runner 2049",
-        "Toy Story",
-        "3 Idiots",
-        "Up",
-        "Inside Out",
-        "La La Land",
-        "The Pursuit of Happyness",
-        "Zootopia",
-        "squid game",
-        "la la land",
-        "harry potter",
-        
-    ]
-
-    shows = [
-         "Breaking Bad",
-        "Better call saul",
-        "The Wire",
-        "Stranger Things",
-        "Friends",
-        "The Office (US)",
-        "Sherlock",
-        "Narcos",
-        "Chernobyl",
-        "Black Mirror",
-        "Game of Thrones",
-        "The Mandalorian",
-        "Rick and Morty",
-        "True Detective",
-        "Peaky Blinders",
-        "The Simpsons",
-        "House of Cards",
-        "Money Heist",
-        "The Witcher",
-        "Fleabag",
-        "Vikings",
-        "The Boys",
-        "The Queen's Gambit",
-        "How I Met Your Mother",
-        "The Haunting of Hill House",
-        "Dark",
-        "Supernatural",
-        "The Marvelous Mrs. Maisel",
-        "BoJack Horseman"
-        ]
-    
     shows_list = []
     movies = []
+    Animes = []
     
     for title in keyword:
-        url = f"http://www.omdbapi.com/?apikey={api_key}&t={title}"  # Search for individual movies by title
+        url = f"http://www.omdbapi.com/?apikey={api_key}&t={title}" 
         response = requests.get(url)
         
         if response.status_code == 200:
@@ -93,11 +31,21 @@ def base(request):
             if data.get("Response") == "True":
                 shows_list.append(data)
 
+    for title in animes:
+        url = f"http://www.omdbapi.com/?apikey={api_key}&t={title}"
+        response = requests.get(url)
+
+        if response.status_code == 200: 
+            data = response.json()
+            if data.get("Response") == "True":
+                Animes.append(data)            
+
 
     
     context = {
         'movies': movies,
         'shows' : shows_list,
+        'Animes': Animes,
     }
 
     return render(request, 'base.html', context)
@@ -128,6 +76,64 @@ def dashboard(request):
             error = f"An error occurred: {str(e)}"
 
     return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
+
+
+
+
+def movie_view(request):
+    movies_per_page = 28
+
+   
+    page_number = request.GET.get('page', 1)
+
+    
+    paginator = Paginator(top_100_movies, movies_per_page)
+
+  
+    page_obj = paginator.get_page(page_number)
+
+   
+    movies = []
+    
+   
+    for movie_id in page_obj.object_list:
+        url = f"http://www.omdbapi.com/?apikey={api_key}&i={movie_id}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("Response") == "True":
+                movies.append(data)
+
+    
+    return render(request, 'movies.html', {'page_obj': page_obj, 'movies': movies})
+
+
+def anime_view(request):
+    movies_per_page = 28
+
+   
+    page_number = request.GET.get('page', 1)
+
+    
+    paginator = Paginator(anime_ids, movies_per_page)
+
+  
+    page_obj = paginator.get_page(page_number)
+
+   
+    animes = []
+    
+   
+    for id in page_obj.object_list:
+        url = f"http://www.omdbapi.com/?apikey={api_key}&i={id}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("Response") == "True":
+                animes.append(data)
+    
+    return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes})
+
 
 def about_view(request):
     return render(request , 'about.html')    
