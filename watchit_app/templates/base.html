@@ -180,8 +180,7 @@
 
          /* Hero Section */
       .hero-section {
-          position: relative;
-          min-height: 80vh;
+         height: 80vh;
           background: url('https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg'); /* Placeholder image */
           background-size: cover;
           background-position: center;
@@ -190,6 +189,12 @@
           align-items: center;
           text-align: center;
           padding: 2rem 1rem;
+      }
+
+      @media(max-width: 768px){
+        .hero-section{
+            height: 40vh;
+        }
       }
 
       .hero-content {
@@ -303,7 +308,7 @@
           <!-- Hero Item 3 -->
           <div class="carousel-item">
             <a href="https://player.vidbinge.com/media/tmdb-tv-60059/60223/1019693" target="_blank" rel="noopener noreferrer">
-              <div class="hero-section" style="background: url('https://www.tracking-board.com/wp-content/uploads/2016/02/better-call-saul-banner.jpg'); background-size: cover; background-position: center top; transform: translateY(-10px); height: 100%; display: flex; align-items: center; justify-content: center;">
+              <div class="hero-section" style="background: url('https://i.pinimg.com/736x/d3/ba/e6/d3bae68bdf8e749bf07fc8c84cf595d3.jpg'); position: relative;">
                 <div class="hero-content">
                 </div>
               </div>
