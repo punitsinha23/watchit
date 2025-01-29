@@ -62,7 +62,7 @@
         {% for anime in animes %}
             {% if anime.Poster != 'N/A' and anime.Poster %}
                 <div class="movie-box fade-in">
-                    <a href="https://vidsrc.dev/embed/movie/{{ movie.imdbID }}" target="_blank">
+                    <a href="https://vidsrc.dev/embed/movie/{{ anime.imdbID }}" target="_blank">
                         <img src="{{ anime.Poster }}" alt="{{ anime.Title }}">
                     </a>
                     <div>
