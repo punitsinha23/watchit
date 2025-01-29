@@ -179,48 +179,55 @@
         }
 
          /* Hero Section */
-      .hero-section {
-         height: 80vh;
-          background: url('https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg'); /* Placeholder image */
-          background-size: cover;
-          background-position: center;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-align: center;
-          padding: 2rem 1rem;
-      }
+         .hero-section {
+    height: 80vh; /* Set default height to 80% of the viewport height */
+    background: url('https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg'); /* Placeholder image */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1rem;
+    position: relative; /* Added position relative for better control over the content */
+}
 
-      @media(max-width: 768px){
-        .hero-section{
-            height: 40vh;
-        }
-      }
+@media (max-width: 768px) {
+    .hero-section {
+        height: 40vh; /* Reduce height for medium and small screens */
+    }
+}
 
-      .hero-content {
-          position: absolute;
-          bottom: 20%;
-          left: 50%;
-          transform: translateX(-50%);
-          color: white;
-      }
+@media (max-width: 576px) {
+    .hero-section {
+        height: 30vh; /* Further reduce height for very small screens */
+    }
 
-      /* Media Query for responsiveness */
-      @media (max-width: 768px) {
-          .hero-title {
-              font-size: 2.5rem;
-             
-          }
+    .hero-content {
+        bottom: 15%; /* Adjust bottom positioning for smaller screens */
+        font-size: 14px; /* Optional: Reduce font size for small devices */
+    }
+}
 
-          .hero-description {
-              font-size: 1rem;
-          }
+.hero-content {
+    position: absolute;
+    bottom: 20%; /* Default bottom positioning */
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    padding: 0 1rem;
+    z-index: 2; /* Ensure content is above the background */
+    font-size: 18px; /* Default font size */
+    font-weight: bold; /* Optional: Make content stand out */
+}
 
-          .hero-button {
-              font-size: 1rem;
-              padding: 10px 20px;
-          }
-      }
+@media (max-width: 576px) {
+    .hero-content {
+        font-size: 14px; /* Adjust font size for small devices */
+        bottom: 10%; /* Adjust bottom positioning further for mobile */
+    }
+}
+
     </style>
   </head>
   <body>
@@ -308,7 +315,7 @@
           <!-- Hero Item 3 -->
           <div class="carousel-item">
             <a href="https://player.vidbinge.com/media/tmdb-tv-60059/60223/1019693" target="_blank" rel="noopener noreferrer">
-              <div class="hero-section" style="background: url('https://i.pinimg.com/736x/d3/ba/e6/d3bae68bdf8e749bf07fc8c84cf595d3.jpg'); position: relative;">
+              <div class="hero-section" style="background: url('https://wallpaperaccess.com/full/1091809.png');  background-size: cover;">
                 <div class="hero-content">
                 </div>
               </div>
