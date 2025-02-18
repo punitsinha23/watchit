@@ -50,7 +50,7 @@
     python manage.py createsuperuser
     Run the development server:
 
-##Usage
+## Usage
 
 User Registration: Visit the registration page to create a new account.
 Search: Use the search bar to find your favorite movies and shows.
@@ -58,16 +58,16 @@ Watch: Click on any movie or TV show to start streaming.
 Admin Panel: Access the admin panel by navigating to http://127.0.0.1:8000/admin/ to manage users, content, and more.
 Contributing
 
-##Fork the repository
+## Fork the repository
 Create your branch (git checkout -b feature/your-feature)
 Commit your changes (git commit -m 'Add new feature')
 Push to the branch (git push origin feature/your-feature)
 Create a new Pull Request
 
-##License
+## License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-##Acknowledgments
+## Acknowledgments
 Vidsrc for providing the movie streaming API.
 Django for the awesome web framework.
 
