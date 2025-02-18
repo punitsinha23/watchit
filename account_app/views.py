@@ -135,7 +135,7 @@ def search(request):
             year = request.POST.get('year')
             poster = request.POST.get('poster')
 
-            # Use get_or_create to avoid IntegrityError
+            
             watchlist_item, created = Watchlist.objects.get_or_create(
                 user=request.user,
                 imdb_id=imdb_id,
@@ -189,23 +189,22 @@ def watchlist_view(request):
 
 def verify_email(request, uidb64, token):
     try:
-        # Decode the user ID
+        
         uid = force_str(urlsafe_base64_decode(uidb64))
         
-        # Fetch the user object by decoded ID
         user = get_user_model().objects.get(pk=uid)
         
-        # Check if the token is valid
+
         if default_token_generator.check_token(user, token):
-            user.is_active = True  # Activate the user
-            user.save()  # Save the changes
-            login(request, user)  # Log the user in
-            return redirect('user')  # Redirect to the user dashboard or homepage
+            user.is_active = True  
+            user.save()  
+            login(request, user)  
+            return redirect('user')
         else:
-            return HttpResponse("Invalid token.")  # Token is invalid
+            return HttpResponse("Invalid token.") 
         
     except (TypeError, ValueError, OverflowError, user.DoesNotExist):
-        return HttpResponse("Invalid verification link.")  # Handle invalid or expired link
+        return HttpResponse("Invalid verification link.")  
 
 def verify(request):
     return render(request, 'verify.html')
