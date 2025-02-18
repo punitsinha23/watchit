@@ -100,28 +100,22 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Directories where Django will look for additional static files
+
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# Directory where static files will be collected during `collectstatic` (used in production)
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-# WhiteNoise settings
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
-LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect after login
-LOGOUT_REDIRECT_URL = '/'  # Redirect after logout
-
-# CSRF Trusted Origins
-CSRF_TRUSTED_ORIGINS = [
-    'https://400c-43-230-106-53.ngrok-free.app',
-    'http://400c-43-230-106-53.ngrok-free.app',
-]
+LOGIN_REDIRECT_URL = '/dashboard/'  
+LOGOUT_REDIRECT_URL = '/'  
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
