@@ -33,9 +33,9 @@ urlpatterns = [
     path('signup/', account_views.signup_view, name='signup'),
     path('login/', account_views.login_view, name='login'),
     path('logout/', account_views.logout_view, name='logout'),
-    path('user/<str:username>/', account_views.user, name='user'),
-    path('dashboard/<str:username>/', account_views.search, name='dashboard'),
-    path('watchlist/<str:username>/', account_views.watchlist_view , name='watchlist')
+    path('account/profile/', account_views.user, name='user'),
+    path('account/profile/dashboard', account_views.search, name='dashboard'),
+    path('account/profile/watchit', account_views.watchlist_view , name='watchlist')
     
 ] 
 

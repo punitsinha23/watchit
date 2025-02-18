@@ -163,7 +163,7 @@
         <a class="navbar-brand" href="#">WATCHIT</a>
         <div class="search-box d-flex align-items-center">
           <i class="fa fa-search search-box__icon"></i>
-          <form class="search-bar" role="search" method="POST" action="{% url 'dashboard' username=username%}">
+          <form class="search-bar" role="search" method="POST" action="{% url 'dashboard' %}">
             {% csrf_token %}
             <input 
               class="search-box__input form-control" 
@@ -186,10 +186,7 @@
               <a class="nav-link" href="{% url 'anime' %}"><strong>Anime</strong></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'logout' %}"><strong>Logout</strong></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'watchlist' username=username %}"><strong>Watchlist</strong></a>
+              <a class="nav-link" href="{% url 'watchlist' %}"><strong>Watchlist</strong></a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

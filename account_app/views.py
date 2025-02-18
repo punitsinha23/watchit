@@ -18,7 +18,7 @@ def signup_view(request):
             user = form.save()
             login(request, user)  
             messages.success(request, "Signup successful!")
-            return redirect(reverse('user', kwargs={'username': user.username}))  
+            return redirect(reverse('user'))  
     else:
         form = myform()  
 
@@ -39,7 +39,7 @@ def login_view(request):
                 if user is not None:
                     login(request, user) 
                     messages.success(request, "You have successfully logged in.")
-                    return redirect('user', username=user.username) 
+                    return redirect('user') 
                 else:
                     messages.error(request, "Invalid email or password.")
             except User.DoesNotExist:
@@ -60,10 +60,8 @@ def logout_view(request):
 
 
 @login_required
-def user(request, username):
-    if request.user.username != username:  
-        messages.error(request, "You do not have permission to access this page.")
-        return redirect('login')  
+def user(request):
+    username= request.user.username
     
     keyword = [
     "The Shawshank Redemption", "The Dark Knight", "The Godfather", "Pulp Fiction", "The Matrix",
@@ -107,7 +105,7 @@ def user(request, username):
                     poster=poster,
                 )
                 messages.success(request, f"'{title}' added to your watchlist!")
-                return redirect('watchlist' , username=request.user.username)
+                return redirect('watchlist')
             else:
                 messages.info(request, f"'{title}' is already in your watchlist.")
    
@@ -119,7 +117,8 @@ def user(request, username):
     return render(request, 'user.html', context)
 
 @login_required
-def search(request, username):
+def search(request):
+    username = request.user.username
     movie_data = None
     error = None
 
@@ -144,7 +143,7 @@ def search(request, username):
                 messages.success(request, f"'{title}' added to your watchlist!")
             else:
                 messages.info(request, f"'{title}' is already in your watchlist.")
-            return redirect('watchlist', username=request.user.username)
+            return redirect('watchlist')
 
 
         else:
@@ -170,10 +169,8 @@ def search(request, username):
     return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error, 'username': username})
 
 @login_required
-def watchlist_view(request, username):
-    if request.user.username != username:
-        messages.error(request, "You do not have permission to access this page.")
-        return redirect('login')
+def watchlist_view(request):
+    username = request.user.username
 
     if request.method == "POST" and 'remove_from_watchlist' in request.POST:
         imdb_id = request.POST.get('imdb_id')

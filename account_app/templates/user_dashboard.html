@@ -32,7 +32,7 @@
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title text-center font-weight-bold">{{ movie.Title }}</h5>
                             <p class="text-center text-muted mb-2">{{ movie.Year }}</p>
-                            <form method="POST" action="{% url 'dashboard' username %}">
+                            <form method="POST" action="{% url 'dashboard'%}">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
                                 <input type="hidden" name="title" value="{{ movie.Title }}">

@@ -259,17 +259,31 @@
                         <a class="nav-link" href="{% url 'movies'%}"><strong>Movies</strong></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'anime'%}"><strong>Animes</strong></a>
+                        <a class="nav-link" href="{% url 'anime'%}"><strong>Animes</strong></a>                        
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about'%}"><strong>About</strong></a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <img style="height: 30px; width: 30px; border-radius: 100px; margin-right: 10px;" src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" alt="Profile Picture" class="profile-img"><strong>{{ request.user.username }}</strong>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                          <li><a class="dropdown-item" href="#">View Profile</a></li>
+                          <li><a class="dropdown-item" href="#">Edit Profile</a></li>
+                          <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                      </li>
+                    {% endif %}
+                    {% if not user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'signup'%}"><strong>Signup</strong></a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'login'%}"><strong>Login</strong></a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about'%}"><strong>About</strong></a>
-                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
