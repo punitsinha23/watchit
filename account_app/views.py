@@ -1,24 +1,30 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
 from .forms import myform, loginform
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required 
-from watchit_app.views import dashboard 
 import requests
 from .models import Watchlist
+from django.http import HttpResponse
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+
+
+
+
 api_key = '593db72e'
 
 def signup_view(request):
     if request.method == "POST":
         form = myform(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)  
-            messages.success(request, "Signup successful!")
-            return redirect(reverse('user'))  
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+            return redirect(reverse('verify'))  
     else:
         form = myform()  
 
@@ -179,3 +185,27 @@ def watchlist_view(request):
 
     watchlist = Watchlist.objects.filter(user=request.user)
     return render(request, 'watchlist.html', {'watchlist': watchlist, 'username': username})
+
+
+def verify_email(request, uidb64, token):
+    try:
+        # Decode the user ID
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        
+        # Fetch the user object by decoded ID
+        user = get_user_model().objects.get(pk=uid)
+        
+        # Check if the token is valid
+        if default_token_generator.check_token(user, token):
+            user.is_active = True  # Activate the user
+            user.save()  # Save the changes
+            login(request, user)  # Log the user in
+            return redirect('user')  # Redirect to the user dashboard or homepage
+        else:
+            return HttpResponse("Invalid token.")  # Token is invalid
+        
+    except (TypeError, ValueError, OverflowError, user.DoesNotExist):
+        return HttpResponse("Invalid verification link.")  # Handle invalid or expired link
+
+def verify(request):
+    return render(request, 'verify.html')
