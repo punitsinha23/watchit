@@ -122,11 +122,15 @@ def user(request):
     
     return render(request, 'user.html', context)
 
-@login_required
+
 def search(request):
+    if not request.user.is_authenticated:
+        return redirect('signup') 
     username = request.user.username
     movie_data = None
     error = None
+    
+
 
     if request.method == "POST":
         if 'add_to_watchlist' in request.POST:
