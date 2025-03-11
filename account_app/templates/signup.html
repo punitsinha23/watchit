@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div style="background-image: url('https://i.ibb.co/gFjvq14B/nextflix.jpg'); background-size: cover; background-position: center;">
+
 <div class="d-flex justify-content-center align-items-center vh-100">
-    <div class="card" style="width: 50rem; padding: 0;">
+    <div class="card" style="width: 40rem; padding: 0;">
         <div class="card-body" style="padding: 1rem; background-color: rgb(34, 34, 34); border-radius: 5px;">
             <h1 class="text-center" style="margin-bottom: 4rem; color: #ff4a4a; font-weight:bold ;">Sign Up</h1>
             <div class="row justify-content-center">
@@ -53,12 +55,13 @@
                         <button type="submit" class="btn btn-primary w-100 mt-3" style="height: 45px;">Sign Up</button>
                         <div style="font-size: 0.8rem;">
                         <p style="color: white; display: inline;">Already have an account?</p>
-                        <a href="{% url 'verify' %}" class="d-inline">Login here</a>
+                        <a href="{% url 'login' %}" class="d-inline">Login here</a>
                     </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
