@@ -62,7 +62,7 @@ def dashboard(request):
             return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
 
         try:
-            api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"  # Search for movies by title
+            api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"  
             response = requests.get(api_url)
             if response.status_code == 200:
                 data = response.json()
