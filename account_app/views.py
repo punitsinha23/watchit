@@ -94,26 +94,6 @@ def user(request):
             data = response.json()
             if data.get("Response") == "True":
                 movies.append(data)  
-    if request.method == "POST":
-         if 'add_to_watchlist' in request.POST:
-            imdb_id = request.POST.get('imdb_id')
-            title = request.POST.get('title')
-            year = request.POST.get('year')
-            poster = request.POST.get('poster')
-
-           
-            if not Watchlist.objects.filter(user=request.user, imdb_id=imdb_id).exists():
-                Watchlist.objects.create(
-                    user=request.user,
-                    movie_title=title,
-                    movie_year=year,
-                    imdb_id=imdb_id,
-                    poster=poster,
-                )
-                messages.success(request, f"'{title}' added to your watchlist!")
-                return redirect('watchlist')
-            else:
-                messages.info(request, f"'{title}' is already in your watchlist.")
    
     context = {
         'username': username, 
