@@ -20,6 +20,7 @@ from django.urls import path
 from watchit_app import views as watchit_views
 from account_app import views as account_views
 from . import settings 
+from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required 
 
@@ -33,8 +34,10 @@ urlpatterns = [
     path('signup/', account_views.signup_view, name='signup'),
     path('verify/<uidb64>/<token>/', account_views.verify_email, name='verify_email'),
     path('verify/', account_views.verify, name='verify'),
-    path('login/', account_views.login_view, name='login'),
+    path('accounts/login/', account_views.login_view, name='login'),
     path('logout/', account_views.logout_view, name='logout'),
+    path("password_reset/", account_views.request_password_reset, name="password_reset_request"),
+    path("reset/<str:token>/", account_views.reset_password, name="reset_password"),
     path('account/profile/', account_views.user, name='user'),
     path('account/profile/dashboard', account_views.search, name='dashboard'),
     path('account/profile/watchit', account_views.watchlist_view , name='watchlist')

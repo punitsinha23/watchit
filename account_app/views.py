@@ -11,7 +11,15 @@ from django.http import HttpResponse
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
+from .forms import PasswordResetRequestForm
+from .models import PasswordResetToken
+from django.conf import settings
+from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
+from datetime import timedelta
 
 
 
@@ -201,3 +209,61 @@ def verify_email(request, uidb64, token):
 
 def verify(request):
     return render(request, 'verify.html')
+
+def request_password_reset(request):
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            user = User.objects.filter(email=email).first()  # Use `.filter().first()` to avoid exceptions
+            
+            if user:
+                token = get_random_string(length=32)
+
+                # Save or update the token in the database
+                PasswordResetToken.objects.update_or_create(user=user, defaults={'token': token})
+
+                reset_link = request.build_absolute_uri(reverse('reset_password', args=[token]))
+
+                send_mail(
+                    "Password Reset Request",
+                    f"Click the link to reset your password: {reset_link}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+
+            messages.success(request, "If the email is registered, a password reset link has been sent.")
+            return redirect("login")
+
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, "password_reset_request.html", {"form": form})
+
+
+
+def reset_password(request, token):
+    reset_token = get_object_or_404(PasswordResetToken, token=token)
+
+    # Check if token is expired (e.g., valid for 24 hours)
+    if reset_token.created_at < now() - timedelta(hours=24):
+        reset_token.delete()  # Remove expired token
+        messages.error(request, "This password reset link has expired.")
+        return redirect("login")
+
+    if request.method == "POST":
+        new_password = request.POST["password"]
+        confirm_password = request.POST["confirm_password"]
+
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+        else:
+            reset_token.user.password = make_password(new_password)
+            reset_token.user.save()
+            reset_token.delete()  # Delete token after successful reset
+
+            messages.success(request, "Password reset successful. You can now log in.")
+            return redirect("login")
+
+    return render(request, "reset_password.html")
