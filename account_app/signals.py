@@ -21,7 +21,7 @@ def send_welcome_email(sender, instance, created, **kwargs):
         send_mail(
             subject="Welcome to Watchit!",
             message=f"Hi {instance.email}, welcome to Watchit! Please verify your email by clicking the link below:\n\n{verify_url}",
-            from_email="punitsinha495@gmail.com",  
+            from_email="watchitoffcial@gmail.com",  
             recipient_list=[instance.email],
             fail_silently=False
         )
