@@ -20,15 +20,24 @@ api_key = '593db72e'
 def signup_view(request):
     if request.method == "POST":
         form = myform(request.POST)
+
+        # Check if email already exists BEFORE form validation
+        email = request.POST.get("email")
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "User with this email already exists.")
+            return redirect(reverse('signup'))
+
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False
+            user.is_active = False  # User will be inactive until verified
             user.save()
-            return redirect(reverse('verify'))  
-    else:
-        form = myform()  
+            messages.success(request, "Sign-up successful. Please verify your email.")
+            return redirect(reverse('verify'))  # Redirect to email verification page
 
-    return render(request, 'signup.html', {'form': form}) 
+    else:
+        form = myform()  # Empty form for GET request
+
+    return render(request, 'signup.html', {'form': form})
 
 def login_view(request):
     if request.method == "POST":
