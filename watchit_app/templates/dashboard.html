@@ -12,9 +12,9 @@
                    <div class="col-6 col-md-2 mb-4 fade-in">
                        <div class="card h-100 d-flex flex-column" style="background-color: #141414;">
                            {% if movie.Type == "series" %}
-                               <a href="https://vidsrc.dev/embed/tv/{{movie.imdbID}}/1/1" target="_blank" class="movie-link">
+                               <a href="https://player.vidsrc.co/embed/tv/{{movie.imdbID}}/1/1" target="_blank" class="movie-link">
                            {% else %}
-                               <a href="https://vidsrc.dev/embed/movie/{{movie.imdbID}}" target="_blank" class="movie-link">
+                               <a href="https://player.vidsrc.co/embed/movie/{{movie.imdbID}}" target="_blank" class="movie-link">
                            {% endif %}
                                <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
                                     class="card-img-top" 
