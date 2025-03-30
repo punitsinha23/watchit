@@ -225,7 +225,7 @@
         {% for movie in movies %}
         <div class="col-12 col-sm-6 col-md-4 col-lg-2"> <!-- Use col-lg-2 for 7 movies in a row -->
           <div class="card h-100 custom-card"> <!-- Added custom class -->
-            <a href="https://vidsrc.dev/embed/movie/{{ movie.imdbID }}" target="_blank">
+            <a href="https://player.vidsrc.co/embed/movie/{{ movie.imdbID }}" target="_blank">
               <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" class="card-img-top custom-img" alt="{{ movie.Title }}">
             </a>
             <div class="card-body text-center">
