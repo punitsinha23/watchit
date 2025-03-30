@@ -19,9 +19,9 @@
                     <div class="card shadow-lg h-100 bg-dark text-white">
                         <!-- Conditional Link for Movies and Series -->
                         {% if movie.Type == "series" %}
-                            <a href="https://vidsrc.dev/embed/tv/{{ movie.imdbID }}/1/1" target="_blank">
+                            <a href="https://player.vidsrc.co/embed/tv/{{ movie.imdbID }}/1/1" target="_blank">
                         {% else %}
-                            <a href="https://vidsrc.dev/embed/movie/{{ movie.imdbID }}" target="_blank">
+                            <a href="https://player.vidsrc.co/embed/movie/{{ movie.imdbID }}" target="_blank">
                         {% endif %}
                             <img 
                                 src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
