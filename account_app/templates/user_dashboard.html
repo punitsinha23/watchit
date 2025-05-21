@@ -2,50 +2,43 @@
 
 {% block content %}
 <div class="container my-5 fade-in">
-    <h2 class="text-center mb-6"><strong>Search for Movies</strong></h2>
+    <h2 class="text-center mb-4 fw-bold">Search for Movies</h2>
 
-    <!-- Display Error Message -->
     {% if error %}
         <div class="alert alert-danger text-center" role="alert">
             {{ error }}
         </div>
     {% endif %}
 
-    <!-- Display Movie Results -->
     {% if movie_data %}
-        <div class="row justify-content-center">
+        <div class="row justify-content-center g-4">
             {% for movie in movie_data %}
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 fade-in">
-                    <div class="card shadow-lg h-100 bg-dark text-white">
-                        <!-- Conditional Link for Movies and Series -->
-                        {% if movie.Type == "series" %}
-                            <a href="https://player.vidsrc.co/embed/tv/{{ movie.imdbID }}/1/1" target="_blank">
-                        {% else %}
-                            <a href="https://player.vidsrc.co/embed/movie/{{ movie.imdbID }}" target="_blank">
-                        {% endif %}
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card bg-dark text-white shadow-sm border-0 h-100">
+                        <a href="{% if movie.Type == 'series' %}https://vidsrc.to/embed/tv/{{ movie.imdbID }}/1/1{% else %}https://vidsrc.to/embed/movie/{{ movie.imdbID }}{% endif %}" target="_blank">
                             <img 
                                 src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
-                                class="card-img-top" 
-                                alt="{{ movie.Title }}" 
-                                style="height: 250px; object-fit: cover;">
+                                class="card-img-top"
+                                alt="{{ movie.Title }}"
+                                style="height: 250px; object-fit: cover; border-radius: 10px 10px 0 0;">
                         </a>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-center font-weight-bold">{{ movie.Title }}</h5>
-                            <p class="text-center text-muted mb-2">{{ movie.Year }}</p>
-                            <form method="POST" action="{% url 'dashboard'%}">
+                        <div class="card-body p-3 d-flex flex-column justify-content-between">
+                            <div>
+                               <h6 class="card-title text-center mb-1 fw-semibold" style="background-color: transparent;">{{ movie.Title }}</h6>
+
+                                <p class="text-center text-muted small mb-2">{{ movie.Year }}</p>
+                            </div>
+                            <form method="POST" action="{% url 'dashboard' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
                                 <input type="hidden" name="title" value="{{ movie.Title }}">
                                 <input type="hidden" name="year" value="{{ movie.Year }}">
                                 <input type="hidden" name="poster" value="{{ movie.Poster }}">
-                                <button type="submit" class="btn  w-100 mt-auto" id="add_to_watchlist" name="add_to_watchlist" style="background-color: #e50914; font-weight: 900; color:white;">Add to Watchlist</button>
+                                <button type="submit" class="btn btn-sm btn-primary w-100">Add to Watchlist</button>
                             </form>
                         </div>
                     </div>
                 </div>
-                {% if forloop.counter|divisibleby:4 and not forloop.last %}
-                    </div><div class="row justify-content-center">
-                {% endif %}
             {% endfor %}
         </div>
     {% else %}
@@ -54,150 +47,60 @@
 </div>
 
 <style>
-    /* Fade-in Animation */
-    @keyframes fadeIn {
-        0% {
-            opacity: 0;
-        }
-        100% {
-            opacity: 1;
-        }
+    body {
+        background-color: #141414;
+        color: white;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        overflow-x: hidden;
     }
 
     .fade-in {
         animation: fadeIn 0.5s ease-in-out;
     }
 
-    body {
-        background-color: #141414;
-        color: white;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
-    /* Navbar Styling */
-    .navbar {
-        background-color: #141414;
-        border-bottom: 1px solid #333;
-    }
-
-    .navbar .navbar-brand {
-        color: #e50914;
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-left: 10px;
-    }
-
-    .navbar .nav-link {
-        color: white;
-        padding: 8px 15px;
-    }
-
-    .navbar .nav-link:hover {
-        color: white;
-    }
-
-    .navbar .nav-item.active .nav-link {
-        color: #e50914;
-    }
-
-    .profile-img {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-right: 8px;
-    }
-
-    /* Search Bar Styling */
-    .search-bar {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .search-bar input {
-        width: 200px;
-        padding: 10px;
-        border-radius: 20px;
-        border: 1px solid #e50914;
-        background-color: #333;
-        color: white;
-        margin-right: 10px;
-    }
-
-    .search-bar button {
-        background-color: #e50914;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 20px;
-        color: white;
-        cursor: pointer;
-    }
-
-    .search-bar button:hover {
-        background-color: #ff4a4a;
-    }
-
-    /* Movie Section Styling */
     .card {
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
+        border-radius: 10px;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
     }
 
     .card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(255, 255, 255, 0.1);
     }
 
-    .card-img-top {
-        border-bottom: 2px solid #e9ecef;
+    .btn-sm {
+        border-radius: 20px;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+        line-height: 1.2;
     }
 
     .card-body {
         padding: 1rem;
+        background-color: transparent;
     }
 
-    .btn:hover {
-        opacity: 0.9;
+    .row.g-4 {
+        row-gap: 1.5rem;
     }
 
-    /* Responsive Design */
     @media (max-width: 768px) {
-        .navbar-brand {
-            font-size: 1.5rem;
-        }
-
         h2 {
             font-size: 1.5rem;
         }
-    }
 
-    .dropdown-menu {
-        background-color: #222;
-        border-radius: 10px;
-    }
-
-    .dropdown-item {
-        color: white;
-    }
-
-    .dropdown-item:hover {
-        background-color: #e50914;
-        color: black;
-    }
-
-    #title::placeholder {
-        color: #b3b3b3;
-        opacity: 1;
-    }
-
-    @media (max-width: 767px) {
-        .card-body {
-            padding: 1rem;
+        .card-title {
+            font-size: 0.9rem;
         }
     }
 </style>
-
 {% endblock %}

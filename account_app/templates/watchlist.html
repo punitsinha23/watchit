@@ -12,11 +12,11 @@
             {% for movie in watchlist %}
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 fade-left">
                     <div class="card shadow-lg h-100" style="background-color: rgb(37, 35, 35);">
-                        <!-- Conditional Link for Movies and Series -->
+
                         {% if movie.Type == "series" %}
-                            <a href="https://player.vidsrc.co/embed/tv/{{ movie.imdb_id }}/1/1" target="_blank">
+                            <a href="https://vidsrc.to/embed/tv/{{ movie.imdb_id }}/1/1" target="_blank">
                         {% else %}
-                            <a href="https://player.vidsrc.co/embed/movie/{{ movie.imdb_id }}" target="_blank">
+                            <a href="https://vidsrc.to/embed/movie/{{ movie.imdb_id }}" target="_blank">
                         {% endif %}
                             <img 
                                 src="{{ movie.poster }}" 

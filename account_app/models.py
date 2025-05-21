@@ -23,7 +23,6 @@ class Watchlist(models.Model):
 class PasswordResetToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     token = models.CharField(max_length=32, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)  # Track creation time
-
+    created_at = models.DateTimeField(auto_now_add=True) 
     def is_valid(self):
         return self.created_at >= now() - timedelta(hours=24)  
