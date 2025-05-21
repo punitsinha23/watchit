@@ -29,7 +29,7 @@ def signup_view(request):
     if request.method == "POST":
         form = myform(request.POST)
 
-        # Check if email already exists BEFORE form validation
+       
         email = request.POST.get("email")
         if User.objects.filter(email=email).exists():
             messages.error(request, "User with this email already exists.")
@@ -37,13 +37,13 @@ def signup_view(request):
 
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False  # User will be inactive until verified
+            user.is_active = False 
             user.save()
             messages.success(request, "Sign-up successful. Please verify your email.")
-            return redirect(reverse('verify'))  # Redirect to email verification page
+            return redirect(reverse('verify')) 
 
     else:
-        form = myform()  # Empty form for GET request
+        form = myform() 
 
     return render(request, 'signup.html', {'form': form})
 
@@ -215,12 +215,12 @@ def request_password_reset(request):
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
-            user = User.objects.filter(email=email).first()  # Use `.filter().first()` to avoid exceptions
+            user = User.objects.filter(email=email).first() 
             
             if user:
                 token = get_random_string(length=32)
 
-                # Save or update the token in the database
+              
                 PasswordResetToken.objects.update_or_create(user=user, defaults={'token': token})
 
                 reset_link = request.build_absolute_uri(reverse('reset_password', args=[token]))
@@ -246,9 +246,9 @@ def request_password_reset(request):
 def reset_password(request, token):
     reset_token = get_object_or_404(PasswordResetToken, token=token)
 
-    # Check if token is expired (e.g., valid for 24 hours)
+    
     if reset_token.created_at < now() - timedelta(hours=24):
-        reset_token.delete()  # Remove expired token
+        reset_token.delete()  
         messages.error(request, "This password reset link has expired.")
         return redirect("login")
 
@@ -261,7 +261,7 @@ def reset_password(request, token):
         else:
             reset_token.user.password = make_password(new_password)
             reset_token.user.save()
-            reset_token.delete()  # Delete token after successful reset
+            reset_token.delete() 
 
             messages.success(request, "Password reset successful. You can now log in.")
             return redirect("login")

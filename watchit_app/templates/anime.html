@@ -1,21 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-/* Pagination container */
 .pagination {
     display: flex;
-    justify-content: space-between; /* Align buttons to the left and right */
-    align-items: center; /* Vertically center the content */
+    justify-content: space-between; 
+    align-items: center; 
     margin-top: 20px;
     margin-bottom: 20px;
 }
 
-/* Styling the page links */
+
 .page-link {
     font-size: 16px;
     padding: 8px 15px;
     color: #fff;
-    background-color: #E50914; /* Netflix-like red */
+    background-color: #E50914;
     border: 1px solid #E50914;
     border-radius: 4px;
     margin: 0 5px;
@@ -24,26 +23,25 @@
 }
 
 .page-link:hover {
-    background-color: #B50712; /* Darker red when hovered */
+    background-color: #B50712; 
     border-color: #B50712;
 }
 
-/* Disable link when on first/last page */
+
 .page-link:disabled {
     background-color: #555;
     border-color: #555;
     cursor: not-allowed;
 }
 
-/* Styling the "current" page text */
 .current {
     font-size: 16px;
     color: #E50914;
     font-weight: bold;
-    margin: 0 auto; /* Center align the current page text */
+    margin: 0 auto;
 }
 
-/* Styling for the "First" and "Last" links */
+
 .page-link:first-child {
     border-left: none;
 }
@@ -62,10 +60,13 @@
         {% for anime in animes %}
             {% if anime.Poster != 'N/A' and anime.Poster %}
                 <div class="movie-box fade-in">
-                    <a href="https://vidsrc.dev/embed/movie/{{ anime.imdbID }}" target="_blank">
-                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}">
-                    </a>
+                    {% if anime.Type == "series" %}
+                            <a href="https://vidsrc.to/embed/tv/{{ anime.imdbID }}/1/1" target="_blank">
+                        {% else %}
+                            <a href="https://vidsrc.to/embed/movie/{{ anime.imdbID }}" target="_blank">
+                        {% endif %}
                     <div>
+                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" class="movie-poster">
                         <div class="movie-title">{{ anime.Title }}</div>
                         <div class="movie-year">{{ anime.Year }}</div>
                     </div>

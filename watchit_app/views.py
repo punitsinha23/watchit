@@ -131,6 +131,7 @@ def anime_view(request):
             data = response.json()
             if data.get("Response") == "True":
                 animes.append(data)
+    print(animes)
     
     return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes})
 

@@ -62,7 +62,7 @@
         {% for movie in movies %}
             {% if movie.Poster != 'N/A' and movie.Poster %}
                 <div class="movie-box fade-in">
-                    <a href="https://player.vidsrc.co/embed/movie/{{ movie.imdbID }}" target="_blank">
+                    <a href="https://vidsrc.to/embed/movie/{{ movie.imdbID }}" target="_blank">
                         <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
                     </a>
                     <div>
