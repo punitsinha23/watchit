@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 from decouple import config
-
+#copied repo
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
