@@ -5,3 +5,5 @@ django-vite
 requests  
 python-decouple
 psycopg2-binary
+django-allauth
+

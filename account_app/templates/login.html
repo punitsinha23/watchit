@@ -1,88 +1,71 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<style>
-    body {
-        background: url('https://i.ibb.co/gFjvq14B/nextflix.jpg') no-repeat center center fixed;
-        background-size: cover;
-    }
-    .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 120%;
-        background: rgba(0, 0, 0, 0.5); /* Dark overlay */
-    }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 30px;
-        color: white;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-        max-width: 400px;
-        width: 100%;
-    }
-    .form-control {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-    }
-    .form-control:focus {
-        background: rgba(255, 255, 255, 0.3);
-        color: white;
-        border: none;
-        box-shadow: none;
-    }
-    label {
-        font-weight: bold;
-    }
-    .btn-custom {
-        background: #ff4a4a;
-        border: none;
-        color: white;
-        transition: 0.3s;
-    }
-    .btn-custom:hover {
-        background: #ff3333;
-    }
-</style>
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-header">Sign In</h1>
 
-<div class="overlay"></div>
-<div class="d-flex justify-content-center align-items-center vh-100 position-relative">
-    <div class="glass-card text-center">
-        <h2 class="mb-4" style="color: #ff4a4a; font-weight: bold;">Login</h2>
-
-        <form method="post" novalidate>
+        <form method="post" class="auth-form" novalidate>
             {% csrf_token %}
 
-            <div class="mb-3">
-                <label for="id_email" class="form-label">Valid Email</label>
-                <input type="email" class="form-control" id="id_email" name="email" value="{{ form.email.value|default:'' }}" required>
+            <div class="form-group">
+                <label for="id_email" class="form-label">Email</label>
+                <input type="email" class="auth-input" id="id_email" name="email"
+                    value="{{ form.email.value|default:'' }}" placeholder="Email" required>
                 {% if form.email.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.email.errors|striptags }}</div>
+                <ul class="auth-error-list">
+                    {% for error in form.email.errors %}
+                    <li>{{ error|striptags }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="id_password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="id_password" name="password" required>
+                <input type="password" class="auth-input" id="id_password" name="password" placeholder="Password"
+                    required>
                 {% if form.password.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.password.errors|striptags }}</div>
+                <ul class="auth-error-list">
+                    {% for error in form.password.errors %}
+                    <li>{{ error|striptags }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-custom w-100 mt-3">Login</button>
+            <button type="submit" class="auth-btn">Sign In</button>
 
-            <p class="mt-3 mb-0" style="font-size: 0.9rem;">Don't have an account? 
-                <a href="{% url 'signup' %}" style="color: #ff4a4a; font-weight: bold;">Create one here!</a>
-            </p>
-            <p class="mt-2 mb-0" style="font-size: 0.9rem;">Forgot Password? 
-                <a href="{% url 'password_reset_request' %}" style="color: #ff4a4a; font-weight: bold;">Reset password</a>
-            </p>
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            {% load socialaccount %}
+            <a href="{% provider_login_url 'google' %}" class="btn-google">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                    alt="Google Logo">
+                Continue with Google
+            </a>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="form-check">
+                    <input class="form-check-input bg-dark border-secondary" type="checkbox" id="rememberMe">
+                    <label class="form-check-label text-secondary small" for="rememberMe" style="cursor: pointer;">
+                        Remember me
+                    </label>
+                </div>
+                <a href="{% url 'password_reset_request' %}" class="text-secondary small">Need help?</a>
+            </div>
+
+            <div class="auth-footer">
+                New to WATCHIT?
+                <a href="{% url 'signup' %}" class="auth-footer-link">Sign up now.</a>
+            </div>
+
+            <div class="auth-tip">
+                This page is protected by Google reCAPTCHA to ensure you're not a bot.
+            </div>
         </form>
     </div>
 </div>
-
 {% endblock %}

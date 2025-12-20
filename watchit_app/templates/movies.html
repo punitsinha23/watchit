@@ -1,94 +1,83 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<style>
-/* Pagination container */
-.pagination {
-    display: flex;
-    justify-content: space-between; /* Align buttons to the left and right */
-    align-items: center; /* Vertically center the content */
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
+<div class="container-fluid page-container mb-5">
+    <h2 class="section-title">TOP MOVIES</h2>
 
-/* Styling the page links */
-.page-link {
-    font-size: 16px;
-    padding: 8px 15px;
-    color: #fff;
-    background-color: #E50914; /* Netflix-like red */
-    border: 1px solid #E50914;
-    border-radius: 4px;
-    margin: 0 5px;
-    text-decoration: none;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.page-link:hover {
-    background-color: #B50712; /* Darker red when hovered */
-    border-color: #B50712;
-}
-
-/* Disable link when on first/last page */
-.page-link:disabled {
-    background-color: #555;
-    border-color: #555;
-    cursor: not-allowed;
-}
-
-/* Styling the "current" page text */
-.current {
-    font-size: 16px;
-    color: #E50914;
-    font-weight: bold;
-    margin: 0 auto; /* Center align the current page text */
-}
-
-/* Styling for the "First" and "Last" links */
-.page-link:first-child {
-    border-left: none;
-}
-
-.page-link:last-child {
-    border-right: none;
-}
-</style>
-
-<div class="container mt-3">
-    <br>
-    <h2 class="text-center mb-4"><b>TOP MOVIES</b></h2>
-    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
-    <br>
-    <div class="d-flex flex-wrap justify-content-center gap-2">
-        {% for movie in movies %}
+    <div class="carousel-container mt-4">
+        <div class="carousel-scroll two-rows" id="movies-scroll">
+            {% for movie in movies %}
             {% if movie.Poster != 'N/A' and movie.Poster %}
-                <div class="movie-box fade-in">
-                    <a href="https://vidsrc.to/embed/movie/{{ movie.imdbID }}" target="_blank">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
-                    </a>
-                    <div>
-                        <div class="movie-title">{{ movie.Title }}</div>
-                        <div class="movie-year">{{ movie.Year }}</div>
+            <div class="media-card fade-in visible">
+                <a href="{% url 'detail' movie.imdbID %}">
+                    <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy">
+                    <div class="media-info">
+                        <div class="media-title">{{ movie.Title }}</div>
+                        <div class="media-meta">{{ movie.Year }}</div>
                     </div>
-                </div>
+                </a>
+            </div>
             {% endif %}
-        {% endfor %}
+            {% endfor %}
+            <div id="loader" class="d-flex align-items-center justify-content-center"
+                style="min-width: 100px; display: none !important;">
+                <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="pagination">
-    {% if page_obj.has_previous %}
-        <a class="page-link" href="?page=1">&laquo; First</a>
-        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-    {% endif %}
+<script>
+    let currentPage = 1;
+    let isLoading = false;
+    let hasNext = true;
+    const scrollContainer = document.getElementById('movies-scroll');
+    const loader = document.getElementById('loader');
 
-    <span class="current">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-    </span>
+    scrollContainer.addEventListener('scroll', () => {
+        if (isLoading || !hasNext) return;
 
-    {% if page_obj.has_next %}
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
-    {% endif %}
-</div>
+        if (scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 200) {
+            loadMoreMovies();
+        }
+    });
 
+    async function loadMoreMovies() {
+        isLoading = true;
+        loader.style.setProperty('display', 'flex', 'important');
+        currentPage++;
+
+        try {
+            const response = await fetch(`/fetch-more/?category=movies&page=${currentPage}`);
+            const data = await response.json();
+
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(movie => {
+                    const card = document.createElement('div');
+                    card.className = 'media-card fade-in visible';
+                    card.innerHTML = `
+                        <a href="/watch/${movie.imdbID}/">
+                            <img src="${movie.Poster}" alt="${movie.Title}" loading="lazy">
+                            <div class="media-info">
+                                <div class="media-title">${movie.Title}</div>
+                                <div class="media-meta">${movie.Year}</div>
+                            </div>
+                        </a>
+                    `;
+                    scrollContainer.insertBefore(card, loader);
+                });
+            }
+
+            hasNext = data.has_next;
+        } catch (error) {
+            console.error('Error fetching more movies:', error);
+        } finally {
+            isLoading = false;
+            loader.style.setProperty('display', 'none', 'important');
+        }
+    }
+</script>
 {% endblock %}

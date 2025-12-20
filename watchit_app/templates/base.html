@@ -1,447 +1,366 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>WATCHIT</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lilita+One&family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600&family=Oswald:wght@200..700&display=swap"
+        rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
 
-
-    <style>
-        
-        body {
-            background-color: #141414; /* Netflix-like dark background */
-            color: #fff;
-            font-family: 'Helvetica Neue', Arial, sans-serif; /* Netflix font style */
-        }
-
-        /* Navbar */
-        .navbar {
-            background-color: #000; /* Dark navbar */
-            border-bottom: 1px solid #333;
-        
-        }
-
-        .navbar-brand {
-            color: #e50914 !important; /* Netflix red */
-            font-weight: bold;
-            font-size: 1.75rem;
-            font-family: "Bebas Neue", serif;
-            font-weight: 400;
-            font-style: normal;
-
-        }
-
-        .nav-link {
-            color: #fff !important;
-            margin-right: 15px;
-            transition: color 0.3s;
-            font-size: 1rem;
-        }
-
-        .nav-link:hover {
-            color: #e50914 !important;
-        }
-
-        .btn-outline-success {
-            border-color: #e50914;
-            color: #e50914;
-            font-size: 1rem;
-        }
-
-        .btn-outline-success:hover {
-            background-color: #e50914;
-            color: #fff;
-        }
-
-        /* Movie Boxes */
-        .movie-box {
-            width: 150px;
-            background: #141414;
-            padding: 10px;
-            border-radius: 8px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-align: center;
-        }
-
-        .movie-box:hover {
-            transform: scale(1.02);
-            
-        }
-
-        .movie-box img {
-            border-radius: 8px;
-            width: 100%;
-            height: auto;
-            transition: transform 0.3s ease;
-        }
-
-        .movie-box:hover img {
-            transform: scale(1.1); /* Zoom in image on hover */
-        }
-
-        .movie-title {
-            color: #fff;
-            font-size: 11px;
-            font-weight: bold;
-            margin: 10px 0 5px;
-        }
-
-        .movie-year {
-            color: #999;
-            font-size: 11px;
-        }
-
-        /* Headings */
-        h2 {
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        /* Footer */
-        footer {
-            background-color: #141414;
-            color: #666;
-            text-align: center;
-            padding: 20px;
-            margin-top: 20px;
-            font-size: 1rem;
-        }
-
-        @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1.5rem;
-            }
-        }
-        
-
-        .search-box {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 250px;
-
-        .search-box__icon {
-            position: absolute;
-            left: 10px; /* Position the icon at the left */
-            color: white;
-            z-index: 10;
-            cursor: pointer;
-            transition: ease transform 1s;
-            transition-delay: 50ms;
-        }
-
-        .search-box__input {
-            outline: none;
-            background: rgba(0, 0, 0, 0.85);
-            border: solid 1px rgba(255, 255, 255, 0.85);
-            box-sizing: border-box;
-            padding: 7px 14px 7px 40px;
-            width: 0%;
-            font-size: 13px;
-            color: #fff;
-            opacity: 0;
-            transition: ease width 1s, ease opacity 1s;
-        }
-
-        &.active {
-            .search-box__icon {
-            transform: translateX(210px); /* Push the icon to the right */
-            }
-            .search-box__input {
-            opacity: 1;
-            width: 100%;
-            }
-        }
-        }
-
-
-        /* Fade-in animation */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(25px);
-            transition: opacity 2s ease-out, transform 1s ease-out;
-        }
-
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-         /* Hero Section */
-         .hero-section {
-    height: 80vh; /* Set default height to 80% of the viewport height */
-    background: url('https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg'); /* Placeholder image */
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2rem 1rem;
-    position: relative; /* Added position relative for better control over the content */
-}
-
-@media (max-width: 768px) {
-    .hero-section {
-        height: 40vh; /* Reduce height for medium and small screens */
-    }
-}
-
-@media (max-width: 576px) {
-    .hero-section {
-        height: 30vh; /* Further reduce height for very small screens */
-    }
-
-    .hero-content {
-        bottom: 15%; /* Adjust bottom positioning for smaller screens */
-        font-size: 14px; /* Optional: Reduce font size for small devices */
-    }
-}
-
-.hero-content {
-    position: absolute;
-    bottom: 20%; /* Default bottom positioning */
-    left: 50%;
-    transform: translateX(-50%);
-    color: white;
-    padding: 0 1rem;
-    z-index: 2; /* Ensure content is above the background */
-    font-size: 18px; /* Default font size */
-    font-weight: bold; /* Optional: Make content stand out */
-}
-
-@media (max-width: 576px) {
-    .hero-content {
-        font-size: 14px; /* Adjust font size for small devices */
-        bottom: 10%; /* Adjust bottom positioning further for mobile */
-    }
-}
-
-    </style>
-  </head>
-  <body>
+<body>
     <div>
-      <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'base' %}"><strong>WATCHIT</strong></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="search-box d-flex align-items-center">
-                    <i class="fa fa-search search-box__icon"></i>
-                    <form class="search-bar" role="search" method="POST" action="{% url 'dashboard' %}">
-                      {% csrf_token %}
-                      <input 
-                        class="search-box__input form-control" 
-                        type="text" 
-                        name="title" 
-                        id="title" 
-                        placeholder="Search" 
-                        aria-label="Search">
-                    </form>
-                  </div>
-                  
-                  
-                <ul class="navbar-nav ms-auto"> 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'movies'%}"><strong>Movies</strong></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'anime'%}"><strong>Animes</strong></a>                        
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about'%}"><strong>About</strong></a>
-                    </li>
-                    {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                          <img style="height: 30px; width: 30px; border-radius: 100px; margin-right: 10px;" src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg" alt="Profile Picture" class="profile-img"><strong>{{ request.user.username }}</strong>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                          <li><a class="dropdown-item" href="#">View Profile</a></li>
-                          <li><a class="dropdown-item" href="#">Edit Profile</a></li>
-                          <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-                        </ul>
-                      </li>
-                    {% endif %}
-                    {% if not user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'signup'%}"><strong>Signup</strong></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login'%}"><strong>Login</strong></a>
-                    </li>
-                    {% endif %}
-                </ul>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{% url 'base' %}">WATCHIT</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <div class="search-box ms-3">
+                        <i class="fa fa-search search-icon"></i>
+                        <form class="search-bar" role="search" method="POST"
+                            action="{% if user.is_authenticated %}{% url 'user_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}">
+                            {% csrf_token %}
+                            <input class="search-input" type="text" name="title" id="title"
+                                placeholder="Titles, people, genres" aria-label="Search">
+                        </form>
+                    </div>
+
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'movies'%}">Movies</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'shows'%}">Shows</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'anime'%}">Anime</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'about'%}">About</a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        <li class="nav-item dropdown ms-3">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
+                                role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img style="height: 32px; width: 32px; border-radius: 4px; margin-right: 10px;"
+                                    src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
+                                    alt="Profile" class="profile-img">
+                                {{ display_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary"
+                                aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item text-white" href="{% url 'user' %}"><i
+                                            class="fas fa-user-circle me-2"></i>View Profile</a></li>
+                                <li><a class="dropdown-item text-white" href="{% url 'watchlist' %}"><i
+                                            class="fas fa-list-ul me-2"></i>My Watchlist</a></li>
+                                <li>
+                                    <hr class="dropdown-divider bg-secondary">
+                                </li>
+                                <li><a class="dropdown-item text-white" href="{% url 'logout' %}"><i
+                                            class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        {% if not user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-danger text-white px-3 py-1 ms-2"
+                                style="background-color: #E50914; border: none;" href="{% url 'signup'%}">Sign Up</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login'%}">Login</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
+            {% block nav %}
+            {% endblock %}
+        </nav>
+        {% if messages %}
+        <div class="container" style="margin-top: 80px;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
         </div>
-        {% block nav %}
-        {% endblock %}
-      </nav>
-      {% if messages %}
-      <div class="container mt-3">
-          {% for message in messages %}
-              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                  {{ message }}
-              </div>
-          {% endfor %}
-      </div>
-      {% endif %}
+        {% endif %}
     </div>
 
-    {% load static %}
     {% block content %}
     <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
-          <!-- Hero Item 1 -->
-          <div class="carousel-item active">
-            <a href="https://vidsrc.to/embed/tv/tt0903747" target="_blank" rel="noopener noreferrer">
-            <div class="hero-section">
-              <div class="hero-content">
-              </div>
-            </a>
-            </div>
-          </div>
-      
-          <!-- Hero Item 2 -->
-          <div class="carousel-item">
-            <a href="https://vidsrc.to/embed/tv/tt4574334" target="_blank" rel="noopener noreferrer">
-            <div class="hero-section" style="background: url('https://mir-s3-cdn-cf.behance.net/project_modules/fs/415b2e58808319.5bf89df796f80.jpg'); background-size: cover;">
-              <div class="hero-content">
-              </div>
-        
-            </div>
-        </a>
-          </div>
-      
-          <!-- Hero Item 3 -->
-          <div class="carousel-item">
-            <a href="https://vidsrc.o/embed/tv/tt3032476" target="_blank" rel="noopener noreferrer">
-              <div class="hero-section" style="background: url('https://wallpaperaccess.com/full/1091809.png');  background-size: cover;">
-                <div class="hero-content">
+            <!-- Hero Item 1 -->
+            <div class="carousel-item active">
+                <div class="hero-wrapper">
+                    <div class="hero-slide"
+                        style="background-image: url('https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg');">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content fade-in">
+                            <h1 class="hero-title">Breaking Bad</h1>
+                            <p class="hero-description">A high school chemistry teacher diagnosed with inoperable lung
+                                cancer turns to manufacturing and selling methamphetamine in order to secure his
+                                family's future.</p>
+                            <a href="{% url 'detail' 'tt0903747' %}" class="btn-hero">
+                                <i class="fas fa-play"></i> Watch Now
+                            </a>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </a>
-          </div>
-          
-      
-        <!-- Carousel Controls -->
+            </div>
+
+            <!-- Hero Item 2 -->
+            <div class="carousel-item">
+                <div class="hero-wrapper">
+                    <div class="hero-slide"
+                        style="background-image: url('https://mir-s3-cdn-cf.behance.net/project_modules/fs/415b2e58808319.5bf89df796f80.jpg');">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <h1 class="hero-title">Stranger Things</h1>
+                            <p class="hero-description">When a young boy disappears, his mother, a police chief and his
+                                friends must confront terrifying supernatural forces in order to get him back.</p>
+                            <a href="{% url 'detail' 'tt4574334' %}" class="btn-hero">
+                                <i class="fas fa-play"></i> Watch Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Item 3 -->
+            <div class="carousel-item">
+                <div class="hero-wrapper">
+                    <div class="hero-slide"
+                        style="background-image: url('https://wallpaperaccess.com/full/1091809.png');">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <h1 class="hero-title">Rick and Morty</h1>
+                            <p class="hero-description">An animated series that follows the exploits of a super
+                                scientist and his not-so-bright grandson.</p>
+                            <a href="{% url 'detail' 'tt3032476' %}" class="btn-hero">
+                                <i class="fas fa-play"></i> Watch Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
         </button>
         <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
         </button>
-      </div>
-      
-      
-    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
-    <br>
+    </div>
 
-    <div class="container mt-3">
-        <h2 class="text-center mb-4"><b>POPULAR MOVIES</b></h2>
-        <div class="d-flex flex-wrap justify-content-center gap-2">
-            {% for movie in movies %}
-                <div class="movie-box fade-in">
-                    <a href="https://vidsrc.to/embed/movie/{{movie.imdbID}}" target="_blank">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
+    <div class="container-fluid mt-5">
+        <h2 class="section-title">Popular Movies</h2>
+        <div class="carousel-container">
+            <div class="carousel-scroll two-rows" id="home-movies-scroll">
+                {% for movie in movies %}
+                <div class="media-card fade-in">
+                    <a href="{% url 'detail' movie.imdbID %}">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy">
+                        <div class="media-info">
+                            <div class="media-title">{{ movie.Title }}</div>
+                            <div class="media-meta">{{ movie.Year }}</div>
+                        </div>
                     </a>
-                    <div>
-                        <div class="movie-title">{{ movie.Title }}</div>
-                        <div class="movie-year">{{ movie.Year }}</div>
-                    </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 
-    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
-    <br>
-
-    <div class="container mt-4">
-        <h2 class="text-center mb-4"><b>POPULAR SHOWS</b></h2>
-        <div class="d-flex flex-wrap justify-content-center gap-2">
-            {% for show in shows %}
-                <div class="movie-box fade-in">
-                    <a href="https://vidsrc.to/embed/tv/{{show.imdbID}}/1/1" target="_blank">
-                        <img src="{{ show.Poster }}" alt="{{ show.Title }}">
+    <div class="container-fluid mt-4">
+        <h2 class="section-title">Popular Shows</h2>
+        <div class="carousel-container">
+            <div class="carousel-scroll two-rows" id="home-shows-scroll">
+                {% for show in shows %}
+                <div class="media-card fade-in">
+                    <a href="{% url 'detail' show.imdbID %}">
+                        <img src="{{ show.Poster }}" alt="{{ show.Title }}" loading="lazy">
+                        <div class="media-info">
+                            <div class="media-title">{{ show.Title }}</div>
+                            <div class="media-meta">{{ show.Year }}</div>
+                        </div>
                     </a>
-                    <div>
-                        <div class="movie-title">{{ show.Title }}</div>
-                        <div class="movie-year">{{ show.Year }}</div>
-                    </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 
-
-
-    <hr style="border: 1px solid white; width: 90%; margin: 20px auto;">
-    <br>
-
-    <div class="container mt-4">
-        <h2 class="text-center mb-4"><b>POPULAR ANIMES</b></h2>
-        <div class="d-flex flex-wrap justify-content-center gap-2">
-            {% for anime in Animes %}
-                <div class="movie-box fade-in">
-                    <a href="ttps://vidsrc.to/embed/tv/{{anime.imdbID}}/1/1" target="_blank">
-                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}">
+    <div class="container-fluid mt-4 mb-5">
+        <h2 class="section-title">Popular Anime</h2>
+        <div class="carousel-container">
+            <div class="carousel-scroll two-rows" id="home-anime-scroll">
+                {% for anime in Animes %}
+                <div class="media-card fade-in">
+                    <a href="{% url 'detail' anime.imdbID %}">
+                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy">
+                        <div class="media-info">
+                            <div class="media-title">{{ anime.Title }}</div>
+                            <div class="media-meta">{{ anime.Year }}</div>
+                        </div>
                     </a>
-                    <div>
-                        <div class="movie-title">{{ anime.Title }}</div>
-                        <div class="movie-year">{{ anime.Year }}</div>
-                    </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
-   
+
     {% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <footer class="main-footer">
+        <div class="mb-3">
+            <a href="#" class="footer-link">Audio Description</a>
+            <a href="#" class="footer-link">Help Center</a>
+            <a href="#" class="footer-link">Gift Cards</a>
+            <a href="#" class="footer-link">Media Center</a>
+            <a href="#" class="footer-link">Investor Relations</a>
+            <a href="#" class="footer-link">Jobs</a>
+            <a href="#" class="footer-link">Terms of Use</a>
+            <a href="#" class="footer-link">Privacy</a>
+            <a href="#" class="footer-link">Legal Notices</a>
+            <a href="#" class="footer-link">Cookie Preferences</a>
+            <a href="#" class="footer-link">Corporate Information</a>
+            <a href="#" class="footer-link">Contact Us</a>
+        </div>
+        <div>
+            © 2024 WATCHIT. All Rights Reserved.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
 
     <script>
-        var searchIcon = document.querySelector(".search-box__icon");
-        var searchBox = document.querySelector(".search-box");
-
-        searchIcon.addEventListener("click", () => {
-        searchBox.classList.toggle("active");
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
         });
 
+        // Search Toggle
+        const searchIcon = document.querySelector(".search-icon");
+        const searchBox = document.querySelector(".search-box");
+
+        if (searchIcon) {
+            searchIcon.addEventListener("click", () => {
+                searchBox.classList.toggle("active");
+                if (searchBox.classList.contains('active')) {
+                    document.querySelector('.search-input').focus();
+                }
+            });
+        }
+
+        // Fade In Animation
         document.addEventListener("DOMContentLoaded", function () {
-            const fadeElements = document.querySelectorAll('.fade-in');  // Get all movie/show boxes with the fade-in class
-            
+            const fadeElements = document.querySelectorAll('.fade-in');
+
             const observer = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        // Add 'visible' class when the element is in view
                         entry.target.classList.add('visible');
-                        observer.unobserve(entry.target); // Stop observing once it's visible
+                        observer.unobserve(entry.target);
                     }
                 });
             }, {
-                threshold: 0.1 
+                threshold: 0.1
             });
 
-            // Start observing each fade-in element
             fadeElements.forEach(element => {
                 observer.observe(element);
             });
         });
+
+        // Infinite Scroll Setup
+        function setupInfiniteScroll(containerId, category) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Add loader
+            const loader = document.createElement('div');
+            loader.id = 'loader';
+            loader.className = 'd-flex align-items-center justify-content-center';
+            loader.style.cssText = 'min-width: 100px; display: none !important;';
+            loader.innerHTML = '<div class="spinner-border text-danger" role="status"></div>';
+            container.appendChild(loader);
+
+            let page = 1;
+            let loading = false;
+            let hasMore = true;
+
+            container.addEventListener('scroll', () => {
+                if (loading || !hasMore) return;
+                if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 300) {
+                    loadMore();
+                }
+            });
+
+            async function loadMore() {
+                loading = true;
+                loader.style.setProperty('display', 'flex', 'important');
+                page++;
+
+                try {
+                    const response = await fetch(`/fetch-more/?category=${category}&page=${page}`);
+                    const data = await response.json();
+
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            const card = document.createElement('div');
+                            card.className = 'media-card fade-in visible';
+                            card.innerHTML = `
+                                <a href="/watch/${item.imdbID}/">
+                                    <img src="${item.Poster}" alt="${item.Title}" loading="lazy">
+                                    <div class="media-info">
+                                        <div class="media-title">${item.Title}</div>
+                                        <div class="media-meta">${item.Year}</div>
+                                    </div>
+                                </a>
+                            `;
+                            container.insertBefore(card, loader);
+                        });
+                    }
+                    hasMore = data.has_next;
+                } catch (err) {
+                    console.error('Lazy load error:', err);
+                } finally {
+                    loading = false;
+                    loader.style.setProperty('display', 'none', 'important');
+                }
+            }
+        }
+
+        // Initialize home scrollers
+        document.addEventListener("DOMContentLoaded", function () {
+            setupInfiniteScroll('home-movies-scroll', 'popular_movies');
+            setupInfiniteScroll('home-shows-scroll', 'home_shows');
+            setupInfiniteScroll('home-anime-scroll', 'popular_anime');
+        });
     </script>
-  </body>
+</body>
+
 </html>

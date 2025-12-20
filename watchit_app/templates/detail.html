@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4 fade-in">
+    <!-- Player Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="player-container position-relative"
+                style="padding-bottom: 56.25%; height: 0; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 35px;">
+                <iframe id="video-player" src=""
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                    allowfullscreen></iframe>
+            </div>
+
+            <!-- Series Controls -->
+            {% if movie.Type == 'series' %}
+            <div class="d-flex gap-3 align-items-center mt-3 p-3 rounded" style="background: #1f1f1f;">
+                <div class="flex-grow-1">
+                    <label class="text-secondary small mb-1">Season</label>
+                    <select id="season-select" class="form-select bg-dark text-white border-secondary">
+                        {% for i in "x"|rjust:movie.totalSeasons %}
+                        <option value="{{ forloop.counter }}">Season {{ forloop.counter }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex-grow-1">
+                    <label class="text-secondary small mb-1">Episode</label>
+                    <select id="episode-select" class="form-select bg-dark text-white border-secondary">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-10 col-xl-9">
+            <h1 class="display-5 fw-bold" style="color: #E50914;">{{ movie.Title }}</h1>
+            <div class="align-items-center d-flex gap-3 mb-3 text-secondary">
+                <span class="badge bg-secondary">{{ movie.Rated }}</span>
+                <span>{{ movie.Year }}</span>
+                <span>{{ movie.Runtime }}</span>
+                <span style="color: #46d369;"><i class="fas fa-star me-1"></i>{{ movie.imdbRating }}</span>
+            </div>
+
+            <p class="lead" style="color: #d1d1d1; font-size: 1.1rem;">{{ movie.Plot }}</p>
+
+            <div class="mt-4 text-secondary small">
+                <p><strong>Genre:</strong> <span class="text-white">{{ movie.Genre }}</span></p>
+                <p><strong>Director:</strong> <span class="text-white">{{ movie.Director }}</span></p>
+                <p><strong>Cast:</strong> <span class="text-white">{{ movie.Actors }}</span></p>
+            </div>
+        </div>
+    </div>
+
+    <hr style="border-color: #333; margin: 3rem 0;">
+
+    <!-- Recommendations -->
+    <h2 class="section-title ps-4">You Might Also Like</h2>
+    <div class="media-grid">
+        {% for rec in recommendations %}
+        <div class="media-card fade-in">
+            <a href="{% url 'detail' rec.imdbID %}">
+                <img src="{{ rec.Poster }}" alt="{{ rec.Title }}" loading="lazy">
+                <div class="media-info">
+                    <div class="media-title">{{ rec.Title }}</div>
+                    <div class="media-meta">{{ rec.Year }}</div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Episode data passed via JSON script tag to avoid syntax issues in standard JS variables -->
+<script id="episodes-data" type="application/json">
+    {{ episodes_json|safe }}
+</script>
+
+<!-- Player Logic -->
+<script>
+    const imdbId = "{{ movie.imdbID }}";
+    const type = "{{ movie.Type }}";
+    const player = document.getElementById('video-player');
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initial Load
+        if (type === 'movie') {
+            player.src = `https://vidsrc.xyz/embed/movie/${imdbId}`;
+        } else {
+            // Default to S1 E1 for series
+            player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/1/1`;
+
+            // Series Logic
+            const seasonSelect = document.getElementById('season-select');
+            const episodeSelect = document.getElementById('episode-select');
+
+            // Populate initial episodes from JSON script tag
+            try {
+                const episodesData = JSON.parse(document.getElementById('episodes-data').textContent);
+                if (episodesData && episodesData.length > 0) {
+                    populateEpisodes(episodesData);
+                }
+            } catch (e) {
+                console.error("Error parsing episode data:", e);
+            }
+
+            // Season Change Listener
+            seasonSelect.addEventListener('change', function () {
+                const season = this.value;
+                fetch(`https://www.omdbapi.com/?apikey={{ api_key }}&i=${imdbId}&Season=${season}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.Episodes) {
+                            populateEpisodes(data.Episodes);
+                            // Auto-play first episode of new season
+                            player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/${season}/1`;
+                        }
+                    });
+            });
+
+            // Episode Change Listener
+            episodeSelect.addEventListener('change', function () {
+                const season = seasonSelect.value;
+                const episode = this.value;
+                player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/${season}/${episode}`;
+            });
+
+            function populateEpisodes(episodes) {
+                episodeSelect.innerHTML = '';
+                episodes.forEach(ep => {
+                    const opt = document.createElement('option');
+                    opt.value = ep.Episode;
+                    opt.text = `Ep ${ep.Episode}: ${ep.Title}`;
+                    episodeSelect.appendChild(opt);
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

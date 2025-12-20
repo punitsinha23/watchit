@@ -1,101 +1,87 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<style>
-    body {
-        background: url('https://i.ibb.co/gFjvq14B/nextflix.jpg') no-repeat center center fixed;
-        background-size: cover;
-    }
-    .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 115%;
-        background: rgba(0, 0, 0, 0.5); 
-    }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 30px;
-        color: white;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-        max-width: 400px;
-        width: 150%;
-    }
-    .form-control {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-    }
-    .form-control:focus {
-        background: rgba(255, 255, 255, 0.3);
-        color: white;
-        border: none;
-        box-shadow: none;
-    }
-    label {
-        font-weight: bold;
-    }
-    .btn-custom {
-        background: #ff4a4a;
-        border: none;
-        color: white;
-        transition: 0.3s;
-    }
-    .btn-custom:hover {
-        background: #ff3333;
-    }
-</style>
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-header">Sign Up</h1>
 
-<div class="overlay"></div>
-<div class="d-flex justify-content-center align-items-center vh-100 position-relative">
-    <div class="glass-card text-center">
-        <h2 class="mb-4" style="color: #ff4a4a; font-weight: bold;">Sign Up</h2>
-
-        <form method="post" novalidate>
+        <form method="post" class="auth-form" novalidate>
             {% csrf_token %}
 
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="id_username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="id_username" name="username" value="{{ form.username.value|default:'' }}" required>
+                <input type="text" class="auth-input" id="id_username" name="username"
+                    value="{{ form.username.value|default:'' }}" placeholder="Username" required>
                 {% if form.username.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.username.errors|striptags }}</div>
+                <ul class="auth-error-list">
+                    {% for error in form.username.errors %}
+                    <li>{{ error|striptags }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
-            <div class="mb-3">
-                <label for="id_email" class="form-label">Valid Email</label>
-                <input type="email" class="form-control" id="id_email" name="email" value="{{ form.email.value|default:'' }}" required>
+            <div class="form-group">
+                <label for="id_email" class="form-label">Email</label>
+                <input type="email" class="auth-input" id="id_email" name="email"
+                    value="{{ form.email.value|default:'' }}" placeholder="Email" required>
                 {% if form.email.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.email.errors|striptags }}</div>
+                <ul class="auth-error-list">
+                    {% for error in form.email.errors %}
+                    <li>{{ error|striptags }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="id_password1" class="form-label">Password</label>
-                <input type="password" class="form-control" id="id_password1" name="password1" required>
+                <input type="password" class="auth-input" id="id_password1" name="password1" placeholder="Password"
+                    required>
                 {% if form.password1.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.password1.errors|striptags }}</div>
+                <ul class="auth-error-list">
+                    {% for error in form.password1.errors %}
+                    <li>{{ error|striptags }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="id_password2" class="form-label">Confirm Password</label>
-                <input type="password" class="form-control" id="id_password2" name="password2" required>
+                <input type="password" class="auth-input" id="id_password2" name="password2"
+                    placeholder="Confirm Password" required>
                 {% if form.password2.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.password2.errors|striptags }}</div>
+                <ul class="auth-error-list">
+                    {% for error in form.password2.errors %}
+                    <li>{{ error|striptags }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-custom w-100 mt-3">Sign Up</button>
+            <button type="submit" class="auth-btn">Sign Up</button>
 
-            <p class="mt-3 mb-0" style="font-size: 0.9rem;">Already have an account? 
-                <a href="{% url 'login' %}" style="color: #ff4a4a; font-weight: bold;">Login here</a>
-            </p>
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            {% load socialaccount %}
+            <a href="{% provider_login_url 'google' %}" class="btn-google">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                    alt="Google Logo">
+                Sign up with Google
+            </a>
+
+            <div class="auth-footer">
+                Already have an account?
+                <a href="{% url 'login' %}" class="auth-footer-link">Sign in now.</a>
+            </div>
+
+            <div class="auth-tip">
+                By signing up, you agree to our Terms of Use and Privacy Policy.
+            </div>
         </form>
     </div>
 </div>
-
 {% endblock %}

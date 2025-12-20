@@ -23,7 +23,9 @@ from datetime import timedelta
 
 
 
-api_key = '593db72e'
+from decouple import config
+
+api_key = config('OMDB_API_KEY', default='24a15e19')
 
 def signup_view(request):
     if request.method == "POST":
@@ -110,20 +112,17 @@ def user(request):
         if response.status_code == 200:
             data = response.json()
             if data.get("Response") == "True":
-                movies.append(data)  
-   
+                movies.append(data)
+
     context = {
-        'username': username, 
         'movies': movies
     }
     
     return render(request, 'user.html', context)
 
 
+@login_required
 def search(request):
-    if not request.user.is_authenticated:
-        return redirect('signup') 
-    username = request.user.username
     movie_data = None
     error = None
     
@@ -157,7 +156,7 @@ def search(request):
             movie_title = request.POST.get('title')
             if not movie_title:
                 error = "Please enter a movie title."
-                return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error, 'username': username})
+                return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error})
 
             try:
                 api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"
@@ -173,11 +172,10 @@ def search(request):
             except Exception as e:
                 error = f"An error occurred: {str(e)}"
 
-    return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error, 'username': username})
+    return render(request, 'user_dashboard.html', {'movie_data': movie_data, 'error': error})
 
 @login_required
 def watchlist_view(request):
-    username = request.user.username
 
     if request.method == "POST" and 'remove_from_watchlist' in request.POST:
         imdb_id = request.POST.get('imdb_id')
@@ -185,7 +183,7 @@ def watchlist_view(request):
         messages.success(request, "Movie removed from your watchlist.")
 
     watchlist = Watchlist.objects.filter(user=request.user)
-    return render(request, 'watchlist.html', {'watchlist': watchlist, 'username': username})
+    return render(request, 'watchlist.html', {'watchlist': watchlist})
 
 
 def verify_email(request, uidb64, token):
