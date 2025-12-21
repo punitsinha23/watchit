@@ -1,6 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
+<<<<<<< HEAD
 import uuid
+=======
+from django.utils import timezone
+from datetime import timedelta
+from django.utils.timezone import now
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
 
 class Watchlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -11,6 +17,7 @@ class Watchlist(models.Model):
     added_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+<<<<<<< HEAD
         unique_together = ('user', 'imdb_id')
         ordering = ['-added_on']
 
@@ -26,3 +33,16 @@ class PasswordResetToken(models.Model):
 
     def __str__(self):
         return f"Reset token for {self.user.username}"
+=======
+        verbose_name = 'Watchlist'
+        verbose_name_plural = 'Watchlists'
+        unique_together = ['user', 'imdb_id']  
+
+
+class PasswordResetToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=32, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True) 
+    def is_valid(self):
+        return self.created_at >= now() - timedelta(hours=24)  
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163

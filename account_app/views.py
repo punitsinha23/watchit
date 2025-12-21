@@ -20,7 +20,10 @@ from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from datetime import timedelta
+<<<<<<< HEAD
 
+=======
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
 
 
 from decouple import config
@@ -112,8 +115,13 @@ def user(request):
         if response.status_code == 200:
             data = response.json()
             if data.get("Response") == "True":
+<<<<<<< HEAD
                 movies.append(data)
 
+=======
+                movies.append(data)  
+   
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
     context = {
         'movies': movies
     }
@@ -121,8 +129,15 @@ def user(request):
     return render(request, 'user.html', context)
 
 
+<<<<<<< HEAD
 @login_required
 def search(request):
+=======
+def search(request):
+    if not request.user.is_authenticated:
+        return redirect('signup') 
+    username = request.user.username
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
     movie_data = None
     error = None
     

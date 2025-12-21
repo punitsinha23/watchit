@@ -85,6 +85,7 @@ def dashboard(request):
             error = "Please enter a movie title."
             return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
 
+<<<<<<< HEAD
         # Search results are also cached by query
         cache_key = f"search_{movie_title.lower()}".replace(" ", "_")
         cached_results = cache.get(cache_key)
@@ -102,6 +103,15 @@ def dashboard(request):
                         cache.set(cache_key, movie_data, 3600) # Cache search for 1 hour
                     else:
                         error = data.get("Error", "No movies or series found matching the title.")
+=======
+        try:
+            api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"  
+            response = requests.get(api_url)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("Response") == "True":
+                    movie_data = data.get("Search", [])
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
                 else:
                     error = "Failed to fetch data from OMDb API. Please try again later."
             except Exception as e:
@@ -131,9 +141,19 @@ def anime_view(request):
 
     animes = []
     for id in page_obj.object_list:
+<<<<<<< HEAD
         data = fetch_omdb_data(imdb_id=id)
         if data:
             animes.append(data)
+=======
+        url = f"http://www.omdbapi.com/?apikey={api_key}&i={id}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("Response") == "True":
+                animes.append(data)
+    print(animes)
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
     
     return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes})
 

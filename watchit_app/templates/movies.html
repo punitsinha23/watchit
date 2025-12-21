@@ -9,12 +9,22 @@
         <div class="carousel-scroll two-rows" id="movies-scroll">
             {% for movie in movies %}
             {% if movie.Poster != 'N/A' and movie.Poster %}
+<<<<<<< HEAD
             <div class="media-card fade-in visible">
                 <a href="{% url 'detail' movie.imdbID %}">
                     <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy">
                     <div class="media-info">
                         <div class="media-title">{{ movie.Title }}</div>
                         <div class="media-meta">{{ movie.Year }}</div>
+=======
+                <div class="movie-box fade-in">
+                    <a href="https://vidsrc.to/embed/movie/{{ movie.imdbID }}" target="_blank">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
+                    </a>
+                    <div>
+                        <div class="movie-title">{{ movie.Title }}</div>
+                        <div class="movie-year">{{ movie.Year }}</div>
+>>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
                     </div>
                 </a>
             </div>
