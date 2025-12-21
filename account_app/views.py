@@ -25,7 +25,7 @@ from datetime import timedelta
 
 from decouple import config
 
-api_key = config('OMDB_API_KEY', default='24a15e19')
+api_key = '24a15e19'
 
 def signup_view(request):
     if request.method == "POST":
