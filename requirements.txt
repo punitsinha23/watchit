@@ -1,11 +1,31 @@
-Django
-gunicorn
-whitenoise
-django-vite
-requests  
-python-decouple
-psycopg2-binary
-django-allauth
-PyJWT
-cryptography
+# Core Django Framework
+Django>=4.2,<5.0
+
+# WSGI HTTP Server for production
+gunicorn>=21.2.0
+
+# Static file serving
+whitenoise>=6.6.0
+
+# Frontend integration (if using Vite)
+django-vite>=3.0.0
+
+# HTTP requests library
+requests>=2.31.0
+
+# Environment variable management
+python-decouple>=3.8
+
+# PostgreSQL database adapter
+psycopg2-binary>=2.9.9
+
+# Authentication and Social Auth
+django-allauth>=0.57.0
+
+# JWT token handling
+PyJWT>=2.8.0
+
+# Cryptography for secure operations
+cryptography>=41.0.0
+jwtauth
 
