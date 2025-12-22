@@ -18,6 +18,10 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
   <style>
+    main {
+      padding-top: 80px;
+    }
+
     /* Specific Profile Overrides only */
     .profile-header {
       background: linear-gradient(135deg, #1f1f1f 0%, #141414 100%);
@@ -51,8 +55,8 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid">
       <a class="navbar-brand" href="{% url 'base' %}">WATCHIT</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span
           class="navbar-toggler-icon"></span></button>
@@ -99,7 +103,7 @@
     {% endfor %}
   </div>
   {% endif %}
-  <main class="container py-5">
+  <main class="container-fluid">
     {% block content %}
     <section class="profile-header text-center fade-in">
       <img
@@ -107,7 +111,7 @@
         alt="Avatar" class="avatar-large shadow">
       <h1 class="display-4 fw-bold">Welcome back, <span class="text-danger">{{ display_name }}</span>!
       </h1>
-      <p class="lead text-muted">Manage your movies, anime, and watchlist all in one place.</p>
+      <small>Manage your movies, anime, and watchlist all in one place.</small>
       <div class="d-flex justify-content-center gap-3 mt-4">
         <a href="{% url 'watchlist' %}" class="btn btn-outline-danger px-4 rounded-pill">View My
           Watchlist</a>
