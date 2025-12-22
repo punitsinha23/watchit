@@ -27,9 +27,6 @@ from django.contrib.auth.decorators import login_required
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', watchit_views.base, name='base'),
-    path('movies/', watchit_views.movie_view, name='movies'),
-    path('shows/', watchit_views.shows_view, name='shows'),
-    path('anime/', watchit_views.anime_view , name='anime' ),
     path('fetch-more/', watchit_views.fetch_more_items, name='fetch_more'),
     path('about/', watchit_views.about_view , name='about'),
     path('dashboard/', watchit_views.dashboard, name='dashboard'),  
@@ -43,6 +40,8 @@ urlpatterns = [
     path("reset/<str:token>/", account_views.reset_password, name="reset_password"),
     path('account/profile/', account_views.user, name='user'),
     path('account/profile/dashboard', account_views.search, name='user_dashboard'),
+    path('account/profile/watchlist/add/', account_views.add_to_watchlist, name='add_to_watchlist'),
+    path('account/profile/watchlist/remove/<str:imdb_id>/', account_views.remove_from_watchlist, name='remove_from_watchlist'),
     path('account/profile/watchit', account_views.watchlist_view , name='watchlist'),
     
     # allauth

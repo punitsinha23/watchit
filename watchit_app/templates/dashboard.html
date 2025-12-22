@@ -2,7 +2,6 @@
 {% load static %}
 
 {% block content %}
-<<<<<<< HEAD
 {% if movie_data %}
 <br>
 <h2 class="section-title text-center">HERE YOU GO!</h2>
@@ -12,12 +11,12 @@
         <div class="media-card fade-in">
             <a href="{% url 'detail' movie.imdbID %}">
                 <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}"
-                        alt="{{ movie.Title }}" loading="lazy">
-                    <div class="media-info">
-                        <div class="media-title">{{ movie.Title }}</div>
-                        <!-- Optionally add year or type if available in movie object -->
-                    </div>
-                </a>
+                    alt="{{ movie.Title }}" loading="lazy">
+                <div class="media-info">
+                    <div class="media-title">{{ movie.Title }}</div>
+                    <!-- Optionally add year or type if available in movie object -->
+                </div>
+            </a>
         </div>
         {% endfor %}
     </div>
@@ -27,30 +26,6 @@
     <p class="text-secondary">No data available</p>
 </div>
 {% endif %}
-=======
-   {% if movie_data %}
-         <br>
-       <h2 class="text-center my-3">HERE YOU GO!</h2>  
-       <hr class="mx-auto" style="border: 1px solid white; width: 90%; margin: 20px 0;">
-       <br>
-       <div class="container">
-           <div class="row justify-content-center">
-               {% for movie in movie_data %}
-                   <div class="col-6 col-md-2 mb-4 fade-in">
-                       <div class="card h-100 d-flex flex-column" style="background-color: #141414;">
-                           {% if movie.Type == "series" %}
-                               <a href="https://vidsrc.to/embed/tv/{{movie.imdbID}}/1/1" target="_blank" class="movie-link">
-                           {% else %}
-                               <a href="https://vidsrc.to/embed/movie/{{movie.imdbID}}" target="_blank" class="movie-link">
-                           {% endif %}
-                               <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}" 
-                                    class="card-img-top" 
-                                    alt="Movie Poster" 
-                                    style="height: 250px; object-fit: cover;">
-                           </a>
-                           <h6 style="text-align: center; color: white; font-weight: bold; margin-top: 10px;">{{movie.Title}}</h6>
-                       </div>
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
 
 {% if error %}
 <div class="container mt-3 text-center">

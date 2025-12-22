@@ -1,188 +1,209 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<<<<<<< HEAD
-<div class="auth-page">
-    <div class="auth-card">
-        <h1 class="auth-header">Sign Up</h1>
+{% extends 'base.html' %}
+{% load socialaccount %}
 
-        <form method="post" class="auth-form" novalidate>
-            {% csrf_token %}
-
-            <div class="form-group">
-                <label for="id_username" class="form-label">Username</label>
-                <input type="text" class="auth-input" id="id_username" name="username"
-                    value="{{ form.username.value|default:'' }}" placeholder="Username" required>
-                {% if form.username.errors %}
-                <ul class="auth-error-list">
-                    {% for error in form.username.errors %}
-                    <li>{{ error|striptags }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="id_email" class="form-label">Email</label>
-                <input type="email" class="auth-input" id="id_email" name="email"
-                    value="{{ form.email.value|default:'' }}" placeholder="Email" required>
-                {% if form.email.errors %}
-                <ul class="auth-error-list">
-                    {% for error in form.email.errors %}
-                    <li>{{ error|striptags }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="id_password1" class="form-label">Password</label>
-                <input type="password" class="auth-input" id="id_password1" name="password1" placeholder="Password"
-                    required>
-                {% if form.password1.errors %}
-                <ul class="auth-error-list">
-                    {% for error in form.password1.errors %}
-                    <li>{{ error|striptags }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="id_password2" class="form-label">Confirm Password</label>
-                <input type="password" class="auth-input" id="id_password2" name="password2"
-                    placeholder="Confirm Password" required>
-                {% if form.password2.errors %}
-                <ul class="auth-error-list">
-                    {% for error in form.password2.errors %}
-                    <li>{{ error|striptags }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-
-            <button type="submit" class="auth-btn">Sign Up</button>
-
-            <div class="auth-divider">
-                <span>OR</span>
-            </div>
-
-            {% load socialaccount %}
-            <a href="{% provider_login_url 'google' %}" class="btn-google">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                    alt="Google Logo">
-                Sign up with Google
-            </a>
-
-            <div class="auth-footer">
-                Already have an account?
-                <a href="{% url 'login' %}" class="auth-footer-link">Sign in now.</a>
-            </div>
-
-            <div class="auth-tip">
-                By signing up, you agree to our Terms of Use and Privacy Policy.
-            </div>
-        </form>
-    </div>
-</div>
-{% endblock %}
-=======
+{% block content %}
 <style>
     body {
-        background: url('https://i.ibb.co/gFjvq14B/nextflix.jpg') no-repeat center center fixed;
+        background: url('https://w.wallhaven.cc/full/zy/wallhaven-zyxvqy.jpg') no-repeat center center fixed;
         background-size: cover;
     }
-    .overlay {
-        position: absolute;
+
+    .auth-overlay {
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        height: 115%;
-        background: rgba(0, 0, 0, 0.5); 
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: -1;
     }
+
     .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 30px;
-        color: white;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-        max-width: 400px;
-        width: 150%;
+        background: rgba(20, 20, 20, 0.85);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        max-width: 450px;
+        width: 100%;
+        margin: 80px auto;
     }
+
+    .auth-header {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 3rem;
+        letter-spacing: 1px;
+    }
+
     .form-control {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         color: white;
+        height: 50px;
+        border-radius: 8px;
     }
+
     .form-control:focus {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #e50914;
         color: white;
-        border: none;
         box-shadow: none;
     }
-    label {
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-auth {
+        background: #e50914;
+        color: white;
+        height: 50px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        border: none;
+        width: 100%;
+    }
+
+    .btn-auth:hover {
+        background: #f6121d;
+        transform: translateY(-2px);
+    }
+
+    .btn-google {
+        background: white;
+        color: #333;
+        height: 50px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        text-decoration: none;
+        transition: all 0.3s;
+        margin-top: 20px;
+    }
+
+    .btn-google:hover {
+        background: #f1f1f1;
+        color: #333;
+        transform: translateY(-2px);
+    }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .auth-divider span {
+        padding: 0 10px;
+        font-size: 0.9rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .auth-footer a {
+        color: white;
+        text-decoration: none;
         font-weight: bold;
     }
-    .btn-custom {
-        background: #ff4a4a;
-        border: none;
-        color: white;
-        transition: 0.3s;
-    }
-    .btn-custom:hover {
-        background: #ff3333;
+
+    .auth-footer a:hover {
+        text-decoration: underline;
     }
 </style>
 
-<div class="overlay"></div>
-<div class="d-flex justify-content-center align-items-center vh-100 position-relative">
-    <div class="glass-card text-center">
-        <h2 class="mb-4" style="color: #ff4a4a; font-weight: bold;">Sign Up</h2>
+<div class="auth-overlay"></div>
+
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="glass-card fade-in">
+        <h1 class="auth-header">Sign Up</h1>
 
         <form method="post" novalidate>
             {% csrf_token %}
 
             <div class="mb-3">
                 <label for="id_username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="id_username" name="username" value="{{ form.username.value|default:'' }}" required>
+                <input type="text" class="form-control" id="id_username" name="username"
+                    value="{{ form.username.value|default:'' }}" placeholder="Choose a username" required>
                 {% if form.username.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.username.errors|striptags }}</div>
+                <div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>
                 {% endif %}
             </div>
 
             <div class="mb-3">
-                <label for="id_email" class="form-label">Valid Email</label>
-                <input type="email" class="form-control" id="id_email" name="email" value="{{ form.email.value|default:'' }}" required>
+                <label for="id_email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="id_email" name="email"
+                    value="{{ form.email.value|default:'' }}" placeholder="name@example.com" required>
                 {% if form.email.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.email.errors|striptags }}</div>
+                <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
                 {% endif %}
             </div>
 
             <div class="mb-3">
                 <label for="id_password1" class="form-label">Password</label>
-                <input type="password" class="form-control" id="id_password1" name="password1" required>
+                <input type="password" class="form-control" id="id_password1" name="password1"
+                    placeholder="Create a password" required>
                 {% if form.password1.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.password1.errors|striptags }}</div>
+                <div class="text-danger small mt-1">{{ form.password1.errors|striptags }}</div>
                 {% endif %}
             </div>
 
             <div class="mb-3">
                 <label for="id_password2" class="form-label">Confirm Password</label>
-                <input type="password" class="form-control" id="id_password2" name="password2" required>
+                <input type="password" class="form-control" id="id_password2" name="password2"
+                    placeholder="Confirm your password" required>
                 {% if form.password2.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.password2.errors|striptags }}</div>
+                <div class="text-danger small mt-1">{{ form.password2.errors|striptags }}</div>
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-custom w-100 mt-3">Sign Up</button>
+            <button type="submit" class="btn-auth">Create Account</button>
 
-            <p class="mt-3 mb-0" style="font-size: 0.9rem;">Already have an account? 
-                <a href="{% url 'login' %}" style="color: #ff4a4a; font-weight: bold;">Login here</a>
-            </p>
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            <a href="{% provider_login_url 'google' %}" class="btn-google">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google"
+                    width="20">
+                Sign up with Google
+            </a>
+
+            <div class="auth-footer">
+                Already have an account? <a href="{% url 'login' %}">Sign in</a>
+            </div>
         </form>
     </div>
 </div>
-
 {% endblock %}
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163

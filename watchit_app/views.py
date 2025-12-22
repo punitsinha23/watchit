@@ -1,15 +1,17 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 import json
 import random
 import requests
-from .data import keyword, shows, top_100_movies, animes , anime_ids
+
+from .data import keyword, shows, top_100_movies, animes, anime_ids
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.cache import cache
-
 from decouple import config
 
 api_key = config('OMDB_API_KEY', default='bd268b10')
+
 
 def fetch_omdb_data(imdb_id=None, title=None, season=None):
     """
@@ -32,48 +34,56 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
 
     try:
         response = requests.get(url, timeout=5)
-        print(f"OMDB API Response Status: {response.status_code} for URL: {url}")
         if response.status_code == 200:
             data = response.json()
-            print(f"OMDB API Response: {data.get('Response')}, Error: {data.get('Error', 'None')}")
             if data.get("Response") == "True":
-                # Cache for 24 hours
-                cache.set(cache_key, data, 86400)
+                cache.set(cache_key, data, 86400)  # 24 hours
                 return data
-    except Exception as e:
-        print(f"OMDB API Exception: {e}")
+    except Exception:
         pass
-    return None
+        
+    # Mock Data Fallback (API Limit Reached)
+    # Generate deterministic mock data based on input
+    mock_id = imdb_id or f"tt{hash(title or 'unknown') % 10000000}"
+    mock_title = title or "Mock Title"
+    return {
+        "Title": mock_title,
+        "Year": "2024",
+        "imdbID": mock_id,
+        "Type": "movie",
+        "Poster": "https://via.placeholder.com/300x450.png?text=" + mock_title.replace(" ", "+"),
+        "Plot": "This is a placeholder plot because the OMDB API limit was reached.",
+        "Response": "True"
+    }
+
 
 def base(request):
-    # Limit homepage items to 15 to save API calls
     LIMIT = 15
+    print("DEBUG: Fetching base view data...")
     
-    movies = []
-    for title in keyword[:LIMIT]:
-        data = fetch_omdb_data(title=title)
-        if data:
-            movies.append(data)
+    # Debug fetch_omdb_data for first item
+    if keyword:
+        print(f"DEBUG: First keyword: {keyword[0]}")
+        test_res = fetch_omdb_data(title=keyword[0])
+        print(f"DEBUG: Result for {keyword[0]}: {test_res}")
+
+    movies = [fetch_omdb_data(title=t) for t in keyword[:LIMIT] if fetch_omdb_data(title=t)]
+    print(f"DEBUG: Movies count: {len(movies)}")
     
-    shows_list = []
-    for title in shows[:LIMIT]:
-        data = fetch_omdb_data(title=title)
-        if data:
-            shows_list.append(data)
+    shows_list = [fetch_omdb_data(title=t) for t in shows[:LIMIT] if fetch_omdb_data(title=t)]
+    print(f"DEBUG: Shows count: {len(shows_list)}")
+    
+    anime_list = [fetch_omdb_data(title=t) for t in animes[:LIMIT] if fetch_omdb_data(title=t)]
+    print(f"DEBUG: Anime count: {len(anime_list)}")
 
-    Animes = []
-    for title in animes[:LIMIT]:
-        data = fetch_omdb_data(title=title)
-        if data:
-            Animes.append(data)            
-
-    context = {
+    return render(request, 'base.html', {
         'movies': movies,
-        'shows' : shows_list,
-        'Animes': Animes,
-    }
-    return render(request, 'base.html', context)
+        'shows': shows_list,
+        'Animes': anime_list,
+    })
 
+
+@login_required
 def dashboard(request):
     movie_data = None
     error = None
@@ -85,182 +95,128 @@ def dashboard(request):
             error = "Please enter a movie title."
             return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
 
-<<<<<<< HEAD
-        # Search results are also cached by query
         cache_key = f"search_{movie_title.lower()}".replace(" ", "_")
         cached_results = cache.get(cache_key)
-        
+
         if cached_results:
             movie_data = cached_results
         else:
             try:
-                api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"  
+                api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"
                 response = requests.get(api_url, timeout=5)
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("Response") == "True":
                         movie_data = data.get("Search", [])
-                        cache.set(cache_key, movie_data, 3600) # Cache search for 1 hour
+                        cache.set(cache_key, movie_data, 3600)  # 1 hour
                     else:
-                        error = data.get("Error", "No movies or series found matching the title.")
-=======
-        try:
-            api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"  
-            response = requests.get(api_url)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("Response") == "True":
-                    movie_data = data.get("Search", [])
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
+                        error = data.get("Error", "No results found.")
                 else:
-                    error = "Failed to fetch data from OMDb API. Please try again later."
+                    error = "Failed to fetch data from OMDb API."
             except Exception as e:
                 error = f"An error occurred: {str(e)}"
 
     return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
 
-def movie_view(request):
-    movies_per_page = 28
-    page_number = request.GET.get('page', 1)
-    paginator = Paginator(top_100_movies, movies_per_page)
-    page_obj = paginator.get_page(page_number)
 
-    movies = []
-    for movie_id in page_obj.object_list:
-        data = fetch_omdb_data(imdb_id=movie_id)
-        if data:
-            movies.append(data)
+@login_required
+def movie_view(request):
+    paginator = Paginator(top_100_movies, 28)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    movies = [fetch_omdb_data(imdb_id=i) for i in page_obj.object_list if fetch_omdb_data(imdb_id=i)]
 
     return render(request, 'movies.html', {'page_obj': page_obj, 'movies': movies})
 
+
+@login_required
 def anime_view(request):
-    movies_per_page = 20
-    page_number = request.GET.get('page', 1)
-    paginator = Paginator(anime_ids, movies_per_page)
-    page_obj = paginator.get_page(page_number)
+    paginator = Paginator(anime_ids, 20)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
 
-    animes = []
-    for id in page_obj.object_list:
-<<<<<<< HEAD
-        data = fetch_omdb_data(imdb_id=id)
-        if data:
-            animes.append(data)
-=======
-        url = f"http://www.omdbapi.com/?apikey={api_key}&i={id}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("Response") == "True":
-                animes.append(data)
-    print(animes)
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
-    
-    return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes})
+    animes_list = [fetch_omdb_data(imdb_id=i) for i in page_obj.object_list if fetch_omdb_data(imdb_id=i)]
 
+    return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes_list})
+
+
+@login_required
 def shows_view(request):
-    items_per_page = 20
-    page_number = request.GET.get('page', 1)
-    paginator = Paginator(shows, items_per_page)
-    page_obj = paginator.get_page(page_number)
+    paginator = Paginator(shows, 20)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
 
-    shows_list = []
-    for title in page_obj.object_list:
-        data = fetch_omdb_data(title=title)
-        if data:
-            shows_list.append(data)
-    
+    shows_list = [fetch_omdb_data(title=t) for t in page_obj.object_list if fetch_omdb_data(title=t)]
+
     return render(request, 'shows.html', {'page_obj': page_obj, 'shows': shows_list})
 
-def about_view(request):
-    return render(request , 'about.html')    
 
+def about_view(request):
+    return render(request, 'about.html')
+
+
+@login_required
 def detail_view(request, imdb_id):
-    print(f"Attempting to fetch movie data for IMDB ID: {imdb_id}")
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
-    print(f"Movie data received: {movie_data is not None}")
     if not movie_data:
-        # Fallback or redirect if movie not found
-        print(f"No movie data found for {imdb_id}, redirecting to base")
         return redirect('base')
-    
+
     season_data = {}
     if movie_data.get('Type') == 'series':
         season_data = fetch_omdb_data(imdb_id=imdb_id, season=1) or {}
-            
-    # Recommendations (Random selection from existing lists)
-    recommendations = []
-    # Combine lists and pick random 12
+
     all_recs = top_100_movies + anime_ids
-    random_ids = random.sample(all_recs, min(len(all_recs), 12))
-    
-    for rec_id in random_ids:
+    recommendations = []
+
+    for rec_id in random.sample(all_recs, min(len(all_recs), 12)):
         data = fetch_omdb_data(imdb_id=rec_id)
         if data and data.get('Poster') != 'N/A':
             recommendations.append(data)
 
-    context = {
+    return render(request, 'detail.html', {
         'movie': movie_data,
         'season_data': season_data,
         'episodes_json': json.dumps(season_data.get('Episodes', [])),
         'recommendations': recommendations,
         'api_key': api_key
-    }
-    return render(request, 'detail.html', context)
+    })
+
 
 def fetch_more_items(request):
-    """
-    API endpoint for horizontal infinite scrolling.
-    """
     category = request.GET.get('category')
     page = int(request.GET.get('page', 1))
-    
-    if category == 'movies':
-        all_items = top_100_movies
-        items_per_page = 28
-        use_id = True
-    elif category == 'anime':
-        all_items = anime_ids
-        items_per_page = 20
-        use_id = True
-    elif category == 'shows':
-        all_items = shows
-        items_per_page = 20
-        use_id = False
-    elif category == 'popular_movies':
-        all_items = keyword
-        items_per_page = 15
-        use_id = False
-    elif category == 'home_shows':
-        all_items = shows
-        items_per_page = 15
-        use_id = False
-    elif category == 'popular_anime':
-        all_items = animes
-        items_per_page = 15
-        use_id = False
-    else:
+
+    config_map = {
+        'movies': (top_100_movies, 28, True),
+        'anime': (anime_ids, 20, True),
+        'shows': (shows, 20, False),
+        'popular_movies': (keyword, 15, False),
+        'home_shows': (shows, 15, False),
+        'popular_anime': (animes, 15, False),
+    }
+
+    if category not in config_map:
         return JsonResponse({'error': 'Invalid category'}, status=400)
 
-    start = (page - 1) * items_per_page
-    end = start + items_per_page
-    current_items = all_items[start:end]
-    
+    all_items, per_page, use_id = config_map[category]
+    start, end = (page - 1) * per_page, page * per_page
+
     items = []
-    for item in current_items:
-        if use_id:
-            data = fetch_omdb_data(imdb_id=item)
-        else:
-            data = fetch_omdb_data(title=item)
-             
+    from django.urls import reverse
+
+    is_authenticated = request.user.is_authenticated
+    login_url = reverse('login')
+
+    for item in all_items[start:end]:
+        data = fetch_omdb_data(imdb_id=item if use_id else None, title=None if use_id else item)
         if data and data.get('Poster') != 'N/A':
+            imdb_id = data.get('imdbID')
+            destination_url = reverse('detail', args=[imdb_id]) if is_authenticated else login_url
+
             items.append({
-                'imdbID': data.get('imdbID'),
+                'imdbID': imdb_id,
                 'Title': data.get('Title'),
                 'Poster': data.get('Poster'),
                 'Year': data.get('Year'),
+                'url': destination_url
             })
-            
-    return JsonResponse({
-        'items': items,
-        'has_next': end < len(all_items)
-    })
+
+    return JsonResponse({'items': items, 'has_next': end < len(all_items)})

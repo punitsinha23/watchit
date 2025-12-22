@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card text-center">
+        <h2 class="auth-header">{% trans "Sign In" %}</h2>
+
+        <p class="text-white mb-4">{% trans "You are about to connect a new third party account from Google." %}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button class="btn-google" type="submit">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                <span style="font-weight: 600;">{% trans "Continue with Google" %}</span>
+            </button>
+        </form>
+
+        <div class="auth-footer text-center mt-3">
+            <a href="{% url 'login' %}" class="auth-footer-link">Cancel</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

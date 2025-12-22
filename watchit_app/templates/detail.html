@@ -1,54 +1,60 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
-<div class="container-fluid mt-4 fade-in">
-    <!-- Player Section -->
-    <div class="row justify-content-center">
-        <div class="col-lg-10 col-xl-9">
-            <div class="player-container position-relative"
-                style="padding-bottom: 56.25%; height: 0; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 35px;">
-                <iframe id="video-player" src=""
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-                    allowfullscreen></iframe>
-            </div>
+{% block title %}{{ movie.Title }} - WATCHIT{% endblock %}
 
-            <!-- Series Controls -->
-            {% if movie.Type == 'series' %}
-            <div class="d-flex gap-3 align-items-center mt-3 p-3 rounded" style="background: #1f1f1f;">
-                <div class="flex-grow-1">
-                    <label class="text-secondary small mb-1">Season</label>
-                    <select id="season-select" class="form-select bg-dark text-white border-secondary">
-                        {% for i in "x"|rjust:movie.totalSeasons %}
-                        <option value="{{ forloop.counter }}">Season {{ forloop.counter }}</option>
-                        {% endfor %}
-                    </select>
+{% block content %}
+<div class="container mt-5 fade-in">
+
+    <!-- Player Section (Visible by Default) -->
+    <div id="player-section" class="mb-5 player-offset">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="player-container position-relative bg-black rounded overflow-hidden shadow-lg"
+                    style="padding-bottom: 56.25%; height: 0;">
+                    <iframe id="video-player" src=""
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                        allowfullscreen></iframe>
                 </div>
-                <div class="flex-grow-1">
-                    <label class="text-secondary small mb-1">Episode</label>
-                    <select id="episode-select" class="form-select bg-dark text-white border-secondary">
-                        <!-- Populated via JS -->
-                    </select>
+
+                <!-- Series Controls -->
+                {% if movie.Type == 'series' %}
+                <div class="d-flex gap-3 align-items-center mt-3 p-3 rounded bg-dark">
+                    <div class="flex-grow-1">
+                        <label class="text-secondary small mb-1">Season</label>
+                        <select id="season-select" class="form-select bg-dark text-white border-secondary">
+                            {% for i in "x"|rjust:movie.totalSeasons %}
+                            <option value="{{ forloop.counter }}">Season {{ forloop.counter }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex-grow-1">
+                        <label class="text-secondary small mb-1">Episode</label>
+                        <select id="episode-select" class="form-select bg-dark text-white border-secondary">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Info Section -->
-    <div class="row justify-content-center mt-4">
-        <div class="col-lg-10 col-xl-9">
-            <h1 class="display-5 fw-bold" style="color: #E50914;">{{ movie.Title }}</h1>
-            <div class="align-items-center d-flex gap-3 mb-3 text-secondary">
-                <span class="badge bg-secondary">{{ movie.Rated }}</span>
+    <!-- Info Section (Simple Layout) -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="display-4 fw-bold text-white mb-3">{{ movie.Title }}</h1>
+
+            <div class="d-flex align-items-center gap-3 mb-4 text-secondary">
+                <span class="badge bg-danger">{{ movie.Rated }}</span>
                 <span>{{ movie.Year }}</span>
                 <span>{{ movie.Runtime }}</span>
-                <span style="color: #46d369;"><i class="fas fa-star me-1"></i>{{ movie.imdbRating }}</span>
+                <span class="text-success"><i class="fas fa-star me-1"></i>{{ movie.imdbRating }}</span>
             </div>
 
-            <p class="lead" style="color: #d1d1d1; font-size: 1.1rem;">{{ movie.Plot }}</p>
+            <p class="lead text-white-50 mb-4">{{ movie.Plot }}</p>
 
-            <div class="mt-4 text-secondary small">
+            <div class="text-secondary small">
                 <p><strong>Genre:</strong> <span class="text-white">{{ movie.Genre }}</span></p>
                 <p><strong>Director:</strong> <span class="text-white">{{ movie.Director }}</span></p>
                 <p><strong>Cast:</strong> <span class="text-white">{{ movie.Actors }}</span></p>
@@ -56,89 +62,122 @@
         </div>
     </div>
 
-    <hr style="border-color: #333; margin: 3rem 0;">
+    <hr class="border-secondary opacity-25 my-5">
 
     <!-- Recommendations -->
     <h2 class="section-title ps-4">You Might Also Like</h2>
     <div class="media-grid">
         {% for rec in recommendations %}
-        <div class="media-card fade-in">
-            <a href="{% url 'detail' rec.imdbID %}">
+        <div class="movie-unit fade-in visible">
+            <div class="premium-card">
                 <img src="{{ rec.Poster }}" alt="{{ rec.Title }}" loading="lazy">
-                <div class="media-info">
-                    <div class="media-title">{{ rec.Title }}</div>
-                    <div class="media-meta">{{ rec.Year }}</div>
+                <div class="premium-overlay">
+                    <a href="{% url 'detail' rec.imdbID %}" class="premium-btn premium-btn-play">
+                        <i class="fas fa-play me-2"></i>Play
+                    </a>
+                    <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                        {% csrf_token %}
+                        <input type="hidden" name="imdb_id" value="{{ rec.imdbID }}">
+                        <input type="hidden" name="title" value="{{ rec.Title }}">
+                        <input type="hidden" name="year" value="{{ rec.Year }}">
+                        <input type="hidden" name="poster" value="{{ rec.Poster }}">
+                        <button type="submit" class="premium-btn premium-btn-list">
+                            <i class="fas fa-plus me-2"></i>My List
+                        </button>
+                    </form>
                 </div>
-            </a>
+            </div>
+            <div class="media-info text-center">
+                <div class="media-title">{{ rec.Title }}</div>
+                <div class="media-meta">{{ rec.Year }}</div>
+            </div>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- Episode data passed via JSON script tag to avoid syntax issues in standard JS variables -->
+<style>
+    .display-none {
+        display: none !important;
+    }
+
+    .clamp-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .player-offset {
+        margin-top: 20px;
+        /* increase if navbar is taller */
+    }
+</style>
+
+<!-- Episode data passed via JSON script tag -->
 <script id="episodes-data" type="application/json">
     {{ episodes_json|safe }}
 </script>
-
-<!-- Player Logic -->
 <script>
     const imdbId = "{{ movie.imdbID }}";
     const type = "{{ movie.Type }}";
     const player = document.getElementById('video-player');
 
+    let currentSeason = 1;
+    let currentEpisode = 1;
+
+    function updateSeriesSource() {
+        player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/${currentSeason}/${currentEpisode}`;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        // Initial Load
+
         if (type === 'movie') {
             player.src = `https://vidsrc.xyz/embed/movie/${imdbId}`;
-        } else {
-            // Default to S1 E1 for series
-            player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/1/1`;
+            return;
+        }
 
-            // Series Logic
-            const seasonSelect = document.getElementById('season-select');
-            const episodeSelect = document.getElementById('episode-select');
+        const seasonSelect = document.getElementById('season-select');
+        const episodeSelect = document.getElementById('episode-select');
 
-            // Populate initial episodes from JSON script tag
-            try {
-                const episodesData = JSON.parse(document.getElementById('episodes-data').textContent);
-                if (episodesData && episodesData.length > 0) {
-                    populateEpisodes(episodesData);
-                }
-            } catch (e) {
-                console.error("Error parsing episode data:", e);
-            }
+        // Load Season 1 initially
+        loadSeason(1);
 
-            // Season Change Listener
-            seasonSelect.addEventListener('change', function () {
-                const season = this.value;
-                fetch(`https://www.omdbapi.com/?apikey={{ api_key }}&i=${imdbId}&Season=${season}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.Episodes) {
-                            populateEpisodes(data.Episodes);
-                            // Auto-play first episode of new season
-                            player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/${season}/1`;
-                        }
+        seasonSelect.addEventListener('change', function () {
+            currentSeason = this.value;
+            loadSeason(currentSeason);
+        });
+
+        episodeSelect.addEventListener('change', function () {
+            currentEpisode = this.value;
+            updateSeriesSource();
+        });
+
+        function loadSeason(season) {
+            fetch(`https://www.omdbapi.com/?apikey={{ api_key }}&i=${imdbId}&Season=${season}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.Episodes) {
+                        episodeSelect.innerHTML = '<option>No episodes</option>';
+                        return;
+                    }
+
+                    episodeSelect.innerHTML = '';
+                    data.Episodes.forEach(ep => {
+                        const opt = document.createElement('option');
+                        opt.value = ep.Episode;
+                        opt.textContent = `Episode ${ep.Episode}: ${ep.Title}`;
+                        episodeSelect.appendChild(opt);
                     });
-            });
 
-            // Episode Change Listener
-            episodeSelect.addEventListener('change', function () {
-                const season = seasonSelect.value;
-                const episode = this.value;
-                player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/${season}/${episode}`;
-            });
-
-            function populateEpisodes(episodes) {
-                episodeSelect.innerHTML = '';
-                episodes.forEach(ep => {
-                    const opt = document.createElement('option');
-                    opt.value = ep.Episode;
-                    opt.text = `Ep ${ep.Episode}: ${ep.Title}`;
-                    episodeSelect.appendChild(opt);
+                    currentEpisode = data.Episodes[0].Episode;
+                    updateSeriesSource();
+                })
+                .catch(() => {
+                    episodeSelect.innerHTML = '<option>Error loading episodes</option>';
                 });
-            }
         }
     });
 </script>
+
 {% endblock %}

@@ -1,62 +1,192 @@
 {% extends 'base.html' %}
+{% load socialaccount %}
 
 {% block content %}
-<<<<<<< HEAD
-<div class="auth-page">
-    <div class="auth-card">
+<style>
+    body {
+        background: url('https://w.wallhaven.cc/full/zy/wallhaven-zyxvqy.jpg') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .auth-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: -1;
+    }
+
+    .glass-card {
+        background: rgba(20, 20, 20, 0.85);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        max-width: 450px;
+        width: 100%;
+        margin: 80px auto;
+    }
+
+    .auth-header {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 3rem;
+        letter-spacing: 1px;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        height: 50px;
+        border-radius: 8px;
+    }
+
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #e50914;
+        color: white;
+        box-shadow: none;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-auth {
+        background: #e50914;
+        color: white;
+        height: 50px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        border: none;
+        width: 100%;
+    }
+
+    .btn-auth:hover {
+        background: #f6121d;
+        transform: translateY(-2px);
+    }
+
+    .btn-google {
+        background: white;
+        color: #333;
+        height: 50px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        text-decoration: none;
+        transition: all 0.3s;
+        margin-top: 20px;
+    }
+
+    .btn-google:hover {
+        background: #f1f1f1;
+        color: #333;
+        transform: translateY(-2px);
+    }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .auth-divider span {
+        padding: 0 10px;
+        font-size: 0.9rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .auth-footer a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="auth-overlay"></div>
+
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="glass-card fade-in">
         <h1 class="auth-header">Sign In</h1>
 
-        <form method="post" class="auth-form" novalidate>
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show bg-danger text-white border-0 mb-4">
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
             {% csrf_token %}
 
-            <div class="form-group">
-                <label for="id_email" class="form-label">Email</label>
-                <input type="email" class="auth-input" id="id_email" name="email"
-                    value="{{ form.email.value|default:'' }}" placeholder="Email" required>
-                {% if form.email.errors %}
-                <ul class="auth-error-list">
-                    {% for error in form.email.errors %}
-                    <li>{{ error|striptags }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+            <div class="mb-3">
+                <label for="id_email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="id_email" name="email"
+                    value="{{ form.email.value|default:'' }}" placeholder="name@example.com" required>
             </div>
 
-            <div class="form-group">
+            <div class="mb-4">
                 <label for="id_password" class="form-label">Password</label>
-                <input type="password" class="auth-input" id="id_password" name="password" placeholder="Password"
-                    required>
-                {% if form.password.errors %}
-                <ul class="auth-error-list">
-                    {% for error in form.password.errors %}
-                    <li>{{ error|striptags }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+                <input type="password" class="form-control" id="id_password" name="password"
+                    placeholder="Enter your password" required>
             </div>
 
-            <button type="submit" class="auth-btn">Sign In</button>
+            <button type="submit" class="btn-auth">Sign In</button>
+
+            <div class="mt-3 text-end">
+                <a href="{% url 'password_reset_request' %}" class="small text-white opacity-75 text-decoration-none">
+                    Forgot Password?
+                </a>
+            </div>
 
             <div class="auth-divider">
                 <span>OR</span>
             </div>
 
-            {% load socialaccount %}
             <a href="{% provider_login_url 'google' %}" class="btn-google">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                    alt="Google Logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google"
+                    width="20">
                 Continue with Google
             </a>
-
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <div class="form-check">
-                    <input class="form-check-input bg-dark border-secondary" type="checkbox" id="rememberMe">
-                    <label class="form-check-label text-secondary small" for="rememberMe" style="cursor: pointer;">
-                        Remember me
-                    </label>
-                </div>
-                <a href="{% url 'password_reset_request' %}" class="text-secondary small">Need help?</a>
-            </div>
 
             <div class="auth-footer">
                 New to WATCHIT?
@@ -70,90 +200,3 @@
     </div>
 </div>
 {% endblock %}
-=======
-<style>
-    body {
-        background: url('https://i.ibb.co/gFjvq14B/nextflix.jpg') no-repeat center center fixed;
-        background-size: cover;
-    }
-    .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 120%;
-        background: rgba(0, 0, 0, 0.5); /* Dark overlay */
-    }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 30px;
-        color: white;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-        max-width: 400px;
-        width: 100%;
-    }
-    .form-control {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-    }
-    .form-control:focus {
-        background: rgba(255, 255, 255, 0.3);
-        color: white;
-        border: none;
-        box-shadow: none;
-    }
-    label {
-        font-weight: bold;
-    }
-    .btn-custom {
-        background: #ff4a4a;
-        border: none;
-        color: white;
-        transition: 0.3s;
-    }
-    .btn-custom:hover {
-        background: #ff3333;
-    }
-</style>
-
-<div class="overlay"></div>
-<div class="d-flex justify-content-center align-items-center vh-100 position-relative">
-    <div class="glass-card text-center">
-        <h2 class="mb-4" style="color: #ff4a4a; font-weight: bold;">Login</h2>
-
-        <form method="post" novalidate>
-            {% csrf_token %}
-
-            <div class="mb-3">
-                <label for="id_email" class="form-label">Valid Email</label>
-                <input type="email" class="form-control" id="id_email" name="email" value="{{ form.email.value|default:'' }}" required>
-                {% if form.email.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.email.errors|striptags }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="id_password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="id_password" name="password" required>
-                {% if form.password.errors %}
-                <div class="alert alert-danger mt-2 p-2">{{ form.password.errors|striptags }}</div>
-                {% endif %}
-            </div>
-
-            <button type="submit" class="btn btn-custom w-100 mt-3">Login</button>
-
-            <p class="mt-3 mb-0" style="font-size: 0.9rem;">Don't have an account? 
-                <a href="{% url 'signup' %}" style="color: #ff4a4a; font-weight: bold;">Create one here!</a>
-            </p>
-            <p class="mt-2 mb-0" style="font-size: 0.9rem;">Forgot Password? 
-                <a href="{% url 'password_reset_request' %}" style="color: #ff4a4a; font-weight: bold;">Reset password</a>
-            </p>
-        </form>
-    </div>
-</div>
-
-{% endblock %}
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163

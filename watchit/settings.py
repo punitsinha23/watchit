@@ -75,7 +75,9 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'account_app.adapters.MySocialAccountAdapter'
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 
 
 ROOT_URLCONF = 'watchit.urls'
@@ -166,7 +168,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
-LOGIN_REDIRECT_URL = '/dashboard/'  
+LOGIN_REDIRECT_URL = '/account/profile/'  
 LOGOUT_REDIRECT_URL = '/'  
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

@@ -1,123 +1,190 @@
-{% extends 'user.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ display_name }}'s Watchlist - WATCHIT{% endblock %}
 
 {% block content %}
-<div class="container page-container my-5 fade-in">
+
+<style>
+    /* ===== Layout ===== */
+    .watchlist-wrapper {
+        margin-top: 2rem;
+    }
+
+    /* 5 movies per row */
+    .watchlist-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+    }
+
+    /* ===== Movie Card ===== */
+    .movie-item {
+        transition: transform 0.25s ease;
+    }
+
+    .movie-item:hover {
+        transform: scale(1.05);
+    }
+
+    .movie-card {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .movie-card img {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        object-fit: cover;
+    }
+
+    /* ===== Overlay ===== */
+    .movie-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top,
+                rgba(0, 0, 0, 0.9),
+                rgba(0, 0, 0, 0.2));
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 1rem;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .movie-card:hover .movie-overlay {
+        opacity: 1;
+    }
+
+    /* ===== Buttons ===== */
+    .overlay-btn {
+        width: 100%;
+        border: none;
+        padding: 0.6rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .btn-play {
+        background: #e50914;
+        color: #fff;
+    }
+
+    .btn-play:hover {
+        background: #ff1e28;
+    }
+
+    .btn-remove {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-remove:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ===== Text ===== */
+    .movie-info {
+        margin-top: 0.6rem;
+        text-align: center;
+    }
+
+    .movie-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .movie-year {
+        font-size: 0.8rem;
+        color: #aaa;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1200px) {
+        .watchlist-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .watchlist-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .watchlist-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="container watchlist-wrapper fade-in pt-5 margin-bottom-5">
+
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="section-title fw-bold mb-0" style="font-size: 2rem;">
-            <span style="color: #e50914;">{{ display_name }}'s</span> Watchlist
+        <h2 class="fw-bold mb-0">
+            <span style="color:#e50914">{{ display_name }}'s</span> Watchlist
         </h2>
+        <span class="text-muted small">{{ watchlist|length }} items</span>
     </div>
 
     {% if watchlist %}
-<<<<<<< HEAD
-    <div class="row g-4">
+    <div class="watchlist-grid">
+
         {% for movie in watchlist %}
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="card movie-card h-100 position-relative">
-                <div class="poster-container position-relative overflow-hidden">
-                    <img src="{{ movie.poster|default:'https://via.placeholder.com/300x450?text=No+Poster' }}"
-                        class="movie-poster" alt="{{ movie.movie_title }}">
+        <div class="movie-item">
 
-                    <div class="movie-overlay d-flex flex-column justify-content-end p-2 opacity-0 position-absolute bottom-0 start-0 end-0 h-100"
-                        style="background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%); transition: opacity 0.3s ease;">
-                        <div class="overlay-buttons d-flex flex-column gap-2 mb-2">
-                            <a href="{% url 'detail' movie.imdb_id %}"
-                                class="btn btn-light btn-sm fw-bold rounded-pill">
-                                <i class="fas fa-play me-1"></i>Watch
-                            </a>
-=======
-        <div class="row justify-content-center">
-            {% for movie in watchlist %}
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 fade-left">
-                    <div class="card shadow-lg h-100" style="background-color: rgb(37, 35, 35);">
+            <div class="movie-card">
+                <img src="{{ movie.poster|default:'https://via.placeholder.com/300x450?text=No+Poster' }}"
+                    alt="{{ movie.title }}" loading="lazy">
 
-                        {% if movie.Type == "series" %}
-                            <a href="https://vidsrc.to/embed/tv/{{ movie.imdb_id }}/1/1" target="_blank">
-                        {% else %}
-                            <a href="https://vidsrc.to/embed/movie/{{ movie.imdb_id }}" target="_blank">
-                        {% endif %}
-                            <img 
-                                src="{{ movie.poster }}" 
-                                alt="{{ movie.movie_title }}" 
-                                class="card-img-top" 
-                                style="height: 250px; object-fit: cover;">
-                        </a>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-center" style="color: aliceblue; font-weight: bold;">{{ movie.movie_title }}</h5>
-                            <p class="text-center text-muted mb-2" style="color: aliceblue;">{{ movie.movie_year }}</p>
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
-                            <form method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="imdb_id" value="{{ movie.imdb_id }}">
-                                <button type="submit" name="remove_from_watchlist"
-                                    class="btn btn-danger btn-sm fw-bold rounded-pill w-100">
-                                    <i class="fas fa-trash-alt me-1"></i>Remove
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="movie-info">
-                    <span class="movie-title">{{ movie.movie_title }}</span>
-                    <span class="movie-meta"><i class="far fa-calendar-alt me-1"></i>{{ movie.movie_year }}</span>
+                <div class="movie-overlay">
+                    <a href="{% url 'detail' movie.imdb_id %}" class="overlay-btn btn-play">
+                        <i class="fas fa-play me-2"></i>Play
+                    </a>
+
+                    <form method="post" action="{% url 'remove_from_watchlist' movie.imdb_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="overlay-btn btn-remove">
+                            <i class="fas fa-trash me-2"></i>Remove
+                        </button>
+                    </form>
                 </div>
             </div>
+
+            <div class="movie-info">
+                <div class="movie-title">{{ movie.title }}</div>
+                <div class="movie-year">{{ movie.year }}</div>
+            </div>
+
         </div>
         {% endfor %}
+
     </div>
+
     {% else %}
+    <!-- Empty State -->
     <div class="text-center py-5">
-        <i class="fas fa-film fa-3x mb-3 text-secondary opacity-25"></i>
-        <p class="h4" style="color: #666;">Your watchlist is empty.</p>
-        <a href="{% url 'user_dashboard' %}" class="btn btn-danger mt-3 px-4 rounded-pill fw-bold">Find something to
-            watch</a>
+        <i class="fas fa-film fa-4x mb-3 text-secondary opacity-25"></i>
+        <p class="h4 mb-3 text-muted">Your watchlist is empty</p>
+        <a href="{% url 'user_dashboard' %}" class="btn btn-danger px-4 py-2 rounded-pill fw-bold">
+            Discover Movies
+        </a>
     </div>
     {% endif %}
+
 </div>
 
-<style>
-<<<<<<< HEAD
-    .poster-container:hover .movie-overlay {
-        opacity: 1 !important;
-=======
-   
-    @keyframes fadeLeft {
-        0% {
-            opacity: 0;
-            transform: translateX(-50px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .fade-left {
-        animation: fadeLeft 1s ease-out;
-    }
-
-    .card {
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
-    }
-
-    .card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-img-top {
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    .btn:hover {
-        opacity: 0.9;
-    }
-
-    @media (max-width: 767px) {
-        .card-body {
-            padding: 1rem;
-        }
->>>>>>> 232b73124b94c537aea1ed2698f86d9ffce2a163
-    }
-</style>
 {% endblock %}
