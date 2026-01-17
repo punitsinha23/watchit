@@ -17,41 +17,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-  <style>
-    main {
-      padding-top: 80px;
-    }
 
-    /* Specific Profile Overrides only */
-    .profile-header {
-      background: linear-gradient(135deg, #1f1f1f 0%, #141414 100%);
-      padding: 60px 0;
-      border-radius: 12px;
-      margin-bottom: 40px;
-      border: 1px solid #333;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .avatar-large {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 3px solid var(--primary-red);
-      margin-bottom: 20px;
-      object-fit: cover;
-    }
-
-    .media-title {
-      color: white;
-      font-weight: 600;
-      margin-top: 8px;
-    }
-
-    .media-meta {
-      color: #888;
-      font-size: 0.8rem;
-    }
-  </style>
 </head>
 
 <body>
@@ -103,7 +69,7 @@
     {% endfor %}
   </div>
   {% endif %}
-  <main class="container-fluid">
+  <main class="container-fluid profile-main">
     {% block content %}
     <section class="profile-header text-center fade-in">
       <img

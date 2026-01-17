@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load socialaccount %}
+
 
 {% block content %}
 <style>
@@ -187,15 +187,6 @@
 
             <button type="submit" class="btn-auth">Create Account</button>
 
-            <div class="auth-divider">
-                <span>OR</span>
-            </div>
-
-            <a href="{% provider_login_url 'google' %}" class="btn-google">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google"
-                    width="20">
-                Sign up with Google
-            </a>
 
             <div class="auth-footer">
                 Already have an account? <a href="{% url 'login' %}">Sign in</a>

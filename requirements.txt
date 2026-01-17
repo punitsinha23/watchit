@@ -19,8 +19,7 @@ python-decouple>=3.8
 # PostgreSQL database adapter
 psycopg2-binary>=2.9.9
 
-# Authentication and Social Auth
-django-allauth>=0.57.0
+
 
 # JWT token handling
 PyJWT>=2.8.0

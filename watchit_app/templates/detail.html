@@ -17,9 +17,20 @@
                         allowfullscreen></iframe>
                 </div>
 
-                <!-- Series Controls -->
-                {% if movie.Type == 'series' %}
-                <div class="d-flex gap-3 align-items-center mt-3 p-3 rounded bg-dark">
+                <!-- Series Controls & Source Selection -->
+                <div class="d-flex flex-wrap gap-3 align-items-center mt-3 p-3 rounded bg-dark">
+                    <!-- Source Selection -->
+                    <div class="flex-grow-1">
+                        <label class="text-secondary small mb-1">Source</label>
+                        <select id="source-select" class="form-select bg-dark text-white border-secondary">
+                            <option value="vidsrc">Server 1 (Vidsrc.xyz)</option>
+                            <option value="vidsrcto">Server 2 (Vidsrc.to)</option>
+                            <option value="vidsrcme">Server 3 (Vidsrc.me)</option>
+                            <option value="superembed">Server 4 (SuperEmbed)</option>
+                        </select>
+                    </div>
+
+                    {% if movie.Type == 'series' %}
                     <div class="flex-grow-1">
                         <label class="text-secondary small mb-1">Season</label>
                         <select id="season-select" class="form-select bg-dark text-white border-secondary">
@@ -34,8 +45,8 @@
                             <!-- Populated via JS -->
                         </select>
                     </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -122,18 +133,56 @@
     const imdbId = "{{ movie.imdbID }}";
     const type = "{{ movie.Type }}";
     const player = document.getElementById('video-player');
+    const sourceSelect = document.getElementById('source-select');
 
     let currentSeason = 1;
     let currentEpisode = 1;
+    let currentSource = 'vidsrc';
 
-    function updateSeriesSource() {
-        player.src = `https://vidsrc.xyz/embed/tv/${imdbId}/${currentSeason}/${currentEpisode}`;
+    function getSourceUrl(source, type, id, season, episode) {
+        if (source === 'vidsrcto') {
+            if (type === 'movie') {
+                return `https://vidsrc.to/embed/movie/${id}`;
+            } else {
+                return `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`;
+            }
+        } else if (source === 'vidsrcme') {
+            if (type === 'movie') {
+                return `https://vidsrc.me/embed/${id}`;
+            } else {
+                return `https://vidsrc.me/embed/tv/${id}/season/${season}/episode/${episode}`;
+            }
+        } else if (source === 'superembed') {
+            if (type === 'movie') {
+                return `https://seapi.link/?type=imdb&id=${id}`;
+            } else {
+                return `https://seapi.link/?type=imdb&id=${id}&season=${season}&episode=${episode}`;
+            }
+        } else {
+            // Default to vidsrc.xyz
+            if (type === 'movie') {
+                return `https://vidsrc.xyz/embed/movie/${id}`;
+            } else {
+                return `https://vidsrc.xyz/embed/tv/${id}/${season}/${episode}`;
+            }
+        }
+    }
+
+    function updatePlayer() {
+        player.src = getSourceUrl(currentSource, type, imdbId, currentSeason, currentEpisode);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
 
+        // Initialize player
+        updatePlayer();
+
+        sourceSelect.addEventListener('change', function () {
+            currentSource = this.value;
+            updatePlayer();
+        });
+
         if (type === 'movie') {
-            player.src = `https://vidsrc.xyz/embed/movie/${imdbId}`;
             return;
         }
 
@@ -150,7 +199,7 @@
 
         episodeSelect.addEventListener('change', function () {
             currentEpisode = this.value;
-            updateSeriesSource();
+            updatePlayer();
         });
 
         function loadSeason(season) {
@@ -171,7 +220,7 @@
                     });
 
                     currentEpisode = data.Episodes[0].Episode;
-                    updateSeriesSource();
+                    updatePlayer();
                 })
                 .catch(() => {
                     episodeSelect.innerHTML = '<option>Error loading episodes</option>';

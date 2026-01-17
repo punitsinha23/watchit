@@ -1,0 +1,8 @@
+Checking foreign keys pointing to 'auth_user':
+Table 'auth_user_groups' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)
+Table 'auth_user_user_permissions' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)
+Table 'django_admin_log' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)
+Table 'account_emailaddress' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)
+Table 'socialaccount_socialaccount' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)
+Table 'account_app_watchlist' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)
+Table 'account_app_passwordresettoken' references 'auth_user' via column 'user_id' (on_delete: NO ACTION)

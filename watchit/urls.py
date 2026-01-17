@@ -36,16 +36,13 @@ urlpatterns = [
     path('verify/', account_views.verify, name='verify'),
     path('accounts/login/', account_views.login_view, name='login'),
     path('logout/', account_views.logout_view, name='logout'),
-    path("password_reset/", account_views.request_password_reset, name="password_reset_request"),
-    path("reset/<str:token>/", account_views.reset_password, name="reset_password"),
+    path('forgot-password/', account_views.forgot_password, name='forgot_password'),
+    path('reset-password/<str:token>/', account_views.reset_password, name='reset_password'),
     path('account/profile/', account_views.user, name='user'),
     path('account/profile/dashboard', account_views.search, name='user_dashboard'),
     path('account/profile/watchlist/add/', account_views.add_to_watchlist, name='add_to_watchlist'),
     path('account/profile/watchlist/remove/<str:imdb_id>/', account_views.remove_from_watchlist, name='remove_from_watchlist'),
     path('account/profile/watchit', account_views.watchlist_view , name='watchlist'),
-    
-    # allauth
-    path('accounts/', include('allauth.urls')),
 ] 
 
 

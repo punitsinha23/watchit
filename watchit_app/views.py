@@ -8,6 +8,7 @@ from .data import keyword, shows, top_100_movies, animes, anime_ids
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.cache import cache
+from django.views.decorators.cache import cache_control
 from decouple import config
 
 api_key = config('OMDB_API_KEY', default='bd268b10')
@@ -57,6 +58,7 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
     }
 
 
+@cache_control(private=True, max_age=3600)
 def base(request):
     LIMIT = 15
     print("DEBUG: Fetching base view data...")
@@ -84,6 +86,7 @@ def base(request):
 
 
 @login_required
+@cache_control(private=True, max_age=3600)
 def dashboard(request):
     movie_data = None
     error = None
@@ -154,6 +157,7 @@ def about_view(request):
 
 
 @login_required
+@cache_control(private=True, max_age=3600)
 def detail_view(request, imdb_id):
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
     if not movie_data:

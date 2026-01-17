@@ -2,22 +2,29 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_control
 from django.contrib import messages
+
 from django.urls import reverse
 from django.http import HttpResponse
 from django.conf import settings
-from django.contrib.auth.hashers import make_password
+
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str, force_bytes
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.crypto import get_random_string
 from django.utils.timezone import now
 from datetime import timedelta
-from django.core.mail import send_mail
+
 
 import requests
+import uuid
+from django.utils.timezone import now
+from datetime import timedelta
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import make_password
 
-from .forms import myform, loginform, PasswordResetRequestForm
+from .forms import myform, loginform
 from .models import Watchlist, PasswordResetToken
 
 
@@ -37,7 +44,23 @@ def signup_view(request):
             user = form.save(commit=False)
             user.is_active = False
             user.save()
-            messages.success(request, "Sign-up successful. Please verify your email.")
+
+            # Send verification email
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            verify_link = request.build_absolute_uri(
+                reverse('verify_email', args=[uid, token])
+            )
+
+            send_mail(
+                "Verify Your Email - WATCHIT",
+                f"Click the link to verify your email and activate your account: {verify_link}",
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+
+            messages.success(request, "Sign-up successful. Please check your email to verify your account.")
             return redirect('verify')
     else:
         form = myform()
@@ -85,6 +108,7 @@ from watchit_app.views import fetch_omdb_data
 import random
 
 @login_required
+@cache_control(private=True, max_age=3600)
 def user(request):
     # Fetch a few items for each category (e.g., 10 items each)
     # We randomize to keep it fresh or just take the first N
@@ -204,50 +228,53 @@ def verify(request):
     return render(request, 'verify.html')
 
 
-def request_password_reset(request):
+def forgot_password(request):
     if request.method == "POST":
-        form = PasswordResetRequestForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            user = User.objects.filter(email=email).first()
+        email = request.POST.get('email')
+        user = User.objects.filter(email=email).first()
 
-            if user:
-                PasswordResetToken.objects.update_or_create(
-                    user=user,
-                    defaults={'token': get_random_string(32)}
-                )
+        if user:
+            # Create or update token
+            PasswordResetToken.objects.update_or_create(
+                user=user,
+                defaults={'token': uuid.uuid4(), 'created_at': now()}
+            )
+            
+            token_obj = PasswordResetToken.objects.get(user=user)
+            reset_link = request.build_absolute_uri(
+                reverse('reset_password', args=[str(token_obj.token)])
+            )
 
-                token = PasswordResetToken.objects.get(user=user).token
-                reset_link = request.build_absolute_uri(
-                    reverse('reset_password', args=[token])
-                )
+            send_mail(
+                "Reset Your Password - WATCHIT",
+                f"Click the link to reset your password: {reset_link}",
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
 
-                send_mail(
-                    "Password Reset",
-                    f"Reset your password: {reset_link}",
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                )
+        # Always show success message for security (prevent email enumeration)
+        messages.success(request, "If an account exists with this email, a reset link has been sent.")
+        return redirect('forgot_password') 
 
-            messages.success(request, "If the email exists, a reset link was sent.")
-            return redirect('login')
-    else:
-        form = PasswordResetRequestForm()
-
-    return render(request, 'password_reset_request.html', {'form': form})
+    return render(request, 'forgot_password.html')
 
 
 def reset_password(request, token):
-    reset_token = get_object_or_404(PasswordResetToken, token=token)
+    try:
+        reset_token = PasswordResetToken.objects.get(token=token)
+    except (PasswordResetToken.DoesNotExist, ValueError):
+        messages.error(request, "Invalid or expired reset link.")
+        return redirect('login')
 
     if not reset_token.is_valid():
         reset_token.delete()
-        messages.error(request, "Reset link expired.")
+        messages.error(request, "Link has expired.")
         return redirect('login')
 
     if request.method == "POST":
-        password = request.POST['password']
-        confirm = request.POST['confirm_password']
+        password = request.POST.get('password')
+        confirm = request.POST.get('confirm_password')
 
         if password != confirm:
             messages.error(request, "Passwords do not match.")
@@ -255,12 +282,13 @@ def reset_password(request, token):
             user = reset_token.user
             user.password = make_password(password)
             user.save()
-            reset_token.delete()
+            reset_token.delete() # Consume token
 
-            messages.success(request, "Password reset successful.")
+            messages.success(request, "Password reset successful! You can now log in.")
             return redirect('login')
 
     return render(request, 'reset_password.html')
+
 
 def remove_from_watchlist(request, imdb_id):
     try:

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load socialaccount %}
+
 
 {% block content %}
 <style>
@@ -173,20 +173,11 @@
             <button type="submit" class="btn-auth">Sign In</button>
 
             <div class="mt-3 text-end">
-                <a href="{% url 'password_reset_request' %}" class="small text-white opacity-75 text-decoration-none">
+                <a href="{% url 'forgot_password' %}" class="small text-white opacity-75 text-decoration-none">
                     Forgot Password?
                 </a>
             </div>
 
-            <div class="auth-divider">
-                <span>OR</span>
-            </div>
-
-            <a href="{% provider_login_url 'google' %}" class="btn-google">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google"
-                    width="20">
-                Continue with Google
-            </a>
 
             <div class="auth-footer">
                 New to WATCHIT?
