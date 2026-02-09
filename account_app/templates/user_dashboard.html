@@ -1,54 +1,64 @@
-{% extends 'user.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-5 fade-in">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0" style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 1px;">
-            Search Results
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <form method="POST" action="{% url 'user_dashboard' %}" class="position-relative">
+                {% csrf_token %}
+                <i class="fas fa-search position-absolute text-muted"
+                    style="left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.2rem;"></i>
+                <input type="text" name="title"
+                    class="form-control form-control-lg bg-dark text-white border-secondary rounded-pill ps-5 py-3"
+                    placeholder="Search for another movie, show, or anime..."
+                    style="font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-dark pb-3">
+        <h2 class="fw-bold mb-0 text-white"
+            style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 1px;">
+            Search Results <span class="text-danger">{% if movie_data %}({{ movie_data|length }}){% endif %}</span>
         </h2>
     </div>
 
     {% if error %}
-    <div class="alert alert-danger text-center bg-dark border-danger text-danger">
-        {{ error }}
+    <div class="alert alert-danger text-center bg-dark border-danger text-danger py-4 rounded-3 shadow">
+        <i class="fas fa-exclamation-circle fa-2x mb-3"></i>
+        <p class="mb-0 fs-5">{{ error }}</p>
     </div>
     {% endif %}
 
     {% if movie_data %}
-    <div class="horizontal-scroll">
+    <div class="media-grid">
         {% for movie in movie_data %}
-        <div class="movie-card-wrapper">
-            <div class="card movie-card h-100 border-0 bg-transparent">
-                <div class="poster-container position-relative overflow-hidden rounded-3 shadow">
-                    <img src="{{ movie.Poster|default:'https://via.placeholder.com/300x450?text=No+Poster' }}"
-                        class="img-fluid" style="aspect-ratio: 2/3; object-fit: cover;">
+        <div class="movie-unit fade-in visible">
+            <div class="premium-card shadow-lg">
+                <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                    onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
 
-                    <div
-                        class="movie-overlay position-absolute bottom-0 start-0 end-0 h-100 d-flex flex-column justify-content-end p-2">
-                        <a href="{% url 'detail' movie.imdbID %}"
-                            class="btn btn-light btn-sm fw-bold rounded-pill mb-2">
-                            Play
-                        </a>
+                <div class="premium-overlay">
+                    <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
+                        <i class="fas fa-play me-2"></i>Play
+                    </a>
 
-                        <form method="POST" action="{% url 'user_dashboard' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
-                            <input type="hidden" name="title" value="{{ movie.Title }}">
-                            <input type="hidden" name="year" value="{{ movie.Year }}">
-                            <input type="hidden" name="poster" value="{{ movie.Poster }}">
-                            <button type="submit" name="add_to_watchlist"
-                                class="btn btn-outline-light btn-sm rounded-pill w-100">
-                                + List
-                            </button>
-                        </form>
-                    </div>
+                    <form method="POST" action="{% url 'user_dashboard' %}" class="w-100">
+                        {% csrf_token %}
+                        <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
+                        <input type="hidden" name="title" value="{{ movie.Title }}">
+                        <input type="hidden" name="year" value="{{ movie.Year }}">
+                        <input type="hidden" name="poster" value="{{ movie.Poster }}">
+                        <button type="submit" name="add_to_watchlist" class="premium-btn premium-btn-list">
+                            <i class="fas fa-plus me-2"></i>My List
+                        </button>
+                    </form>
                 </div>
-
-                <div class="mt-2">
-                    <h6 class="text-truncate mb-0 fw-bold">{{ movie.Title }}</h6>
-                    <p class="text-secondary small mb-0">{{ movie.Year }}</p>
-                </div>
+            </div>
+            <div class="media-info text-center mt-3">
+                <div class="media-title text-white fw-bold text-truncate">{{ movie.Title }}</div>
+                <div class="media-meta text-muted small">{{ movie.Year }}</div>
             </div>
         </div>
         {% endfor %}
@@ -56,48 +66,12 @@
 
     {% else %}
     <div class="text-center py-5">
-        <p class="h4 text-secondary">No results found</p>
+        <div class="mb-4">
+            <i class="fas fa-film fa-4x text-muted opacity-25"></i>
+        </div>
+        <p class="h3 text-white-50 fw-light">No results found</p>
+        <p class="text-secondary">Try searching for something else like "Avengers" or "Breaking Bad"</p>
     </div>
     {% endif %}
 </div>
-
-<style>
-    /* SIDE SCROLL */
-    .horizontal-scroll {
-        display: flex;
-        gap: 14px;
-        overflow-x: auto;
-        padding-bottom: 10px;
-    }
-
-    .horizontal-scroll::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .horizontal-scroll::-webkit-scrollbar-thumb {
-        background: #444;
-        border-radius: 10px;
-    }
-
-    .movie-card-wrapper {
-        flex: 0 0 auto;
-        width: 160px;
-    }
-
-    /* HOVER */
-    .poster-container:hover img {
-        transform: scale(1.05);
-        transition: transform 0.3s ease;
-    }
-
-    .movie-overlay {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-    }
-
-    .poster-container:hover .movie-overlay {
-        opacity: 1;
-    }
-</style>
 {% endblock %}

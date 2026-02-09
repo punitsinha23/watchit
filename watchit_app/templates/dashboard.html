@@ -10,8 +10,8 @@
         {% for movie in movie_data %}
         <div class="media-card fade-in">
             <a href="{% url 'detail' movie.imdbID %}">
-                <img src="{{ movie.Poster|default:'https://via.placeholder.com/150x225?text=No+Poster' }}"
-                    alt="{{ movie.Title }}" loading="lazy">
+                <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                    onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
                 <div class="media-info">
                     <div class="media-title">{{ movie.Title }}</div>
                     <!-- Optionally add year or type if available in movie object -->

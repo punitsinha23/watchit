@@ -81,7 +81,8 @@
         {% for rec in recommendations %}
         <div class="movie-unit fade-in visible">
             <div class="premium-card">
-                <img src="{{ rec.Poster }}" alt="{{ rec.Title }}" loading="lazy">
+                <img src="{{ rec.Poster }}" alt="{{ rec.Title }}" loading="lazy"
+                    onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
                 <div class="premium-overlay">
                     <a href="{% url 'detail' rec.imdbID %}" class="premium-btn premium-btn-play">
                         <i class="fas fa-play me-2"></i>Play

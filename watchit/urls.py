@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', watchit_views.base, name='base'),
     path('fetch-more/', watchit_views.fetch_more_items, name='fetch_more'),
+    path('api/trial-status/', watchit_views.check_trial_status, name='trial_status'),
     path('about/', watchit_views.about_view , name='about'),
     path('dashboard/', watchit_views.dashboard, name='dashboard'),  
     path('watch/<str:imdb_id>/', watchit_views.detail_view, name='detail'),

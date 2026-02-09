@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 import json
 import random
 import requests
+import time
+from django.utils import timezone
 
 from .data import keyword, shows, top_100_movies, animes, anime_ids
 from django.http import JsonResponse
@@ -12,6 +14,9 @@ from django.views.decorators.cache import cache_control
 from decouple import config
 
 api_key = config('OMDB_API_KEY', default='bd268b10')
+
+# Free trial duration in seconds (45 minutes)
+TRIAL_DURATION = 45 * 60  # 2700 seconds
 
 
 def fetch_omdb_data(imdb_id=None, title=None, season=None):
@@ -58,34 +63,48 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
     }
 
 
+# Recent releases (2023-2024) - 50 movies
+recent_releases = [
+    "Oppenheimer", "Barbie", "Dune: Part Two", "Poor Things", 
+    "The Holdovers", "Killers of the Flower Moon", "Past Lives",
+    "Anatomy of a Fall", "The Zone of Interest", "Ferrari",
+    "The Boy and the Heron", "Saltburn", "All of Us Strangers",
+    "May December", "The Iron Claw", "Maestro", "The Beekeeper",
+    "Mean Girls", "Dream Scenario", "The Color Purple", "American Fiction",
+    "Priscilla", "The Wonderful Story of Henry Sugar", "Society of the Snow",
+    "The Teachers' Lounge", "Fallen Leaves", "Perfect Days",
+    "Drive-Away Dolls", "Love Lies Bleeding", "Immaculate",
+    "Civil War", "Late Night with the Devil", "Abigail",
+    "The Fall Guy", "IF", "Furiosa: A Mad Max Saga",
+    "Hit Man", "Bad Boys: Ride or Die", "Inside Out 2",
+    "A Quiet Place: Day One", "Longlegs", "Deadpool & Wolverine",
+    "Trap", "Alien: Romulus", "Blink Twice",
+    "Beetlejuice Beetlejuice", "The Substance", "Speak No Evil",
+    "Megalopolis", "The Wild Robot", "Smile 2"
+]
+
 @cache_control(private=True, max_age=3600)
 def base(request):
-    LIMIT = 15
-    print("DEBUG: Fetching base view data...")
+    LIMIT = 10  # Initial load: 10 items for fast loading, more via lazy load
     
-    # Debug fetch_omdb_data for first item
-    if keyword:
-        print(f"DEBUG: First keyword: {keyword[0]}")
-        test_res = fetch_omdb_data(title=keyword[0])
-        print(f"DEBUG: Result for {keyword[0]}: {test_res}")
-
+    # Initialize free trial for anonymous users
+    if not request.user.is_authenticated:
+        if 'trial_start_time' not in request.session:
+            request.session['trial_start_time'] = time.time()
+    
     movies = [fetch_omdb_data(title=t) for t in keyword[:LIMIT] if fetch_omdb_data(title=t)]
-    print(f"DEBUG: Movies count: {len(movies)}")
-    
     shows_list = [fetch_omdb_data(title=t) for t in shows[:LIMIT] if fetch_omdb_data(title=t)]
-    print(f"DEBUG: Shows count: {len(shows_list)}")
-    
     anime_list = [fetch_omdb_data(title=t) for t in animes[:LIMIT] if fetch_omdb_data(title=t)]
-    print(f"DEBUG: Anime count: {len(anime_list)}")
+    recent_movies = [fetch_omdb_data(title=t) for t in recent_releases[:LIMIT] if fetch_omdb_data(title=t)]
 
     return render(request, 'base.html', {
         'movies': movies,
         'shows': shows_list,
         'Animes': anime_list,
+        'recent_movies': recent_movies,
     })
 
 
-@login_required
 @cache_control(private=True, max_age=3600)
 def dashboard(request):
     movie_data = None
@@ -122,7 +141,6 @@ def dashboard(request):
     return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
 
 
-@login_required
 def movie_view(request):
     paginator = Paginator(top_100_movies, 28)
     page_obj = paginator.get_page(request.GET.get('page', 1))
@@ -132,7 +150,6 @@ def movie_view(request):
     return render(request, 'movies.html', {'page_obj': page_obj, 'movies': movies})
 
 
-@login_required
 def anime_view(request):
     paginator = Paginator(anime_ids, 20)
     page_obj = paginator.get_page(request.GET.get('page', 1))
@@ -142,7 +159,6 @@ def anime_view(request):
     return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes_list})
 
 
-@login_required
 def shows_view(request):
     paginator = Paginator(shows, 20)
     page_obj = paginator.get_page(request.GET.get('page', 1))
@@ -156,7 +172,6 @@ def about_view(request):
     return render(request, 'about.html')
 
 
-@login_required
 @cache_control(private=True, max_age=3600)
 def detail_view(request, imdb_id):
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
@@ -188,13 +203,34 @@ def fetch_more_items(request):
     category = request.GET.get('category')
     page = int(request.GET.get('page', 1))
 
+    # Recent releases for fetch_more_items (same list as above)
+    recent_releases = [
+        "Oppenheimer", "Barbie", "Dune: Part Two", "Poor Things", 
+        "The Holdovers", "Killers of the Flower Moon", "Past Lives",
+        "Anatomy of a Fall", "The Zone of Interest", "Ferrari",
+        "The Boy and the Heron", "Saltburn", "All of Us Strangers",
+        "May December", "The Iron Claw", "Maestro", "The Beekeeper",
+        "Mean Girls", "Dream Scenario", "The Color Purple", "American Fiction",
+        "Priscilla", "The Wonderful Story of Henry Sugar", "Society of the Snow",
+        "The Teachers' Lounge", "Fallen Leaves", "Perfect Days",
+        "Drive-Away Dolls", "Love Lies Bleeding", "Immaculate",
+        "Civil War", "Late Night with the Devil", "Abigail",
+        "The Fall Guy", "IF", "Furiosa: A Mad Max Saga",
+        "Hit Man", "Bad Boys: Ride or Die", "Inside Out 2",
+        "A Quiet Place: Day One", "Longlegs", "Deadpool & Wolverine",
+        "Trap", "Alien: Romulus", "Blink Twice",
+        "Beetlejuice Beetlejuice", "The Substance", "Speak No Evil",
+        "Megalopolis", "The Wild Robot", "Smile 2"
+    ]
+    
     config_map = {
         'movies': (top_100_movies, 28, True),
         'anime': (anime_ids, 20, True),
         'shows': (shows, 20, False),
-        'popular_movies': (keyword, 15, False),
-        'home_shows': (shows, 15, False),
-        'popular_anime': (animes, 15, False),
+        'popular_movies': (keyword, 50, False),  # 50 total available
+        'home_shows': (shows, 50, False),  # 50 total available
+        'popular_anime': (animes, 50, False),  # 50 total available
+        'recent_movies': (recent_releases, 50, False),  # 50 total available
     }
 
     if category not in config_map:
@@ -211,7 +247,7 @@ def fetch_more_items(request):
 
     for item in all_items[start:end]:
         data = fetch_omdb_data(imdb_id=item if use_id else None, title=None if use_id else item)
-        if data and data.get('Poster') != 'N/A':
+        if data:
             imdb_id = data.get('imdbID')
             destination_url = reverse('detail', args=[imdb_id]) if is_authenticated else login_url
 
@@ -224,3 +260,37 @@ def fetch_more_items(request):
             })
 
     return JsonResponse({'items': items, 'has_next': end < len(all_items)})
+
+
+def check_trial_status(request):
+    """
+    API endpoint to check free trial status for anonymous users.
+    Returns trial info including remaining time and expiry status.
+    """
+    # Authenticated users have unlimited access
+    if request.user.is_authenticated:
+        return JsonResponse({
+            'trial_active': False,
+            'unlimited': True,
+            'authenticated': True
+        })
+    
+    # Get or initialize trial start time
+    trial_start = request.session.get('trial_start_time')
+    if not trial_start:
+        trial_start = time.time()
+        request.session['trial_start_time'] = trial_start
+    
+    # Calculate elapsed and remaining time
+    elapsed = time.time() - trial_start
+    remaining = max(0, TRIAL_DURATION - elapsed)
+    
+    return JsonResponse({
+        'trial_active': True,
+        'unlimited': False,
+        'authenticated': False,
+        'remaining_seconds': int(remaining),
+        'expired': remaining <= 0,
+        'trial_duration': TRIAL_DURATION
+    })
+

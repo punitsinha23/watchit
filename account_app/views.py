@@ -168,7 +168,6 @@ def add_to_watchlist(request):
     return redirect('watchlist')
 
 
-@login_required
 def search(request):
     movie_data = None
     error = None

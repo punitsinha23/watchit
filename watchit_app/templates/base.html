@@ -175,6 +175,110 @@
             padding-left: 1rem;
             border-left: 4px solid #e50914;
         }
+
+        /* Free Trial Modal Styles */
+        .trial-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .trial-modal-content {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 2px solid #e50914;
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(229, 9, 20, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .trial-modal h2 {
+            color: #e50914;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .trial-modal p {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .trial-timer {
+            background: rgba(229, 9, 20, 0.2);
+            border: 1px solid #e50914;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            font-size: 1.3rem;
+            color: #e50914;
+            font-weight: bold;
+        }
+
+        .trial-modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .trial-modal-buttons button {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.9rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .trial-btn-signup {
+            background: #e50914;
+            color: white;
+        }
+
+        .trial-btn-signup:hover {
+            background: #b8070e;
+            transform: scale(1.05);
+        }
+
+        .trial-btn-login {
+            background: transparent;
+            color: white;
+            border: 2px solid #fff;
+        }
+
+        .trial-btn-login:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 
@@ -194,8 +298,7 @@
                 <div class="mx-auto my-2 my-lg-0">
                     <div class="search-box">
                         <i class="fa fa-search search-icon"></i>
-                        <form method="POST" id="searchForm"
-                            action="{% if user.is_authenticated %}{% url 'user_dashboard' %}{% else %}{% url 'login' %}{% endif %}">
+                        <form method="POST" id="searchForm" action="{% url 'user_dashboard' %}">
                             {% csrf_token %}
                             <input class="search-input" type="text" name="title" placeholder="Titles, people, genres">
                         </form>
@@ -212,7 +315,7 @@
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
                                 class="profile-img" alt="Profile"
-                                style="width: 30px; height: 30px; border-radius: 5px; object-fit: cover;">
+                                style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark"
                             style="background-color: #1f1f1f; border-color: #333;">
@@ -251,8 +354,8 @@
                         <h1>Breaking Bad</h1>
                         <p class="lead mb-4">A high school chemistry teacher diagnosed with inoperable lung cancer turns
                             to manufacturing and selling methamphetamine in order to secure his family's future.</p>
-                        <a href="{% if user.is_authenticated %}{% url 'detail' 'tt0903747' %}{% else %}{% url 'login' %}{% endif %}"
-                            class="btn btn-danger btn-lg px-5 rounded-pill"><i class="fas fa-play me-2"></i>Watch
+                        <a href="{% url 'detail' 'tt0903747' %}" class="btn btn-danger btn-lg px-5 rounded-pill"><i
+                                class="fas fa-play me-2"></i>Watch
                             Now</a>
                     </div>
                 </div>
@@ -265,8 +368,8 @@
                         <h1>Stranger Things</h1>
                         <p class="lead mb-4">When a young boy disappears, his mother, a police chief and his friends
                             must confront terrifying supernatural forces in order to get him back.</p>
-                        <a href="{% if user.is_authenticated %}{% url 'detail' 'tt4574334' %}{% else %}{% url 'login' %}{% endif %}"
-                            class="btn btn-danger btn-lg px-5 rounded-pill"><i class="fas fa-play me-2"></i>Watch
+                        <a href="{% url 'detail' 'tt0944947' %}" class="btn btn-danger btn-lg px-5 rounded-pill"><i
+                                class="fas fa-play me-2"></i>Watch
                             Now</a>
                     </div>
                 </div>
@@ -278,13 +381,30 @@
                         <h1>Rick and Morty</h1>
                         <p class="lead mb-4">An animated series that follows the exploits of a super scientist and his
                             not-so-bright grandson.</p>
-                        <a href="{% if user.is_authenticated %}{% url 'detail' 'tt3032476' %}{% else %}{% url 'login' %}{% endif %}"
-                            class="btn btn-danger btn-lg px-5 rounded-pill"><i class="fas fa-play me-2"></i>Watch
+                        <a href="{% url 'detail' 'tt3032476' %}" class="btn btn-danger btn-lg px-5 rounded-pill"><i
+                                class="fas fa-play me-2"></i>Watch
                             Now</a>
                     </div>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Recently Released Movies Scroller -->
+    <div class="container-fluid mt-5 px-4">
+        <h2 class="section-header">RECENTLY RELEASED</h2>
+        <div class="carousel-container" data-category="recent_movies" data-page="1">
+            <div class="carousel-scroll">
+                {% for movie in recent_movies %}
+                <div class="movie-box">
+                    <a href="{% url 'detail' movie.imdbID %}">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
@@ -295,9 +415,9 @@
             <div class="carousel-scroll">
                 {% for movie in movies %}
                 <div class="movie-box">
-                    <a
-                        href="{% if user.is_authenticated %}{% url 'detail' movie.imdbID %}{% else %}{% url 'login' %}{% endif %}">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy">
+                    <a href="{% url 'detail' movie.imdbID %}">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
                     </a>
                 </div>
                 {% endfor %}
@@ -312,9 +432,9 @@
             <div class="carousel-scroll">
                 {% for show in shows %}
                 <div class="movie-box">
-                    <a
-                        href="{% if user.is_authenticated %}{% url 'detail' show.imdbID %}{% else %}{% url 'login' %}{% endif %}">
-                        <img src="{{ show.Poster }}" alt="{{ show.Title }}" loading="lazy">
+                    <a href="{% url 'detail' show.imdbID %}">
+                        <img src="{{ show.Poster }}" alt="{{ show.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
                     </a>
                 </div>
                 {% endfor %}
@@ -329,9 +449,9 @@
             <div class="carousel-scroll">
                 {% for anime in Animes %}
                 <div class="movie-box">
-                    <a
-                        href="{% if user.is_authenticated %}{% url 'detail' anime.imdbID %}{% else %}{% url 'login' %}{% endif %}">
-                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy">
+                    <a href="{% url 'detail' anime.imdbID %}">
+                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
                     </a>
                 </div>
                 {% endfor %}
@@ -341,6 +461,26 @@
 
     {% endblock %}
 
+    <!-- Free Trial Modal -->
+    <div id="trialModal" class="trial-modal">
+        <div class="trial-modal-content">
+            <h2>🎬 Your Free Trial Has Ended</h2>
+            <p>You've enjoyed 45 minutes of free browsing! Sign up now to continue watching unlimited movies, shows, and
+                anime.</p>
+            <div class="trial-timer">
+                Trial Expired ⏰
+            </div>
+            <div class="trial-modal-buttons">
+                <button class="trial-btn-signup" onclick="window.location.href='{% url 'signup' %}'">
+                    <i class="fas fa-user-plus"></i> Sign Up Free
+                </button>
+                <button class="trial-btn-login" onclick="window.location.href='{% url 'login' %}'">
+                    <i class="fas fa-sign-in-alt"></i> Already Have Account?
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer class="text-center py-4 text-muted border-top border-secondary mt-5">
         <div class="container">
             <p class="mb-0">© 2024 WATCHIT. All Rights Reserved.</p>
@@ -348,6 +488,30 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- VPN Tip Modal -->
+    <div class="modal fade" id="vpnModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="fas fa-shield-alt text-danger me-2"></i>Streaming Tip</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-globe-americas fa-3x text-muted mb-3"></i>
+                    <p class="lead mb-2">Video not loading?</p>
+                    <p class="text-secondary mb-0">If the player gets stuck or refuses to connect, try using a
+                        <strong>VPN</strong>. Some ISPs restrict streaming servers.
+                    </p>
+                </div>
+                <div class="modal-footer border-secondary justify-content-center">
+                    <button type="button" class="btn btn-danger px-4 rounded-pill" data-bs-dismiss="modal">Got
+                        it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const searchIcon = document.querySelector(".search-icon");
@@ -361,6 +525,45 @@
                 }
             });
         }
+
+        // Free Trial Timer (45 minutes for anonymous users)
+        {% if not user.is_authenticated %}
+        (function () {
+            const TRIAL_DURATION = 45 * 60 * 1000; // 45 minutes in milliseconds
+
+            // Initialize trial start time in localStorage
+            let trialStart = localStorage.getItem('trial_start_time');
+            if (!trialStart) {
+                trialStart = Date.now();
+                localStorage.setItem('trial_start_time', trialStart);
+            }
+
+            function checkTrialStatus() {
+                const trialStart = parseInt(localStorage.getItem('trial_start_time'));
+                const elapsed = Date.now() - trialStart;
+                const remaining = TRIAL_DURATION - elapsed;
+
+                if (remaining <= 0) {
+                    // Trial expired - show modal
+                    showTrialModal();
+                }
+            }
+
+            function showTrialModal() {
+                const modal = document.getElementById('trialModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling
+                }
+            }
+
+            // Check immediately on load
+            checkTrialStatus();
+
+            // Check every minute
+            setInterval(checkTrialStatus, 60000);
+        })();
+        {% endif %}
 
         // Lazy Loading & Caching Logic
         document.addEventListener("DOMContentLoaded", function () {
@@ -464,6 +667,17 @@
             return item.value;
         }
 
+        // VPN Modal Logic - Show once per session
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!sessionStorage.getItem('vpnModalShown')) {
+                // Small delay to not overwhelm immediate load
+                setTimeout(() => {
+                    const vpnModal = new bootstrap.Modal(document.getElementById('vpnModal'));
+                    vpnModal.show();
+                    sessionStorage.setItem('vpnModalShown', 'true');
+                }, 2000);
+            }
+        });
     </script>
 
 </body>
