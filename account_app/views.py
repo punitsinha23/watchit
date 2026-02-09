@@ -130,7 +130,7 @@ def user(request):
                 results.append(data)
         return results
 
-    movies_data = get_data(top_100_movies)
+    movies_data = get_data(top_100_movies, limit=28)
     anime_data = get_data(animes)
     shows_data = get_data(shows)
 
@@ -279,7 +279,7 @@ def reset_password(request, token):
             messages.error(request, "Passwords do not match.")
         else:
             user = reset_token.user
-            user.password = make_password(password)
+            user.set_password(password)
             user.save()
             reset_token.delete() # Consume token
 

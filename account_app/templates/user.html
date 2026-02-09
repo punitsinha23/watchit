@@ -87,12 +87,13 @@
     </section>
     <section class="fade-in" style="animation-delay: 0.2s;">
       <h2 class="section-title">Top Movies</h2>
-      <div class="carousel-container mt-4">
+      <div class="carousel-container mt-4" data-category="movies" data-page="1" data-render-type="premium">
         <div class="carousel-scroll" id="movies-scroll">
           {% for item in movies %}
           <div class="movie-unit fade-in visible">
             <div class="premium-card">
-              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy">
+              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
               <div class="premium-overlay">
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
@@ -121,12 +122,13 @@
 
     <section class="fade-in" style="animation-delay: 0.3s;">
       <h2 class="section-title">Top Anime</h2>
-      <div class="carousel-container mt-4">
+      <div class="carousel-container mt-4" data-category="popular_anime" data-page="1" data-render-type="premium">
         <div class="carousel-scroll" id="anime-scroll">
           {% for item in anime %}
           <div class="movie-unit fade-in visible">
             <div class="premium-card">
-              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy">
+              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
               <div class="premium-overlay">
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
@@ -155,12 +157,13 @@
 
     <section class="fade-in" style="animation-delay: 0.4s;">
       <h2 class="section-title">TV Shows</h2>
-      <div class="carousel-container mt-4">
+      <div class="carousel-container mt-4" data-category="home_shows" data-page="1" data-render-type="premium">
         <div class="carousel-scroll" id="shows-scroll">
           {% for item in shows %}
           <div class="movie-unit fade-in visible">
             <div class="premium-card">
-              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy">
+              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
               <div class="premium-overlay">
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play

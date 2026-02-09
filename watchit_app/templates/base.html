@@ -596,7 +596,8 @@
 
                     if (cachedData) {
                         console.log(`Loading ${category} page ${page} from cache`);
-                        appendItems(scrollContainer, cachedData);
+                        const renderType = container.getAttribute('data-render-type');
+                        appendItems(scrollContainer, cachedData, renderType);
                         container.setAttribute('data-page', page);
                         isLoading = false;
                         return;
@@ -609,7 +610,8 @@
                         if (response.ok) {
                             const data = await response.json();
                             if (data.items.length > 0) {
-                                appendItems(scrollContainer, data.items);
+                                const renderType = container.getAttribute('data-render-type');
+                                appendItems(scrollContainer, data.items, renderType);
                                 container.setAttribute('data-page', page);
                                 setCachedData(cacheKey, data.items);
                                 hasNext = data.has_next;
@@ -627,17 +629,53 @@
                     }
                 }
 
-                function appendItems(container, items) {
-                    items.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'movie-box';
+                function appendItems(container, items, renderType) {
+                    const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                    const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
 
-                        div.innerHTML = `
-                            <a href="${item.url}">
-                                <img src="${item.Poster}" alt="${item.Title}" loading="lazy">
-                            </a>
-                        `;
-                        container.appendChild(div);
+                    items.forEach(item => {
+                        if (renderType === 'premium') {
+                            // Premium Card Rendering (for Profile/Dashboard)
+                            const div = document.createElement('div');
+                            div.className = 'movie-unit fade-in visible';
+                            div.innerHTML = `
+                                <div class="premium-card">
+                                    <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
+                                         onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                                    <div class="premium-overlay">
+                                        <a href="${item.url}" class="premium-btn premium-btn-play">
+                                            <i class="fas fa-play me-2"></i>Play
+                                        </a>
+                                        <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                                            <input type="hidden" name="imdb_id" value="${item.imdbID}">
+                                            <input type="hidden" name="title" value="${item.Title}">
+                                            <input type="hidden" name="year" value="${item.Year}">
+                                            <input type="hidden" name="poster" value="${item.Poster}">
+                                            <button type="submit" class="premium-btn premium-btn-list">
+                                                <i class="fas fa-plus me-2"></i>My List
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="media-info text-center">
+                                    <div class="media-title">${item.Title}</div>
+                                    <div class="media-meta">${item.Year}</div>
+                                </div>
+                            `;
+                            container.appendChild(div);
+                        } else {
+                            // Default Simple Card (for Home)
+                            const div = document.createElement('div');
+                            div.className = 'movie-box';
+                            div.innerHTML = `
+                                <a href="${item.url}">
+                                    <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
+                                         onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                                </a>
+                            `;
+                            container.appendChild(div);
+                        }
                     });
                 }
             });
