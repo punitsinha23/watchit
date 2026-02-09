@@ -1,18 +1,22 @@
 {
-    "builds": [{
-        "src": "watchit/wsgi.py",
-        "use": "@vercel/python",
-        "config": {"maxLamdaSize": "15mb", "runtime": "python3.12.1"}
-    }],
+    "builds": [
+        {
+            "src": "watchit/wsgi.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLamdaSize": "15mb",
+                "runtime": "python3.12.1"
+            }
+        }
+    ],
     "routes": [
         {
             "src": "/static/(.*)",
-            "dest": "/staticfiles/$1"
+            "dest": "static/$1"
         },
         {
             "src": "/(.*)",
             "dest": "watchit/wsgi.py"
         }
     ]
-  }
-  
+}
