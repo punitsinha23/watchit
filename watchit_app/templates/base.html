@@ -248,10 +248,25 @@
             background: rgba(255, 255, 255, 0.1);
             transform: scale(1.05);
         }
+
+        /* Loading Bar CSS */
+        #loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #e50914, #ff00cc);
+            z-index: 11000;
+            transition: width 0.3s ease, opacity 0.3s ease;
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+            pointer-events: none;
+        }
     </style>
 </head>
 
 <body>
+    <div id="loading-bar"></div>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm"
         style="border-bottom: 1px solid #333;">
@@ -278,14 +293,17 @@
                         <a class="nav-link" href="{% url 'user' %}">Profile</a>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'join_watch_party' %}"><i
+                                class="fas fa-users me-1"></i>Join Party</a></li>
 
                     <!-- Desktop Profile Dropdown -->
                     <li class="nav-item dropdown d-none d-lg-block">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
                             data-bs-toggle="dropdown">
-                            <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
-                                class="profile-img" alt="Profile"
-                                style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #444;">
+                            <div class="profile-icon-placeholder d-flex align-items-center justify-content-center bg-danger text-white rounded-circle"
+                                style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                <i class="fas fa-user"></i>
+                            </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2"
                             style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
@@ -546,10 +564,10 @@
                 Trial Expired ⏰
             </div>
             <div class="trial-modal-buttons">
-                <button class="trial-btn-signup" onclick="window.location.href='{% url 'signup' %}'">
+                <button class="trial-btn-signup" onclick="window.location.href='{% url 'signup' %}';">
                     <i class="fas fa-user-plus"></i> Sign Up Free
                 </button>
-                <button class="trial-btn-login" onclick="window.location.href='{% url 'login' %}'">
+                <button class="trial-btn-login" onclick="window.location.href='{% url 'login' %}';">
                     <i class="fas fa-sign-in-alt"></i> Already Have Account?
                 </button>
             </div>
@@ -661,6 +679,7 @@
                 async function loadMore(container) {
                     if (isLoading || !hasNext) return;
                     isLoading = true;
+                    startLoading(20);
 
                     const category = container.getAttribute('data-category');
                     let page = parseInt(container.getAttribute('data-page')) + 1;
@@ -701,6 +720,7 @@
                         console.error('Network error:', error);
                     } finally {
                         isLoading = false;
+                        finishLoading();
                     }
                 }
 
@@ -781,6 +801,82 @@
                 }, 2000);
             }
         });
+
+        // Global Loading Bar Logic
+        const bar = document.getElementById('loading-bar');
+        let loadingInterval;
+
+        window.startLoading = function (initialWidth = 10) {
+            if (loadingInterval) clearInterval(loadingInterval);
+            bar.style.opacity = '1';
+            bar.style.width = initialWidth + '%';
+
+            let currentWidth = initialWidth;
+            loadingInterval = setInterval(() => {
+                if (currentWidth < 90) {
+                    // Smoother increments at faster interval
+                    currentWidth += (90 - currentWidth) * 0.02;
+                } else {
+                    currentWidth += 0.05;
+                }
+                bar.style.width = Math.min(currentWidth, 99) + '%';
+            }, 100); // 100ms for high-frequency updates
+        };
+
+        window.finishLoading = function () {
+            if (loadingInterval) clearInterval(loadingInterval);
+            bar.style.width = '100%';
+
+            // Speed up the disappearance
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                    bar.style.opacity = '1';
+                }, 300);
+            }, 100);
+        };
+
+        (function () {
+            // Universal click listener for all links and buttons
+            document.addEventListener('click', (e) => {
+                const target = e.target.closest('a, button');
+                if (!target) return;
+
+                if (target.tagName === 'A') {
+                    const href = target.getAttribute('href');
+                    const isSamePage = href && (href.startsWith('#') || href.startsWith('javascript:'));
+                    const isNewTab = target.target === '_blank';
+
+                    if (href && !isSamePage && !isNewTab && !e.ctrlKey && !e.metaKey) {
+                        startLoading(15);
+                    }
+                } else if (target.tagName === 'BUTTON') {
+                    if (target.type === 'submit' || target.closest('form')) {
+                        startLoading(20);
+                    }
+                }
+            });
+
+            // Form submission listener
+            document.addEventListener('submit', () => {
+                startLoading(25);
+            });
+
+            // Page load completion
+            if (document.readyState === 'complete') {
+                finishLoading();
+            } else {
+                window.addEventListener('load', finishLoading);
+            }
+
+            // Detach on back/forward or fast-navigation
+            window.addEventListener('pageshow', (event) => {
+                if (event.persisted) {
+                    finishLoading();
+                }
+            });
+        })();
     </script>
 
 </body>

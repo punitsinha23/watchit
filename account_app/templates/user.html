@@ -44,6 +44,8 @@
           <li class="nav-item"><a class="nav-link" href="#anime-scroll">Anime</a></li>
           <li class="nav-item"><a class="nav-link" href="#shows-scroll">TV Shows</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'join_watch_party' %}"><i
+                class="fas fa-users me-1"></i>Join Party</a></li>
 
           <!-- Mobile Profile Options -->
           <li class="nav-item d-lg-none">
@@ -54,10 +56,11 @@
           <li class="nav-item dropdown d-none d-lg-block">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
               data-bs-toggle="dropdown">
-              <img
-                src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
-                class="profile-img" alt="Profile"
-                style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #444;">
+              <div
+                class="profile-icon-placeholder d-flex align-items-center justify-content-center bg-danger text-white rounded-circle"
+                style="width: 32px; height: 32px; font-size: 0.8rem;">
+                <i class="fas fa-user"></i>
+              </div>
             </a>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2"
               style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
@@ -92,89 +95,11 @@
   {% endif %}
   <main class="container-fluid profile-main">
     {% block content %}
-    <section class="profile-header text-center fade-in">
-      <img
-        src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
-        alt="Avatar" class="avatar-large shadow">
-      <h1 class="display-4 fw-bold">Welcome back, <span class="text-danger">{{ display_name }}</span>!
+    <div class="container-fluid mt-5 text-center">
+      <h1 class="display-5 fw-bold mb-5">
+        Welcome <span class="text-danger">{{ display_name }}</span>
       </h1>
-      <small>Manage your movies, anime, and watchlist all in one place.</small>
-      <div class="d-flex justify-content-center gap-3 mt-4">
-        <a href="{% url 'watchlist' %}" class="btn btn-outline-danger px-4 rounded-pill">View My
-          Watchlist</a>
-        <a href="{% url 'user_dashboard' %}" class="btn btn-danger px-4 rounded-pill">Search For
-          Movies</a>
-        <a href="{% url 'join_watch_party' %}" class="btn btn-outline-light px-4 rounded-pill"><i
-            class="fas fa-users me-2"></i>Join
-          Watch Party</a>
-      </div>
-    </section>
-    <!-- ACTIVE ROOMS SECTION -->
-    {% if hosted_parties or joined_parties %}
-    <section class="fade-in mb-5 px-3" style="animation-delay: 0.1s;">
-      <h2 class="section-title text-danger mb-4"><i class="fas fa-users-viewfinder me-2"></i>My Active Rooms</h2>
-      <div class="carousel-container mt-4">
-        <div class="carousel-scroll">
-
-          <!-- Hosted Rooms -->
-          {% for party in hosted_parties %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
-              <img
-                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
-                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
-                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-              <div class="premium-overlay flex-column">
-                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
-                  <i class="fas fa-play me-2"></i>Enter Room
-                </a>
-                <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100"
-                  onsubmit="return confirm('Permanently delete this room?')">
-                  {% csrf_token %}
-                  <button type="submit" class="premium-btn premium-btn-danger">
-                    <i class="fas fa-trash-alt me-2"></i>Delete
-                  </button>
-                </form>
-              </div>
-            </div>
-            <div class="media-info text-center">
-              <div class="media-title text-danger">{{ party.movie_title|default:party.room_code }}</div>
-              <div class="media-meta">Room: {{ party.room_code }}</div>
-            </div>
-          </div>
-          {% endfor %}
-
-          <!-- Joined Rooms -->
-          {% for party in joined_parties %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
-              <img
-                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
-                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
-                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-              <div class="premium-overlay flex-column">
-                <span class="badge bg-secondary mb-2">GUEST</span>
-                <div class="mb-3 text-center">
-                  <small class="text-white-50 d-block">Room Code</small>
-                  <span class="text-white fw-bold h5">{{ party.room_code }}</span>
-                  <small class="text-white-50 d-block mt-1">Host: {{ party.host.username }}</small>
-                </div>
-                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100">
-                  <i class="fas fa-sign-in-alt me-2"></i>Rejoin
-                </a>
-              </div>
-            </div>
-            <div class="media-info text-center">
-              <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
-              <div class="media-meta">Hosted by {{ party.host.username }}</div>
-            </div>
-          </div>
-          {% endfor %}
-
-        </div>
-      </div>
-    </section>
-    {% endif %}
+    </div>
 
     <section class="fade-in" style="animation-delay: 0.2s;">
       <h2 class="section-title">Top Movies</h2>
@@ -292,10 +217,74 @@
         </div>
       </div>
     </section>
+    <!-- ACTIVE ROOMS SECTION -->
+    {% if hosted_parties or joined_parties %}
+    <section class="fade-in mb-5 px-3" style="animation-delay: 0.1s;">
+      <h2 class="section-title"><i class="fas fa-users-viewfinder me-2"></i>My Active Rooms</h2>
+      <div class="carousel-container mt-4">
+        <div class="carousel-scroll">
+
+          <!-- Hosted Rooms -->
+          {% for party in hosted_parties %}
+          <div class="movie-unit fade-in visible">
+            <div class="premium-card">
+              <img
+                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
+                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+              <div class="premium-overlay flex-column">
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
+                  <i class="fas fa-play me-2"></i>Enter Room
+                </a>
+                <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100"
+                  onsubmit="return confirm('Permanently delete this room?')">
+                  {% csrf_token %}
+                  <button type="submit" class="premium-btn premium-btn-danger">
+                    <i class="fas fa-trash-alt me-2"></i>Delete
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="media-info text-center">
+              <div class="media-title text-danger">{{ party.movie_title|default:party.room_code }}</div>
+              <div class="media-meta">Room: {{ party.room_code }}</div>
+            </div>
+          </div>
+          {% endfor %}
+
+          <!-- Joined Rooms -->
+          {% for party in joined_parties %}
+          <div class="movie-unit fade-in visible">
+            <div class="premium-card">
+              <img
+                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
+                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+              <div class="premium-overlay flex-column">
+                <span class="badge bg-secondary mb-2">GUEST</span>
+                <div class="mb-3 text-center">
+                  <small class="text-white-50 d-block">Room Code</small>
+                  <span class="text-white fw-bold h5">{{ party.room_code }}</span>
+                  <small class="text-white-50 d-block mt-1">Host: {{ party.host.username }}</small>
+                </div>
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100">
+                  <i class="fas fa-sign-in-alt me-2"></i>Rejoin
+                </a>
+              </div>
+            </div>
+            <div class="media-info text-center">
+              <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
+              <div class="media-meta">Hosted by {{ party.host.username }}</div>
+            </div>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+    </section>
+    {% endif %}
     {% endblock %}
   </main>
-  <hr class="border-light" style="opacity: 0.1;">
-
 
   <footer class="mt-4">
     &copy; {{ year|date:"Y" }} WATCHIT. All Rights Reserved.

@@ -4,23 +4,52 @@
 {% block title %}Join Watch Party - WATCHIT{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 60vh;">
-    <div class="card bg-dark text-white border-secondary p-4" style="max-width: 400px; width: 100%;">
-        <h2 class="text-center mb-4">Join Party</h2>
+<div class="container-fluid d-flex justify-content-center align-items-center"
+    style="min-height:85vh; background: radial-gradient(circle at top, #1a1a1a, #000);">
+
+    <div class="card bg-dark text-white border-0 shadow-lg p-4 p-md-5"
+        style="max-width:420px; width:100%; border-radius:16px;">
+
+        <!-- Branding -->
+        <div class="text-center mb-4">
+            <h1 class="fw-bold text-danger mb-1" style="letter-spacing:1px;">WATCHIT</h1>
+            <p class="text-secondary small">Watch and chat together with your friends.</p>
+        </div>
+
+        <h3 class="text-center mb-4">Join a Watch Party</h3>
 
         {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
+        <div class="alert alert-danger small text-center rounded-3">
+            {{ error }}
+        </div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" autocomplete="off">
             {% csrf_token %}
-            <div class="mb-3">
-                <label for="room_code" class="form-label text-secondary">Room Code</label>
-                <input type="text" class="form-control bg-black text-white border-secondary text-uppercase"
-                    id="room_code" name="room_code" placeholder="XY12Z3" required maxlength="6">
+
+            <div class="mb-4">
+                <label for="room_code" class="form-label text-secondary small">ROOM CODE</label>
+                <input type="text" class="form-control bg-black text-white border-0 text-center fw-bold" id="room_code"
+                    name="room_code" placeholder="AB12CD" required maxlength="6"
+                    style="letter-spacing:4px; font-size:1.4rem; padding:14px; border-radius:10px;">
             </div>
-            <button type="submit" class="btn btn-danger w-100">Join Room</button>
+
+            <button type="submit" class="btn btn-danger w-100 py-2 fw-semibold" style="border-radius:10px;">
+                Join Party
+            </button>
+
+            <div class="text-center mt-4 text-secondary small">
+                <i class="fas fa-clock me-1"></i>
+                Rooms expire automatically after 24 hours
+            </div>
         </form>
+
+        <hr class="border-secondary my-4">
+
+        <div class="text-center text-secondary small">
+            Paste the room code and start watching instantly.
+        </div>
+
     </div>
 </div>
 {% endblock %}

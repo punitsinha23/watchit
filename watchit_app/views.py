@@ -55,6 +55,11 @@ def join_watch_party(request):
         try:
             party = WatchParty.objects.get(room_code=room_code, is_active=True)
             
+            # 24hr expiration check
+            if (timezone.now() - party.created_at).total_seconds() > 86400:
+                party.delete()
+                return render(request, 'join_party.html', {'error': 'This room has expired after 24 hours.'})
+
             # If already a participant or the host, go straight in
             if request.user == party.host or party.participants.filter(id=request.user.id).exists():
                 return redirect('party_room', room_code=room_code)
@@ -72,6 +77,10 @@ def join_watch_party(request):
 def waiting_room(request, room_code):
     try:
         party = WatchParty.objects.get(room_code=room_code, is_active=True)
+        # 24hr expiration check
+        if (timezone.now() - party.created_at).total_seconds() > 86400:
+            party.delete()
+            return redirect('base')
     except WatchParty.DoesNotExist:
         return redirect('base')
         
@@ -84,6 +93,10 @@ def waiting_room(request, room_code):
 def api_check_approval(request, room_code):
     try:
         party = WatchParty.objects.get(room_code=room_code, is_active=True)
+        # 24hr expiration check
+        if (timezone.now() - party.created_at).total_seconds() > 86400:
+            party.delete()
+            return JsonResponse({'status': 'room_gone'})
     except WatchParty.DoesNotExist:
         return JsonResponse({'status': 'room_gone'})
         
@@ -100,6 +113,10 @@ def api_check_approval(request, room_code):
 def party_room(request, room_code):
     try:
         party = WatchParty.objects.get(room_code=room_code, is_active=True)
+        # 24hr expiration check
+        if (timezone.now() - party.created_at).total_seconds() > 86400:
+            party.delete()
+            return redirect('base')
     except WatchParty.DoesNotExist:
         return redirect('base')
 
@@ -148,11 +165,28 @@ def api_party_status(request, room_code):
         'timestamp': m.timestamp.strftime('%H:%M')
     } for m in messages]
 
+    # Viewer tracking
+    current_time = time.time()
+    v_cache_key = f"viewers_{room_code}"
+    # Structure: {user_id: last_heartbeat_timestamp}
+    viewers_map = cache.get(v_cache_key, {})
+    
+    # Update current user
+    if request.user.is_authenticated:
+        viewers_map[str(request.user.id)] = current_time
+    
+    # Clean up old viewers (inactive for > 15 seconds)
+    active_viewers_map = {uid: ts for uid, ts in viewers_map.items() if current_time - ts < 15}
+    cache.set(v_cache_key, active_viewers_map, 30) # short TTL
+    
+    viewer_count = len(active_viewers_map)
+
     return JsonResponse({
         'season': party.current_season,
         'episode': party.current_episode,
         'source': party.current_source,
         'messages': msgs_data,
+        'viewers': viewer_count,
         'pending_users': [{'id': u.id, 'username': u.username} for u in party.pending_participants.all()] if request.user == party.host else []
     })
 
