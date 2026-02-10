@@ -29,7 +29,8 @@ from .models import Watchlist, PasswordResetToken
 from watchit_app.models import WatchParty
 
 
-api_key = '24a15e19'
+from decouple import config
+api_key = config('OMDB_API_KEY')
 
 
 def signup_view(request):

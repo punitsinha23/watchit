@@ -20,7 +20,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
-api_key = config('OMDB_API_KEY', default='24a15e19')
+api_key = config('OMDB_KEY', default='24a15e19')
 
 # ... (Previous constants)
 
@@ -32,17 +32,10 @@ def create_watch_party(request, imdb_id):
         if not WatchParty.objects.filter(room_code=room_code).exists():
             break
             
-    # Fetch movie details from OMDB
-    movie_title = ""
-    poster_url = ""
-    try:
-        omdb_res = requests.get(f"http://www.omdbapi.com/?i={imdb_id}&apikey={api_key}")
-        if omdb_res.status_code == 200:
-            movie_data = omdb_res.json()
-            movie_title = movie_data.get('Title', '')
-            poster_url = movie_data.get('Poster', '')
-    except Exception as e:
-        print(f"Error fetching metadata: {e}")
+    # Use the robust fetch_omdb_data helper
+    movie_data = fetch_omdb_data(imdb_id=imdb_id)
+    movie_title = movie_data.get('Title', '')
+    poster_url = movie_data.get('Poster', '')
 
     party = WatchParty.objects.create(
         room_code=room_code,
@@ -245,14 +238,34 @@ TRIAL_DURATION = 45 * 60  # 2700 seconds
 
 def fetch_omdb_data(imdb_id=None, title=None, season=None):
     """
-    Helper to fetch data from OMDb API with caching.
+    Helper to fetch data from OMDb API with caching and database fallback.
     """
+    # 1. Check Cache First
     raw_key = f"omdb_{imdb_id or title}_{season or 'main'}"
     cache_key = raw_key.replace(" ", "_")
     cached_data = cache.get(cache_key)
     if cached_data:
         return cached_data
 
+    # 2. Check Database for existing metadata (if it's a main fetch)
+    if not season:
+        existing_party = None
+        if imdb_id:
+            existing_party = WatchParty.objects.filter(imdb_id=imdb_id).exclude(movie_title="").exclude(movie_title__isnull=True).first()
+        elif title:
+            existing_party = WatchParty.objects.filter(movie_title__icontains=title).exclude(poster_url="").first()
+        
+        if existing_party:
+            db_data = {
+                "Title": existing_party.movie_title,
+                "Poster": existing_party.poster_url,
+                "imdbID": existing_party.imdb_id,
+                "Response": "True"
+            }
+            cache.set(cache_key, db_data, 86400)
+            return db_data
+
+    # 3. Fetch from API
     if imdb_id:
         url = f"http://www.omdbapi.com/?apikey={api_key}&i={imdb_id}&plot=full"
         if season:
@@ -269,11 +282,12 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
             if data.get("Response") == "True":
                 cache.set(cache_key, data, 86400)  # 24 hours
                 return data
-    except Exception:
-        pass
+            else:
+                print(f"DEBUG: OMDB API Error for {imdb_id or title}: {data.get('Error')}")
+    except Exception as e:
+        print(f"DEBUG: OMDB Fetch Exception: {e}")
         
-    # Mock Data Fallback (API Limit Reached)
-    # Generate deterministic mock data based on input
+    # 4. Final Mock Data Fallback (Last resort)
     mock_id = imdb_id or f"tt{hash(title or 'unknown') % 10000000}"
     mock_title = title or "Mock Title"
     return {
@@ -282,7 +296,7 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
         "imdbID": mock_id,
         "Type": "movie",
         "Poster": "https://via.placeholder.com/300x450.png?text=" + mock_title.replace(" ", "+"),
-        "Plot": "This is a placeholder plot because the OMDB API limit was reached.",
+        "Plot": "Live data currently unavailable.",
         "Response": "True"
     }
 
