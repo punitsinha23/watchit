@@ -313,6 +313,14 @@ ul {
     min-width: 100px;
 }
 
+.carousel-scroll .movie-unit {
+    flex: 0 0 auto;
+    width: 160px;
+    background: transparent;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
 .carousel-scroll::-webkit-scrollbar {
     display: none;
 }

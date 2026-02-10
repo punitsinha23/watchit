@@ -373,18 +373,33 @@
         <div class="carousel-container" data-category="recent_movies" data-page="1">
             <div class="carousel-scroll">
                 {% for movie in recent_movies %}
-                <div class="movie-box">
-                    <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                        onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    <div class="overlay-btns">
-                        <a href="{% url 'detail' movie.imdbID %}" class="overlay-btn overlay-btn-play">
-                            <i class="fas fa-play me-2"></i>Play
-                        </a>
-                        {% if user.is_authenticated %}
-                        <a href="{% url 'create_watch_party' movie.imdbID %}" class="overlay-btn overlay-btn-party">
-                            <i class="fas fa-users me-2"></i>Party
-                        </a>
-                        {% endif %}
+                <div class="movie-unit fade-in visible">
+                    <div class="premium-card">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                        <div class="premium-overlay">
+                            <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
+                                <i class="fas fa-play me-2"></i>Play
+                            </a>
+                            <a href="{% url 'create_watch_party' movie.imdbID %}" class="premium-btn premium-btn-play"
+                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                <i class="fas fa-users me-2"></i>Party
+                            </a>
+                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
+                                <input type="hidden" name="title" value="{{ movie.Title }}">
+                                <input type="hidden" name="year" value="{{ movie.Year }}">
+                                <input type="hidden" name="poster" value="{{ movie.Poster }}">
+                                <button type="submit" class="premium-btn premium-btn-list">
+                                    <i class="fas fa-plus me-2"></i>My List
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="media-info text-center">
+                        <div class="media-title">{{ movie.Title }}</div>
+                        <div class="media-meta">{{ movie.Year }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -398,18 +413,33 @@
         <div class="carousel-container" data-category="popular_movies" data-page="1">
             <div class="carousel-scroll">
                 {% for movie in movies %}
-                <div class="movie-box">
-                    <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                        onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    <div class="overlay-btns">
-                        <a href="{% url 'detail' movie.imdbID %}" class="overlay-btn overlay-btn-play">
-                            <i class="fas fa-play me-2"></i>Play
-                        </a>
-                        {% if user.is_authenticated %}
-                        <a href="{% url 'create_watch_party' movie.imdbID %}" class="overlay-btn overlay-btn-party">
-                            <i class="fas fa-users me-2"></i>Party
-                        </a>
-                        {% endif %}
+                <div class="movie-unit fade-in visible">
+                    <div class="premium-card">
+                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                        <div class="premium-overlay">
+                            <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
+                                <i class="fas fa-play me-2"></i>Play
+                            </a>
+                            <a href="{% url 'create_watch_party' movie.imdbID %}" class="premium-btn premium-btn-play"
+                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                <i class="fas fa-users me-2"></i>Party
+                            </a>
+                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
+                                <input type="hidden" name="title" value="{{ movie.Title }}">
+                                <input type="hidden" name="year" value="{{ movie.Year }}">
+                                <input type="hidden" name="poster" value="{{ movie.Poster }}">
+                                <button type="submit" class="premium-btn premium-btn-list">
+                                    <i class="fas fa-plus me-2"></i>My List
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="media-info text-center">
+                        <div class="media-title">{{ movie.Title }}</div>
+                        <div class="media-meta">{{ movie.Year }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -423,18 +453,34 @@
         <div class="carousel-container" data-category="home_shows" data-page="1">
             <div class="carousel-scroll">
                 {% for show in shows %}
-                <div class="movie-box">
-                    <img src="{{ show.imdbID|default:show.imdbID|default:show.Title }}" alt="{{ show.Title }}"
-                        loading="lazy" onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    <div class="overlay-btns">
-                        <a href="{% url 'detail' show.imdbID %}" class="overlay-btn overlay-btn-play">
-                            <i class="fas fa-play me-2"></i>Play
-                        </a>
-                        {% if user.is_authenticated %}
-                        <a href="{% url 'create_watch_party' show.imdbID %}" class="overlay-btn overlay-btn-party">
-                            <i class="fas fa-users me-2"></i>Party
-                        </a>
-                        {% endif %}
+                <div class="movie-unit fade-in visible">
+                    <div class="premium-card">
+                        <img src="{{ show.Poster|default:'https://critics.io/img/movies/poster-placeholder.png' }}"
+                            alt="{{ show.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                        <div class="premium-overlay">
+                            <a href="{% url 'detail' show.imdbID %}" class="premium-btn premium-btn-play">
+                                <i class="fas fa-play me-2"></i>Play
+                            </a>
+                            <a href="{% url 'create_watch_party' show.imdbID %}" class="premium-btn premium-btn-play"
+                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                <i class="fas fa-users me-2"></i>Party
+                            </a>
+                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <input type="hidden" name="imdb_id" value="{{ show.imdbID }}">
+                                <input type="hidden" name="title" value="{{ show.Title }}">
+                                <input type="hidden" name="year" value="{{ show.Year }}">
+                                <input type="hidden" name="poster" value="{{ show.Poster }}">
+                                <button type="submit" class="premium-btn premium-btn-list">
+                                    <i class="fas fa-plus me-2"></i>My List
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="media-info text-center">
+                        <div class="media-title">{{ show.Title }}</div>
+                        <div class="media-meta">{{ show.Year }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -448,18 +494,33 @@
         <div class="carousel-container" data-category="popular_anime" data-page="1">
             <div class="carousel-scroll">
                 {% for anime in Animes %}
-                <div class="movie-box">
-                    <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy"
-                        onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    <div class="overlay-btns">
-                        <a href="{% url 'detail' anime.imdbID %}" class="overlay-btn overlay-btn-play">
-                            <i class="fas fa-play me-2"></i>Play
-                        </a>
-                        {% if user.is_authenticated %}
-                        <a href="{% url 'create_watch_party' anime.imdbID %}" class="overlay-btn overlay-btn-party">
-                            <i class="fas fa-users me-2"></i>Party
-                        </a>
-                        {% endif %}
+                <div class="movie-unit fade-in visible">
+                    <div class="premium-card">
+                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy"
+                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                        <div class="premium-overlay">
+                            <a href="{% url 'detail' anime.imdbID %}" class="premium-btn premium-btn-play">
+                                <i class="fas fa-play me-2"></i>Play
+                            </a>
+                            <a href="{% url 'create_watch_party' anime.imdbID %}" class="premium-btn premium-btn-play"
+                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                <i class="fas fa-users me-2"></i>Party
+                            </a>
+                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <input type="hidden" name="imdb_id" value="{{ anime.imdbID }}">
+                                <input type="hidden" name="title" value="{{ anime.Title }}">
+                                <input type="hidden" name="year" value="{{ anime.Year }}">
+                                <input type="hidden" name="poster" value="{{ anime.Poster }}">
+                                <button type="submit" class="premium-btn premium-btn-list">
+                                    <i class="fas fa-plus me-2"></i>My List
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="media-info text-center">
+                        <div class="media-title">{{ anime.Title }}</div>
+                        <div class="media-meta">{{ anime.Year }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -648,52 +709,38 @@
                     const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
 
                     items.forEach(item => {
-                        if (renderType === 'premium') {
-                            // Premium Card Rendering (for Profile/Dashboard)
-                            const div = document.createElement('div');
-                            div.className = 'movie-unit fade-in visible';
-                            div.innerHTML = `
-                                <div class="premium-card">
-                                    <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
-                                         onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                                    <div class="premium-overlay">
-                                        <a href="${item.url}" class="premium-btn premium-btn-play">
-                                            <i class="fas fa-play me-2"></i>Play
-                                        </a>
-                                        <a href="/party/create/${item.imdbID}/" class="premium-btn premium-btn-play" 
-                                           style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                            <i class="fas fa-users me-2"></i>Party
-                                        </a>
-                                        <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                                            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-                                            <input type="hidden" name="imdb_id" value="${item.imdbID}">
-                                            <input type="hidden" name="title" value="${item.Title}">
-                                            <input type="hidden" name="year" value="${item.Year}">
-                                            <input type="hidden" name="poster" value="${item.Poster}">
-                                            <button type="submit" class="premium-btn premium-btn-list">
-                                                <i class="fas fa-plus me-2"></i>My List
-                                            </button>
-                                        </form>
-                                    </div>
+                        const div = document.createElement('div');
+                        div.className = 'movie-unit fade-in visible';
+                        div.innerHTML = `
+                            <div class="premium-card">
+                                <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
+                                     onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                                <div class="premium-overlay">
+                                    <a href="/watch/${item.imdbID}/" class="premium-btn premium-btn-play">
+                                        <i class="fas fa-play me-2"></i>Play
+                                    </a>
+                                    <a href="/party/create/${item.imdbID}/" class="premium-btn premium-btn-play" 
+                                       style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                        <i class="fas fa-users me-2"></i>Party
+                                    </a>
+                                    <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                                        <input type="hidden" name="imdb_id" value="${item.imdbID}">
+                                        <input type="hidden" name="title" value="${item.Title}">
+                                        <input type="hidden" name="year" value="${item.Year}">
+                                        <input type="hidden" name="poster" value="${item.Poster}">
+                                        <button type="submit" class="premium-btn premium-btn-list">
+                                            <i class="fas fa-plus me-2"></i>My List
+                                        </button>
+                                    </form>
                                 </div>
-                                <div class="media-info text-center">
-                                    <div class="media-title">${item.Title}</div>
-                                    <div class="media-meta">${item.Year}</div>
-                                </div>
-                            `;
-                            container.appendChild(div);
-                        } else {
-                            // Default Simple Card (for Home)
-                            const div = document.createElement('div');
-                            div.className = 'movie-box';
-                            div.innerHTML = `
-                                <a href="${item.url}">
-                                    <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
-                                         onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                                </a>
-                            `;
-                            container.appendChild(div);
-                        }
+                            </div>
+                            <div class="media-info text-center">
+                                <div class="media-title">${item.Title}</div>
+                                <div class="media-meta">${item.Year}</div>
+                            </div>
+                        `;
+                        container.appendChild(div);
                     });
                 }
             });
