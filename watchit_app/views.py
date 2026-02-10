@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 import json
 import random
 import requests
@@ -12,8 +13,232 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
 from decouple import config
+from .models import WatchParty, PartyMessage
+import uuid
+from django.utils import timezone
+from django.http import JsonResponse
+from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
-api_key = config('OMDB_API_KEY', default='bd268b10')
+api_key = config('OMDB_API_KEY', default='24a15e19')
+
+# ... (Previous constants)
+
+@login_required
+def create_watch_party(request, imdb_id):
+    # Create a unique 6-character room code
+    while True:
+        room_code = str(uuid.uuid4())[:6].upper()
+        if not WatchParty.objects.filter(room_code=room_code).exists():
+            break
+            
+    # Fetch movie details from OMDB
+    movie_title = ""
+    poster_url = ""
+    try:
+        omdb_res = requests.get(f"http://www.omdbapi.com/?i={imdb_id}&apikey={api_key}")
+        if omdb_res.status_code == 200:
+            movie_data = omdb_res.json()
+            movie_title = movie_data.get('Title', '')
+            poster_url = movie_data.get('Poster', '')
+    except Exception as e:
+        print(f"Error fetching metadata: {e}")
+
+    party = WatchParty.objects.create(
+        room_code=room_code,
+        host=request.user,
+        imdb_id=imdb_id,
+        movie_title=movie_title,
+        poster_url=poster_url,
+        current_season=1,
+        current_episode=1
+    )
+    return redirect('party_room', room_code=room_code)
+
+@login_required
+def join_watch_party(request):
+    if request.method == 'POST':
+        room_code = request.POST.get('room_code', '').upper()
+        try:
+            party = WatchParty.objects.get(room_code=room_code, is_active=True)
+            
+            # If already a participant or the host, go straight in
+            if request.user == party.host or party.participants.filter(id=request.user.id).exists():
+                return redirect('party_room', room_code=room_code)
+            
+            # Add to pending if not already there
+            if not party.pending_participants.filter(id=request.user.id).exists():
+                party.pending_participants.add(request.user)
+            
+            return redirect('waiting_room', room_code=room_code)
+        except WatchParty.DoesNotExist:
+            return render(request, 'join_party.html', {'error': 'Invalid or inactive room code'})
+    return render(request, 'join_party.html')
+
+@login_required
+def waiting_room(request, room_code):
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True)
+    except WatchParty.DoesNotExist:
+        return redirect('base')
+        
+    if request.user == party.host or party.participants.filter(id=request.user.id).exists():
+        return redirect('party_room', room_code=room_code)
+        
+    return render(request, 'waiting_room.html', {'party': party})
+
+@login_required
+def api_check_approval(request, room_code):
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True)
+    except WatchParty.DoesNotExist:
+        return JsonResponse({'status': 'room_gone'})
+        
+    if party.participants.filter(id=request.user.id).exists():
+        return JsonResponse({'status': 'approved'})
+    
+    if not party.pending_participants.filter(id=request.user.id).exists():
+        return JsonResponse({'status': 'denied'})
+        
+    return JsonResponse({'status': 'pending'})
+
+
+@login_required
+def party_room(request, room_code):
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True)
+    except WatchParty.DoesNotExist:
+        return redirect('base')
+
+    # Access check: Host or Participant only
+    if request.user != party.host and not party.participants.filter(id=request.user.id).exists():
+        return redirect('waiting_room', room_code=room_code)
+
+
+    # Fetch movie data using existing helper
+    movie_data = fetch_omdb_data(imdb_id=party.imdb_id)
+    if not movie_data:
+        return redirect('base')
+
+    season_data = {}
+    if movie_data.get('Type') == 'series':
+        season_data = fetch_omdb_data(imdb_id=party.imdb_id, season=party.current_season) or {}
+    
+    # Simple recommendation logic (can share with detail view)
+    all_recs = top_100_movies + anime_ids
+    recommendations = []
+    # (Optional: Recommendations logic similar to detail_view, omitted for brevity if needed)
+
+    return render(request, 'watch_party.html', {
+        'party': party,
+        'movie': movie_data,
+        'season_data': season_data,
+        'episodes_json': json.dumps(season_data.get('Episodes', [])),
+        'is_host': request.user == party.host,
+        'api_key': api_key
+    })
+
+def api_party_status(request, room_code):
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True)
+    except WatchParty.DoesNotExist:
+        return JsonResponse({'error': 'Party not found'}, status=404)
+
+    # Fetch messages since 'last_msg_id' if provided
+    last_msg_id = request.GET.get('last_msg_id', 0)
+    messages = party.messages.filter(id__gt=last_msg_id).order_by('timestamp')
+    
+    msgs_data = [{
+        'id': m.id,
+        'user': m.user.username,
+        'text': m.text,
+        'timestamp': m.timestamp.strftime('%H:%M')
+    } for m in messages]
+
+    return JsonResponse({
+        'season': party.current_season,
+        'episode': party.current_episode,
+        'source': party.current_source,
+        'messages': msgs_data,
+        'pending_users': [{'id': u.id, 'username': u.username} for u in party.pending_participants.all()] if request.user == party.host else []
+    })
+
+@csrf_exempt
+@login_required
+def api_handle_join_request(request, room_code):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True, host=request.user)
+    except WatchParty.DoesNotExist:
+        return JsonResponse({'error': 'Party not found or unauthorized'}, status=404)
+
+    data = json.loads(request.body)
+    user_id = data.get('user_id')
+    action = data.get('action') # 'approve' or 'deny'
+    
+    try:
+        user_to_handle = User.objects.get(id=user_id)
+        party.pending_participants.remove(user_to_handle)
+        if action == 'approve':
+            party.participants.add(user_to_handle)
+        return JsonResponse({'status': 'ok'})
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+@csrf_exempt
+@login_required
+def delete_party(request, room_code):
+    try:
+        party = WatchParty.objects.get(room_code=room_code, host=request.user)
+        party.is_active = False
+        party.save()
+        return redirect('user') # Correct name is 'user'
+    except WatchParty.DoesNotExist:
+        return redirect('base')
+
+
+@csrf_exempt
+@login_required
+def api_party_update(request, room_code):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True)
+    except WatchParty.DoesNotExist:
+        return JsonResponse({'error': 'Party not found'}, status=404)
+
+    if request.user != party.host:
+        return JsonResponse({'error': 'Only host can update settings'}, status=403)
+
+    data = json.loads(request.body)
+    party.current_season = data.get('season', party.current_season)
+    party.current_episode = data.get('episode', party.current_episode)
+    party.current_source = data.get('source', party.current_source)
+    party.save()
+    
+    return JsonResponse({'status': 'ok'})
+
+@csrf_exempt
+@login_required
+def api_party_chat(request, room_code):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    try:
+        party = WatchParty.objects.get(room_code=room_code, is_active=True)
+    except WatchParty.DoesNotExist:
+        return JsonResponse({'error': 'Party not found'}, status=404)
+
+    data = json.loads(request.body)
+    text = data.get('text', '').strip()
+    if text:
+        PartyMessage.objects.create(party=party, user=request.user, text=text)
+
+    return JsonResponse({'status': 'ok'})
+
 
 # Free trial duration in seconds (45 minutes)
 TRIAL_DURATION = 45 * 60  # 2700 seconds

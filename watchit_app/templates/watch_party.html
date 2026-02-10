@@ -1,0 +1,472 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Watch Party: {{ movie.Title }} - WATCHIT{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 fade-in">
+    <div class="row">
+
+        <!-- ================= PLAYER SECTION ================= -->
+        <div class="col-lg-9 col-md-8">
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="text-white m-0">
+                    Room:
+                    <span class="text-danger fw-bold">{{ party.room_code }}</span>
+                </h4>
+                <span class="badge bg-secondary" id="active-viewers">Loading...</span>
+            </div>
+
+            <div class="player-container position-relative bg-black rounded overflow-hidden shadow-lg"
+                style="padding-bottom:56.25%; height:0;">
+                <iframe id="video-player" allowfullscreen
+                    style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;">
+                </iframe>
+            </div>
+
+            <!-- HOST CONTROLS -->
+            {% if is_host %}
+            <div class="d-flex flex-wrap gap-3 align-items-center mt-3 p-3 rounded bg-dark border border-secondary">
+
+                <span class="badge bg-danger">HOST CONTROLS</span>
+
+                <select id="source-select" class="form-select bg-black text-white border-secondary">
+                    <option value="vidsrc">Server 1</option>
+                    <option value="vidsrcto">Server 2</option>
+                    <option value="vidsrcme">Server 3</option>
+                    <option value="superembed">Server 4</option>
+                </select>
+
+                {% if movie.Type == 'series' %}
+                <select id="season-select" class="form-select bg-black text-white border-secondary">
+                    {% for i in "x"|rjust:movie.totalSeasons %}
+                    <option value="{{ forloop.counter }}">
+                        Season {{ forloop.counter }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <select id="episode-select" class="form-select bg-black text-white border-secondary"></select>
+                {% endif %}
+
+                <button id="update-btn" class="btn btn-success btn-sm">
+                    Sync to All
+                </button>
+
+            </div>
+            {% else %}
+            <div class="mt-3 p-2 bg-dark rounded text-center text-secondary small">
+                Waiting for host to select content...
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <h2 class="text-white">{{ movie.Title }}</h2>
+                <p class="text-white-50">{{ movie.Plot }}</p>
+            </div>
+
+        </div>
+
+        <!-- ================= CHAT SECTION ================= -->
+        <div class="col-lg-3 col-md-4">
+
+            {% if is_host %}
+            <!-- Join Requests Notification -->
+            <div id="pending-requests" class="mb-3 d-none">
+                <div class="card bg-danger border-secondary p-2 shadow">
+                    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                        <small class="text-white fw-bold"><i class="fas fa-user-plus me-1"></i> Join Requests</small>
+                        <span class="badge bg-white text-danger" id="request-count">0</span>
+                    </div>
+                    <div id="request-list" class="d-flex flex-column gap-1"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card bg-dark border-secondary h-100" style="max-height:80vh;">
+
+                <div class="card-header bg-black border-bottom border-secondary text-white fw-bold">
+                    Live Chat
+                </div>
+
+                <div id="chat-messages" class="card-body overflow-auto" style="height:400px; scroll-behavior:smooth;">
+                </div>
+
+                <div class="card-footer bg-black border-top border-secondary">
+                    <form id="chat-form" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input id="chat-input" class="form-control bg-dark text-white border-secondary"
+                            placeholder="Type message..." required>
+                        <button class="btn btn-danger">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        /* ================= CONFIG ================= */
+
+        const ROOM_CODE = "{{ party.room_code }}";
+        const IMDB_ID = "{{ party.imdb_id }}";
+        const TYPE = "{{ movie.Type|lower }}";
+        const API_KEY = "{{ api_key }}";
+        const IS_HOST = "{{ is_host }}" === "True";
+
+        const player = document.getElementById("video-player");
+        const chatBox = document.getElementById("chat-messages");
+        const chatForm = document.getElementById("chat-form");
+        const chatInput = document.getElementById("chat-input");
+
+        const sourceSelect = document.getElementById("source-select");
+        const seasonSelect = document.getElementById("season-select");
+        const episodeSelect = document.getElementById("episode-select");
+
+        const viewerBadge = document.getElementById("active-viewers");
+
+        let lastMsgId = 0;
+        let polling = false;
+
+        let currentState = {
+            season: parseInt("{{ party.current_season|default:1 }}"),
+            episode: parseInt("{{ party.current_episode|default:1 }}"),
+            source: "{{ party.current_source|default:'vidsrc' }}"
+        };
+
+        console.log("DEBUG: Initial State", currentState);
+        console.log("DEBUG: Config", { ROOM_CODE, IMDB_ID, TYPE, IS_HOST });
+
+        /* ================= CSRF ================= */
+
+        function getCSRF() {
+            // Try hidden input first
+            const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            if (token) return token;
+
+            // Fallback to cookie
+            return document.cookie
+                .split("; ")
+                .find(row => row.startsWith("csrftoken="))
+                ?.split("=")[1];
+        }
+
+        /* ================= VIDEO SOURCE ================= */
+
+        function getSourceUrl(source, season, episode) {
+
+            if (source === "vidsrcto") {
+                return TYPE === "movie"
+                    ? `https://vidsrc.to/embed/movie/${IMDB_ID}`
+                    : `https://vidsrc.to/embed/tv/${IMDB_ID}/${season}/${episode}`;
+            }
+
+            if (source === "vidsrcme") {
+                return TYPE === "movie"
+                    ? `https://vidsrc.me/embed/${IMDB_ID}`
+                    : `https://vidsrc.me/embed/tv/${IMDB_ID}/season/${season}/episode/${episode}`;
+            }
+
+            if (source === "superembed") {
+                return TYPE === "movie"
+                    ? `https://seapi.link/?type=imdb&id=${IMDB_ID}`
+                    : `https://seapi.link/?type=imdb&id=${IMDB_ID}&season=${season}&episode=${episode}`;
+            }
+
+            return TYPE === "movie"
+                ? `https://vidsrc.xyz/embed/movie/${IMDB_ID}`
+                : `https://vidsrc.xyz/embed/tv/${IMDB_ID}/${season}/${episode}`;
+        }
+
+        function updatePlayer(state) {
+
+            const newUrl = getSourceUrl(
+                state.source,
+                state.season,
+                state.episode
+            );
+
+            if (player.src !== newUrl) {
+                player.src = newUrl;
+            }
+
+            currentState = { ...state };
+        }
+
+        /* ================= HOST SYNC ================= */
+
+        async function syncState() {
+            if (!IS_HOST) return;
+
+            const btn = document.getElementById("update-btn");
+            const originalText = btn ? btn.innerText : "Sync to All";
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "Syncing...";
+            }
+
+            const state = {
+                source: sourceSelect.value,
+                season: seasonSelect ? (parseInt(seasonSelect.value) || 1) : 1,
+                episode: episodeSelect ? (parseInt(episodeSelect.value) || 1) : 1
+            };
+
+            console.log("DEBUG: Syncing state", state);
+            updatePlayer(state);
+
+            try {
+                const res = await fetch(`/party/api/update/${ROOM_CODE}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRF()
+                    },
+                    body: JSON.stringify(state)
+                });
+                const data = await res.json();
+                console.log("DEBUG: Sync response", data);
+            } catch (e) {
+                console.error("Sync error:", e);
+                alert("Failed to sync: " + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            }
+        }
+
+        /* ================= POLLING ================= */
+
+        async function pollServer() {
+
+            if (polling) return;
+            polling = true;
+
+            try {
+
+                const res = await fetch(`/party/api/status/${ROOM_CODE}/?last_msg_id=${lastMsgId}`);
+                const data = await res.json();
+
+                /* viewer count */
+                if (viewerBadge && data.viewers !== undefined) {
+                    viewerBadge.textContent = `${data.viewers} Viewer(s)`;
+                }
+
+                /* pending requests (host only) */
+                if (IS_HOST && data.pending_users) {
+                    updatePendingRequests(data.pending_users);
+                }
+
+                /* guest sync */
+                if (!IS_HOST) {
+                    updatePlayer({
+                        source: data.source,
+                        season: data.season,
+                        episode: data.episode
+                    });
+                }
+
+                /* chat */
+                if (data.messages) {
+                    data.messages.forEach(m => {
+                        appendMessage(m);
+                        lastMsgId = Math.max(lastMsgId, m.id);
+                    });
+                }
+
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+
+            polling = false;
+        }
+
+        function updatePendingRequests(users) {
+            const container = document.getElementById("pending-requests");
+            const list = document.getElementById("request-list");
+            const count = document.getElementById("request-count");
+            if (!container || !list) return;
+
+            if (!users || users.length === 0) {
+                container.classList.add("d-none");
+                return;
+            }
+
+            container.classList.remove("d-none");
+            count.textContent = users.length;
+            list.innerHTML = "";
+
+            users.forEach(u => {
+                const div = document.createElement("div");
+                div.className = "d-flex justify-content-between align-items-center bg-black p-2 rounded small border border-secondary mb-1";
+                div.innerHTML = `
+                <span class="text-white text-truncate me-2">${u.username}</span>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-success py-0 px-2" onclick="handleJoinRequest(${u.id}, 'approve', event)" title="Approve">
+                        <i class="fas fa-check" style="font-size: 0.8rem;"></i>
+                    </button>
+                    <button class="btn btn-danger py-0 px-2" onclick="handleJoinRequest(${u.id}, 'deny', event)" title="Deny">
+                        <i class="fas fa-times" style="font-size: 0.8rem;"></i>
+                    </button>
+                </div>
+            `;
+                list.appendChild(div);
+            });
+        }
+
+        window.handleJoinRequest = async function (userId, action, event) {
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+
+            // Immediate feedback
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size: 0.8rem;"></i>';
+
+            try {
+                const res = await fetch(`/party/api/handle-request/${ROOM_CODE}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRF()
+                    },
+                    body: JSON.stringify({ user_id: userId, action: action })
+                });
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    // Success - remove row
+                    btn.closest('.d-flex').remove();
+                    // Update count
+                    const count = document.getElementById("request-count");
+                    const newCount = parseInt(count.textContent) - 1;
+                    count.textContent = newCount;
+                    if (newCount <= 0) {
+                        document.getElementById("pending-requests").classList.add("d-none");
+                    }
+                } else {
+                    alert("Error: " + (data.error || "Failed to process request"));
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+            } catch (e) {
+                console.error("Error handling join request:", e);
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        setInterval(pollServer, 2000);
+
+        /* ================= CHAT ================= */
+
+        chatForm?.addEventListener("submit", async e => {
+
+            e.preventDefault();
+
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            await fetch(`/party/api/chat/${ROOM_CODE}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRF()
+                },
+                body: JSON.stringify({ text })
+            });
+
+            chatInput.value = "";
+        });
+
+        function appendMessage(msg) {
+
+            const div = document.createElement("div");
+            div.className = "mb-2";
+
+            div.innerHTML = `
+            <small class="text-secondary" style="font-size:0.7em;">
+                ${msg.timestamp}
+            </small>
+            <div>
+                <span class="text-danger fw-bold">${msg.user}:</span>
+                <span class="text-white">${escapeHtml(msg.text)}</span>
+            </div>
+        `;
+
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /* ================= SERIES LOGIC ================= */
+
+        function loadEpisodes(season) {
+
+            if (!episodeSelect) return;
+
+            // Fetch episodes from OMDB
+            fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${IMDB_ID}&Season=${season}`)
+                .then(res => res.json())
+                .then(data => {
+
+                    if (!data.Episodes) return;
+
+                    episodeSelect.innerHTML = "";
+
+                    data.Episodes.forEach(ep => {
+                        const opt = document.createElement("option");
+                        opt.value = ep.Episode;
+                        opt.textContent = `Ep ${ep.Episode}: ${ep.Title}`;
+
+                        if (parseInt(ep.Episode) === currentState.episode) {
+                            opt.selected = true;
+                        }
+
+                        episodeSelect.appendChild(opt);
+                    });
+                });
+        }
+
+        /* ================= HOST UI ================= */
+
+        if (IS_HOST) {
+
+            sourceSelect?.addEventListener("change", syncState);
+            seasonSelect?.addEventListener("change", function () {
+                // Update episodes when season changes
+                loadEpisodes(this.value);
+                // Default to ep 1
+                episodeSelect.value = 1;
+                syncState();
+            });
+            episodeSelect?.addEventListener("change", syncState);
+            document.getElementById("update-btn")?.addEventListener("click", syncState);
+
+            // Initial setup
+            if (TYPE === 'series') {
+                loadEpisodes(currentState.season);
+            }
+
+            updatePlayer(currentState);
+        } else {
+            // Guest init
+            updatePlayer(currentState);
+        }
+
+    });
+</script>
+
+{% endblock %}

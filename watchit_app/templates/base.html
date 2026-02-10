@@ -93,37 +93,6 @@
             margin-bottom: 1rem;
         }
 
-        /* Search Box */
-        .search-box {
-            position: relative;
-            display: flex;
-            align-items: center;
-            width: 250px;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 10px;
-            color: white;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .search-input {
-            outline: none;
-            background: rgba(0, 0, 0, 0.85);
-            border: solid 1px rgba(255, 255, 255, 0.85);
-            padding: 7px 14px 7px 40px;
-            width: 0;
-            color: #fff;
-            opacity: 0;
-            transition: 0.5s;
-        }
-
-        .search-box.active .search-input {
-            opacity: 1;
-            width: 100%;
-        }
 
         /* Horizontal Scroll Containers */
         .carousel-container {
@@ -284,57 +253,64 @@
 
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm"
+        style="border-bottom: 1px solid #333;">
+        <div class="container-fluid px-lg-4 d-flex align-items-center">
             <a class="navbar-brand" href="{% url 'base' %}">WATCHIT</a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <!-- Search Bar - Always Visible -->
+            <div class="ms-auto me-2">
+                <form method="POST" action="{% url 'user_dashboard' %}" class="search-box">
+                    {% csrf_token %}
+                    <i class="fa fa-search search-icon"></i>
+                    <input class="search-input" type="text" name="title" placeholder="Search...">
+                </form>
+            </div>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- Search Box - Centered on Desktop -->
-                <div class="mx-auto my-2 my-lg-0">
-                    <div class="search-box">
-                        <i class="fa fa-search search-icon"></i>
-                        <form method="POST" id="searchForm" action="{% url 'user_dashboard' %}">
-                            {% csrf_token %}
-                            <input class="search-input" type="text" name="title" placeholder="Titles, people, genres">
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Nav Items - Right Side on Desktop -->
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-
-
+                <ul class="navbar-nav ms-auto align-items-lg-center">
                     {% if user.is_authenticated %}
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link" href="{% url 'user' %}">Profile</a>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+
+                    <!-- Desktop Profile Dropdown -->
+                    <li class="nav-item dropdown d-none d-lg-block">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                            data-bs-toggle="dropdown">
                             <img src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
                                 class="profile-img" alt="Profile"
-                                style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                                style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #444;">
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark"
-                            style="background-color: #1f1f1f; border-color: #333;">
-                            <li><a class="dropdown-item text-white" href="{% url 'user' %}">View Profile</a></li>
-                            <li><a class="dropdown-item text-white" href="{% url 'watchlist' %}">Watchlist</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2"
+                            style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+                            <li><a class="dropdown-item rounded-2 text-white" href="{% url 'user' %}"><i
+                                        class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item rounded-2 text-white" href="{% url 'watchlist' %}"><i
+                                        class="fas fa-list me-2"></i>Watchlist</a></li>
                             <li>
                                 <hr class="dropdown-divider border-secondary">
                             </li>
-                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i
+                            <li><a class="dropdown-item text-danger rounded-2" href="{% url 'logout' %}"><i
                                         class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link text-danger" href="{% url 'logout' %}">Logout</a>
+                    </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link btn btn-danger text-white px-3 rounded-pill"
-                            style="background-color: #e50914;" href="{% url 'signup' %}">Sign Up</a>
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="nav-link btn btn-danger text-white px-4 rounded-pill ms-lg-2"
+                            style="background-color: #e50914; border: none; font-weight: 600;"
+                            href="{% url 'signup' %}">Sign Up</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -398,10 +374,18 @@
             <div class="carousel-scroll">
                 {% for movie in recent_movies %}
                 <div class="movie-box">
-                    <a href="{% url 'detail' movie.imdbID %}">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    </a>
+                    <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                        onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                    <div class="overlay-btns">
+                        <a href="{% url 'detail' movie.imdbID %}" class="overlay-btn overlay-btn-play">
+                            <i class="fas fa-play me-2"></i>Play
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'create_watch_party' movie.imdbID %}" class="overlay-btn overlay-btn-party">
+                            <i class="fas fa-users me-2"></i>Party
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -415,10 +399,18 @@
             <div class="carousel-scroll">
                 {% for movie in movies %}
                 <div class="movie-box">
-                    <a href="{% url 'detail' movie.imdbID %}">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    </a>
+                    <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                        onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                    <div class="overlay-btns">
+                        <a href="{% url 'detail' movie.imdbID %}" class="overlay-btn overlay-btn-play">
+                            <i class="fas fa-play me-2"></i>Play
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'create_watch_party' movie.imdbID %}" class="overlay-btn overlay-btn-party">
+                            <i class="fas fa-users me-2"></i>Party
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -432,10 +424,18 @@
             <div class="carousel-scroll">
                 {% for show in shows %}
                 <div class="movie-box">
-                    <a href="{% url 'detail' show.imdbID %}">
-                        <img src="{{ show.Poster }}" alt="{{ show.Title }}" loading="lazy"
-                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    </a>
+                    <img src="{{ show.imdbID|default:show.imdbID|default:show.Title }}" alt="{{ show.Title }}"
+                        loading="lazy" onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                    <div class="overlay-btns">
+                        <a href="{% url 'detail' show.imdbID %}" class="overlay-btn overlay-btn-play">
+                            <i class="fas fa-play me-2"></i>Play
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'create_watch_party' show.imdbID %}" class="overlay-btn overlay-btn-party">
+                            <i class="fas fa-users me-2"></i>Party
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -449,10 +449,18 @@
             <div class="carousel-scroll">
                 {% for anime in Animes %}
                 <div class="movie-box">
-                    <a href="{% url 'detail' anime.imdbID %}">
-                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy"
-                            onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                    </a>
+                    <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy"
+                        onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                    <div class="overlay-btns">
+                        <a href="{% url 'detail' anime.imdbID %}" class="overlay-btn overlay-btn-play">
+                            <i class="fas fa-play me-2"></i>Play
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'create_watch_party' anime.imdbID %}" class="overlay-btn overlay-btn-party">
+                            <i class="fas fa-users me-2"></i>Party
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -463,7 +471,13 @@
 
     <!-- Free Trial Modal -->
     <div id="trialModal" class="trial-modal">
-        <div class="trial-modal-content">
+        <div class="trial-modal-content" style="position: relative;">
+            <button type="button"
+                style="position: absolute; top: 10px; right: 10px; z-index: 20; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                onclick="document.getElementById('trialModal').style.display='none'; document.body.style.overflow='auto';"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                <i class="fas fa-times"></i>
+            </button>
             <h2>🎬 Your Free Trial Has Ended</h2>
             <p>You've enjoyed 45 minutes of free browsing! Sign up now to continue watching unlimited movies, shows, and
                 anime.</p>
@@ -527,7 +541,7 @@
         }
 
         // Free Trial Timer (45 minutes for anonymous users)
-        {% if not user.is_authenticated %}
+        {% if not user.is_authenticated and request.path != '/accounts/login/' and request.path != '/signup/' and '/verify/' not in request.path and '/reset-password/' not in request.path and request.path != '/forgot-password/' %}
         (function () {
             const TRIAL_DURATION = 45 * 60 * 1000; // 45 minutes in milliseconds
 

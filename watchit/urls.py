@@ -44,6 +44,20 @@ urlpatterns = [
     path('account/profile/watchlist/add/', account_views.add_to_watchlist, name='add_to_watchlist'),
     path('account/profile/watchlist/remove/<str:imdb_id>/', account_views.remove_from_watchlist, name='remove_from_watchlist'),
     path('account/profile/watchit', account_views.watchlist_view , name='watchlist'),
+    
+    # Watch Party URLs
+    path('party/create/<str:imdb_id>/', watchit_views.create_watch_party, name='create_watch_party'),
+    path('party/join/', watchit_views.join_watch_party, name='join_watch_party'),
+    path('party/room/<str:room_code>/', watchit_views.party_room, name='party_room'),
+    path('party/api/status/<str:room_code>/', watchit_views.api_party_status, name='api_party_status'),
+    path('party/api/update/<str:room_code>/', watchit_views.api_party_update, name='api_party_update'),
+    path('party/api/chat/<str:room_code>/', watchit_views.api_party_chat, name='api_party_chat'),
+    
+    # New Room Management & Approval URLs
+    path('party/waiting/<str:room_code>/', watchit_views.waiting_room, name='waiting_room'),
+    path('party/api/check-approval/<str:room_code>/', watchit_views.api_check_approval, name='api_check_approval'),
+    path('party/api/handle-request/<str:room_code>/', watchit_views.api_handle_join_request, name='api_handle_join_request'),
+    path('party/delete/<str:room_code>/', watchit_views.delete_party, name='delete_party'),
 ] 
 
 

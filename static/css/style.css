@@ -76,9 +76,6 @@ ul {
 
 /* Navbar */
 .navbar {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
-    background-color: transparent;
-    /* Allows gradient to work */
     padding: 15px 4%;
     position: fixed;
     width: 100%;
@@ -88,8 +85,20 @@ ul {
     height: var(--navbar-height);
 }
 
-.navbar.scrolled {
-    background-color: var(--background-black);
+.navbar.bg-black {
+    background-color: var(--background-black) !important;
+    background-image: none !important;
+}
+
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background-color: #050505;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-top: 15px;
+        border: 1px solid #333;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+    }
 }
 
 .navbar-brand {
@@ -118,17 +127,26 @@ ul {
     color: var(--text-white) !important;
 }
 
-/* Search Box */
+/* Search Box - Improved and Refined */
 .search-box {
     position: relative;
     display: flex;
     align-items: center;
+    transition: all 0.3s ease;
+    min-width: 40px;
 }
 
 .search-icon {
     color: var(--text-white);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     cursor: pointer;
+    z-index: 10;
+    padding: 5px;
+    transition: transform 0.2s;
+}
+
+.search-icon:hover {
+    transform: scale(1.1);
 }
 
 .search-input {
@@ -136,20 +154,37 @@ ul {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
-    padding: 8px 15px;
+    padding: 6px 15px 6px 35px;
     border-radius: 20px;
     outline: none;
     width: 0;
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    margin-left: 10px;
-    font-size: 0.9rem;
+    position: absolute;
+    right: 0;
+    font-size: 0.85rem;
+}
+
+.search-box.active .search-input {
+    width: 200px;
+    opacity: 1;
+    position: relative;
 }
 
 .search-input:focus {
     background: rgba(0, 0, 0, 0.8);
-    border-color: rgba(229, 9, 20, 0.5);
-    box-shadow: 0 0 10px rgba(229, 9, 20, 0.2);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+}
+
+@media (max-width: 576px) {
+    .search-box.active .search-input {
+        width: 130px;
+    }
+
+    .navbar-brand {
+        font-size: 1.5rem !important;
+    }
 }
 
 .search-box.active .search-input {

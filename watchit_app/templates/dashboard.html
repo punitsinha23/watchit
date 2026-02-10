@@ -8,16 +8,33 @@
 <div class="container-fluid mt-4">
     <div class="media-grid">
         {% for movie in movie_data %}
-        <div class="media-card fade-in">
-            <a href="{% url 'detail' movie.imdbID %}">
-                <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                    onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                <div class="media-info">
-                    <div class="media-title">{{ movie.Title }}</div>
-                    <!-- Optionally add year or type if available in movie object -->
-                </div>
-            </a>
+        <div class="media-card fade-in position-relative">
+            <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+            <div class="media-info">
+                <div class="media-title">{{ movie.Title }}</div>
+            </div>
+
+            <!-- Hover Overlay -->
+            <div class="premium-overlay d-flex flex-column justify-content-center align-items-center p-3"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.3s;">
+                <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play mb-2 w-100 text-center">
+                    <i class="fas fa-play me-2"></i>Play
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'create_watch_party' movie.imdbID %}"
+                    class="premium-btn premium-btn-play w-100 text-center"
+                    style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                    <i class="fas fa-users me-2"></i>Party
+                </a>
+                {% endif %}
+            </div>
         </div>
+        <style>
+            .media-card:hover .premium-overlay {
+                opacity: 1 !important;
+            }
+        </style>
         {% endfor %}
     </div>
 </div>

@@ -2,7 +2,7 @@
 
 import requests
 
-api_key = 'bd268b10'
+api_key = '24a15e19'
 imdb_id = 'tt1375666' # Inception
 
 url = f"http://www.omdbapi.com/?apikey={api_key}&i={imdb_id}&plot=full"

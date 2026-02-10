@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Join Watch Party - WATCHIT{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="card bg-dark text-white border-secondary p-4" style="max-width: 400px; width: 100%;">
+        <h2 class="text-center mb-4">Join Party</h2>
+
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="room_code" class="form-label text-secondary">Room Code</label>
+                <input type="text" class="form-control bg-black text-white border-secondary text-uppercase"
+                    id="room_code" name="room_code" placeholder="XY12Z3" required maxlength="6">
+            </div>
+            <button type="submit" class="btn btn-danger w-100">Join Room</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

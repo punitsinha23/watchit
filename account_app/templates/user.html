@@ -21,40 +21,61 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <div class="container-fluid">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm" style="border-bottom: 1px solid #333;">
+    <div class="container-fluid px-lg-4 d-flex align-items-center">
       <a class="navbar-brand" href="{% url 'base' %}">WATCHIT</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span
-          class="navbar-toggler-icon"></span></button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="#movies-scroll">Movies</a>
-          </li>
-          <li class="nav-item"><a class="nav-link" href="#anime-scroll">Anime</a>
-          </li>
-          <li class="nav-item"><a class="nav-link" href="#shows-scroll">TV Shows</a>
-          </li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><img
-                src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
-                class="profile-img" alt="Profile Picture"></a>
-            <ul class="dropdown-menu dropdown-menu-end" style="background-color: var(--card-bg); border-color: #333;">
-              <li><a class="dropdown-item text-white" href="{% url 'user' %}">View Profile</a></li>
-              <li><a class="dropdown-item text-white" href="{% url 'watchlist' %}">Watchlist</a></li>
-              <li>
-                <hr class="dropdown-divider border-secondary">
-              </li>
-              <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i
-                    class="fas fa-sign-out-alt me-3"></i>Logout</a></li>
-            </ul>
-          </li>
-        </ul>
-        <form method="POST" action="{% url 'user_dashboard' %}" class="search-box ms-3">
+
+      <!-- Search Bar - Always Visible -->
+      <div class="ms-auto me-2">
+        <form method="POST" action="{% url 'user_dashboard' %}" class="search-box">
           {% csrf_token %}
           <i class="fa fa-search search-icon"></i>
           <input class="search-input" type="text" name="title" placeholder="Search...">
         </form>
+      </div>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="#movies-scroll">Movies</a></li>
+          <li class="nav-item"><a class="nav-link" href="#anime-scroll">Anime</a></li>
+          <li class="nav-item"><a class="nav-link" href="#shows-scroll">TV Shows</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
+
+          <!-- Mobile Profile Options -->
+          <li class="nav-item d-lg-none">
+            <a class="nav-link" href="{% url 'user' %}">Profile</a>
+          </li>
+
+          <!-- Desktop Profile Dropdown -->
+          <li class="nav-item dropdown d-none d-lg-block">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+              data-bs-toggle="dropdown">
+              <img
+                src="https://static.vecteezy.com/system/resources/previews/009/734/564/original/default-avatar-profile-icon-of-social-media-user-vector.jpg"
+                class="profile-img" alt="Profile"
+                style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #444;">
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2"
+              style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+              <li><a class="dropdown-item rounded-2 text-white" href="{% url 'user' %}"><i
+                    class="fas fa-user me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item rounded-2 text-white" href="{% url 'watchlist' %}"><i
+                    class="fas fa-list me-2"></i>Watchlist</a></li>
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li><a class="dropdown-item text-danger rounded-2" href="{% url 'logout' %}"><i
+                    class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+            </ul>
+          </li>
+          <li class="nav-item d-lg-none">
+            <a class="nav-link text-danger" href="{% url 'logout' %}">Logout</a>
+          </li>
+        </ul>
       </div>
     </div>
   </nav>
@@ -83,8 +104,78 @@
           Watchlist</a>
         <a href="{% url 'user_dashboard' %}" class="btn btn-danger px-4 rounded-pill">Search For
           Movies</a>
+        <a href="{% url 'join_watch_party' %}" class="btn btn-outline-light px-4 rounded-pill"><i
+            class="fas fa-users me-2"></i>Join
+          Watch Party</a>
       </div>
     </section>
+    <!-- ACTIVE ROOMS SECTION -->
+    {% if hosted_parties or joined_parties %}
+    <section class="fade-in mb-5 px-3" style="animation-delay: 0.1s;">
+      <h2 class="section-title text-danger mb-4"><i class="fas fa-users-viewfinder me-2"></i>My Active Rooms</h2>
+      <div class="carousel-container mt-4">
+        <div class="carousel-scroll">
+
+          <!-- Hosted Rooms -->
+          {% for party in hosted_parties %}
+          <div class="movie-unit fade-in visible">
+            <div class="premium-card">
+              <img
+                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
+                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+              <div class="premium-overlay flex-column">
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play mb-2">
+                  <i class="fas fa-play me-2"></i>Enter Room
+                </a>
+                <form method="POST" action="{% url 'delete_party' party.room_code %}"
+                  onsubmit="return confirm('Permanently delete this room?')">
+                  {% csrf_token %}
+                  <button type="submit" class="premium-btn bg-dark text-danger border-danger">
+                    <i class="fas fa-trash-alt me-2"></i>Delete
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="media-info text-center">
+              <div class="media-title text-danger">{{ party.movie_title|default:party.room_code }}</div>
+              <div class="media-meta">Room: {{ party.room_code }}</div>
+            </div>
+          </div>
+          {% endfor %}
+
+          <!-- Joined Rooms -->
+          {% for party in joined_parties %}
+          <div class="movie-unit fade-in visible">
+            <div class="premium-card">
+              <img
+                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
+                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+              <div class="premium-overlay flex-column">
+                <span class="badge bg-secondary mb-2">GUEST</span>
+                <div class="mb-3 text-center">
+                  <small class="text-white-50 d-block">Room Code</small>
+                  <span class="text-white fw-bold h5">{{ party.room_code }}</span>
+                  <small class="text-white-50 d-block mt-1">Host: {{ party.host.username }}</small>
+                </div>
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play">
+                  <i class="fas fa-sign-in-alt me-2"></i>Rejoin
+                </a>
+              </div>
+            </div>
+            <div class="media-info text-center">
+              <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
+              <div class="media-meta">Hosted by {{ party.host.username }}</div>
+            </div>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
     <section class="fade-in" style="animation-delay: 0.2s;">
       <h2 class="section-title">Top Movies</h2>
       <div class="carousel-container mt-4" data-category="movies" data-page="1" data-render-type="premium">
@@ -97,6 +188,10 @@
               <div class="premium-overlay">
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
+                </a>
+                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play ms-2"
+                  style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                  <i class="fas fa-users me-2"></i>Party
                 </a>
                 <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                   {% csrf_token %}
@@ -133,6 +228,10 @@
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
                 </a>
+                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play ms-2"
+                  style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                  <i class="fas fa-users me-2"></i>Party
+                </a>
                 <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                   {% csrf_token %}
                   <input type="hidden" name="imdb_id" value="{{ item.imdbID }}">
@@ -168,6 +267,10 @@
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
                 </a>
+                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play ms-2"
+                  style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                  <i class="fas fa-users me-2"></i>Party
+                </a>
                 <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                   {% csrf_token %}
                   <input type="hidden" name="imdb_id" value="{{ item.imdbID }}">
@@ -193,22 +296,6 @@
   </main>
   <hr class="border-light" style="opacity: 0.1;">
 
-  {% comment %}
-  The original file had a second block content and movie loop here which seemed redundant or part of the conflict.
-  I kept the structure of the incoming body but it seems to have had a duplicate movie grid or similar.
-  However, looking at the Incoming body, it had a second loop for movies using custom-card.
-  Checking logic: usually 'movies' is a single context variable. Displaying it twice (once as 'Recommended' and once as
-  'No title') seems odd.
-  I will keep it commented out or remove it if it looks like a conflict artifact.
-  Actually, the incoming code had `{% endblock %}` after the first section, then another list, then `{% endblock %}`
-  again.
-  That is invalid template syntax (multiple endblocks for one block?).
-  Wait, line 445: `{% endblock %}`.
-  Then line 468: `{% endblock %}`.
-  This suggests the second part might have been inside the block in the original file, or a copy-paste error.
-  Given `user_dashboard` extends `user.html`, `user.html` should define `{% block content %}` once.
-  So I will assume the first block is the correct one.
-  {% endcomment %}
 
   <footer class="mt-4">
     &copy; {{ year|date:"Y" }} WATCHIT. All Rights Reserved.
@@ -220,6 +307,120 @@
     document.querySelector(".search-icon").addEventListener("click", function () {
       document.querySelector(".search-box").classList.toggle("active");
     });
+
+    // Lazy Loading Script (Adapted from base.html)
+    document.addEventListener("DOMContentLoaded", function () {
+      const containers = document.querySelectorAll('.carousel-container');
+
+      containers.forEach(container => {
+        const scrollContainer = container.querySelector('.carousel-scroll');
+        let isLoading = false;
+        let hasNext = true;
+
+        scrollContainer.addEventListener('scroll', () => {
+          if (isLoading || !hasNext) return;
+          if (scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 300) {
+            loadMore(container);
+          }
+        });
+
+        async function loadMore(container) {
+          if (isLoading || !hasNext) return;
+          isLoading = true;
+
+          const category = container.getAttribute('data-category');
+          let page = parseInt(container.getAttribute('data-page')) + 1;
+          const cacheKey = `watchit_cache_${category}_${page}`;
+
+          // Check Cache
+          const cachedData = getCachedData(cacheKey);
+          if (cachedData) {
+            appendItems(scrollContainer, cachedData, container.getAttribute('data-render-type'));
+            container.setAttribute('data-page', page);
+            isLoading = false;
+            return;
+          }
+
+          try {
+            const response = await fetch(`/fetch-more/?category=${category}&page=${page}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.items.length > 0) {
+                appendItems(scrollContainer, data.items, container.getAttribute('data-render-type'));
+                container.setAttribute('data-page', page);
+                setCachedData(cacheKey, data.items);
+                hasNext = data.has_next;
+              } else {
+                hasNext = false;
+              }
+            } else {
+              hasNext = false;
+            }
+          } catch (error) {
+            console.error(error);
+          } finally {
+            isLoading = false;
+          }
+        }
+
+        function appendItems(container, items, renderType) {
+          const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+          const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+          items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'movie-unit fade-in visible';
+
+            // Premium Card (used in Profile)
+            div.innerHTML = `
+                    <div class="premium-card">
+                        <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
+                                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                        <div class="premium-overlay">
+                            <a href="${item.url}" class="premium-btn premium-btn-play">
+                                <i class="fas fa-play me-2"></i>Play
+                            </a>
+                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                                <input type="hidden" name="imdb_id" value="${item.imdbID}">
+                                <input type="hidden" name="title" value="${item.Title}">
+                                <input type="hidden" name="year" value="${item.Year}">
+                                <input type="hidden" name="poster" value="${item.Poster}">
+                                <button type="submit" class="premium-btn premium-btn-list">
+                                    <i class="fas fa-plus me-2"></i>My List
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="media-info text-center">
+                        <div class="media-title">${item.Title}</div>
+                        <div class="media-meta">${item.Year}</div>
+                    </div>
+                `;
+            container.appendChild(div);
+          });
+        }
+      });
+    });
+
+    // Cache Helpers
+    function setCachedData(key, data) {
+      localStorage.setItem(key, JSON.stringify({
+        value: data,
+        expiry: Date.now() + 86400000
+      }));
+    }
+
+    function getCachedData(key) {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) return null;
+      const item = JSON.parse(itemStr);
+      if (Date.now() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return item.value;
+    }
   </script>
 </body>
 

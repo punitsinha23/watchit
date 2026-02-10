@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Waiting for Approval - WATCHIT{% endblock %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="text-center p-5 rounded bg-dark border border-secondary shadow-lg fade-in" style="max-width: 500px;">
+        <div class="mb-4">
+            <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <h1 class="display-6 text-white mb-3">Pending Approval</h1>
+        <p class="text-secondary mb-4">
+            The host of room <span class="text-danger fw-bold">{{ party.room_code }}</span> has been notified of your
+            request.
+            Please stay on this page while they review your entry.
+        </p>
+        <div class="p-3 bg-black rounded border border-secondary mb-4">
+            <small class="text-white-50 d-block mb-1">Watching:</small>
+            <span class="text-white h5">{{ party.imdb_id }}</span>
+        </div>
+        <div id="status-message" class="text-info small mb-0">
+            <i class="fas fa-sync fa-spin me-2"></i>Checking status...
+        </div>
+    </div>
+</div>
+
+<script>
+    const ROOM_CODE = "{{ party.room_code }}";
+    const statusMsg = document.getElementById('status-message');
+
+    async function checkStatus() {
+        try {
+            const response = await fetch(`/party/api/check-approval/${ROOM_CODE}/`);
+            const data = await response.json();
+
+            if (data.status === 'approved') {
+                statusMsg.innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>Approved! Redirecting...';
+                setTimeout(() => {
+                    window.location.href = `/party/room/${ROOM_CODE}/`;
+                }, 1500);
+            } else if (data.status === 'denied') {
+                statusMsg.innerHTML = '<i class="fas fa-times-circle text-danger me-2"></i>Request Denied.';
+                setTimeout(() => {
+                    window.location.href = "{% url 'join_watch_party' %}?error=denied";
+                }, 2000);
+            } else if (data.status === 'room_gone') {
+                window.location.href = "{% url 'base' %}";
+            }
+        } catch (e) {
+            console.error("Error checking status:", e);
+        }
+    }
+
+    // Poll every 3 seconds
+    setInterval(checkStatus, 3000);
+    checkStatus(); // Initial check
+</script>
+{% endblock %}

@@ -87,6 +87,10 @@
                     <a href="{% url 'detail' rec.imdbID %}" class="premium-btn premium-btn-play">
                         <i class="fas fa-play me-2"></i>Play
                     </a>
+                    <a href="{% url 'create_watch_party' rec.imdbID %}" class="premium-btn premium-btn-play ms-2"
+                        style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                        <i class="fas fa-users me-2"></i>Party
+                    </a>
                     <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                         {% csrf_token %}
                         <input type="hidden" name="imdb_id" value="{{ rec.imdbID }}">
@@ -116,6 +120,7 @@
     .clamp-text {
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }

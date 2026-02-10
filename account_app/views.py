@@ -26,6 +26,7 @@ from django.contrib.auth.hashers import make_password
 
 from .forms import myform, loginform
 from .models import Watchlist, PasswordResetToken
+from watchit_app.models import WatchParty
 
 
 api_key = '24a15e19'
@@ -107,38 +108,62 @@ from watchit_app.data import top_100_movies, animes, shows
 from watchit_app.views import fetch_omdb_data
 import random
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 @login_required
 @cache_control(private=True, max_age=3600)
 def user(request):
-    # Fetch a few items for each category (e.g., 10 items each)
-    # We randomize to keep it fresh or just take the first N
+    # Fetch a few items for each category (Reduced to 12 for speed)
+    INITIAL_LIMIT = 12
     
-    # helper to fetch list
-    def get_data(source_list, limit=50):
+    def fetch_item(item):
+        """Helper to fetch a single item"""
+        kwargs = {}
+        if item.startswith('tt'):
+            kwargs['imdb_id'] = item
+        else:
+            kwargs['title'] = item
+        
+        data = fetch_omdb_data(**kwargs)
+        if data and data.get('Poster') != 'N/A':
+            return data
+        return None
+
+    def get_data_parallel(source_list, limit=12):
+        """Fetch items in parallel using ThreadPoolExecutor"""
         results = []
-        for item in source_list[:limit]: # simple slicing for now
-            # if item is a title (str), use title=item
-            # if item is an ID (starts with tt), use imdb_id=item
-            kwargs = {}
-            if item.startswith('tt'):
-                kwargs['imdb_id'] = item
-            else:
-                kwargs['title'] = item
+        # Take only the needed amount from source
+        items_to_fetch = source_list[:limit]
+        
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            # Submit all tasks
+            future_to_item = {executor.submit(fetch_item, item): item for item in items_to_fetch}
             
-            data = fetch_omdb_data(**kwargs)
-            if data and data.get('Poster') != 'N/A':
-                results.append(data)
+            # Collect results as they complete
+            for future in as_completed(future_to_item):
+                data = future.result()
+                if data:
+                    results.append(data)
+                    
         return results
 
-    movies_data = get_data(top_100_movies, limit=28)
-    anime_data = get_data(animes)
-    shows_data = get_data(shows)
+    # Fetch in parallel
+    # specific limits for each if needed, but 12 is good for one screen row
+    movies_data = get_data_parallel(top_100_movies, limit=INITIAL_LIMIT)
+    anime_data = get_data_parallel(animes, limit=INITIAL_LIMIT)
+    shows_data = get_data_parallel(shows, limit=INITIAL_LIMIT)
+
+    hosted_parties = WatchParty.objects.filter(host=request.user, is_active=True)
+    # Exclude hosted parties from joined parties to avoid duplication
+    joined_parties = request.user.joined_parties.filter(is_active=True).exclude(host=request.user)
 
     return render(request, 'user.html', {
         'movies': movies_data,
         'anime': anime_data,
         'shows': shows_data,
-        'display_name': request.user.username
+        'display_name': request.user.username,
+        'hosted_parties': hosted_parties,
+        'joined_parties': joined_parties
     })
 
 
