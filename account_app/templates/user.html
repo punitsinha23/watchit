@@ -125,13 +125,13 @@
                 alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
                 onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
               <div class="premium-overlay flex-column">
-                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play mb-2">
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
                   <i class="fas fa-play me-2"></i>Enter Room
                 </a>
-                <form method="POST" action="{% url 'delete_party' party.room_code %}"
+                <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100"
                   onsubmit="return confirm('Permanently delete this room?')">
                   {% csrf_token %}
-                  <button type="submit" class="premium-btn bg-dark text-danger border-danger">
+                  <button type="submit" class="premium-btn premium-btn-danger">
                     <i class="fas fa-trash-alt me-2"></i>Delete
                   </button>
                 </form>
@@ -159,7 +159,7 @@
                   <span class="text-white fw-bold h5">{{ party.room_code }}</span>
                   <small class="text-white-50 d-block mt-1">Host: {{ party.host.username }}</small>
                 </div>
-                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play">
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100">
                   <i class="fas fa-sign-in-alt me-2"></i>Rejoin
                 </a>
               </div>
@@ -189,7 +189,7 @@
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
                 </a>
-                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play ms-2"
+                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play"
                   style="background: linear-gradient(45deg, #ff00cc, #333399);">
                   <i class="fas fa-users me-2"></i>Party
                 </a>
@@ -228,7 +228,7 @@
                 <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
                   <i class="fas fa-play me-2"></i>Play
                 </a>
-                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play ms-2"
+                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play"
                   style="background: linear-gradient(45deg, #ff00cc, #333399);">
                   <i class="fas fa-users me-2"></i>Party
                 </a>
@@ -379,6 +379,10 @@
                         <div class="premium-overlay">
                             <a href="${item.url}" class="premium-btn premium-btn-play">
                                 <i class="fas fa-play me-2"></i>Play
+                            </a>
+                            <a href="/party/create/${item.imdbID}/" class="premium-btn premium-btn-play" 
+                               style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                <i class="fas fa-users me-2"></i>Party
                             </a>
                             <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                                 <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">

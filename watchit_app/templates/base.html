@@ -660,6 +660,10 @@
                                         <a href="${item.url}" class="premium-btn premium-btn-play">
                                             <i class="fas fa-play me-2"></i>Play
                                         </a>
+                                        <a href="/party/create/${item.imdbID}/" class="premium-btn premium-btn-play" 
+                                           style="background: linear-gradient(45deg, #ff00cc, #333399);">
+                                            <i class="fas fa-users me-2"></i>Party
+                                        </a>
                                         <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                                             <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                                             <input type="hidden" name="imdb_id" value="${item.imdbID}">

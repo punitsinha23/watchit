@@ -192,9 +192,8 @@ def api_handle_join_request(request, room_code):
 def delete_party(request, room_code):
     try:
         party = WatchParty.objects.get(room_code=room_code, host=request.user)
-        party.is_active = False
-        party.save()
-        return redirect('user') # Correct name is 'user'
+        party.delete()
+        return redirect('user') 
     except WatchParty.DoesNotExist:
         return redirect('base')
 

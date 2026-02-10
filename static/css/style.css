@@ -403,7 +403,8 @@ ul {
     transition: opacity 0.3s ease;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
+    align-items: center;
     padding: 15px;
     z-index: 200;
 }
@@ -420,9 +421,11 @@ ul {
     padding: 8px 0;
     text-align: center;
     transition: all 0.2s;
-    margin-top: 8px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     display: block;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .premium-btn-play {
