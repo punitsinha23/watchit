@@ -4,6 +4,97 @@
 {% block title %}Watch Party: {{ movie.Title }} - WATCHIT{% endblock %}
 
 {% block content %}
+<style>
+    /* Premium Join Request Notification */
+    .join-request-toast {
+        background: rgba(229, 9, 20, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 32px rgba(229, 9, 20, 0.4);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: pulseSidebar 2s infinite;
+    }
+
+    @keyframes pulseSidebar {
+        0% {
+            box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(229, 9, 20, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(229, 9, 20, 0);
+        }
+    }
+
+    .request-item {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        transition: all 0.2s;
+    }
+
+    .request-item:hover {
+        background: rgba(0, 0, 0, 0.6);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .request-user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-avatar-small {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-approve {
+        background: #2ecc71;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background: #27ae60;
+        transform: scale(1.1);
+    }
+
+    .btn-deny {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .btn-deny:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+    }
+</style>
 <div class="container-fluid mt-4 fade-in">
     <div class="row">
 
@@ -72,14 +163,17 @@
         <div class="col-lg-3 col-md-4">
 
             {% if is_host %}
-            <!-- Join Requests Notification -->
-            <div id="pending-requests" class="mb-3 d-none">
-                <div class="card bg-danger border-secondary p-2 shadow">
-                    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-                        <small class="text-white fw-bold"><i class="fas fa-user-plus me-1"></i> Join Requests</small>
-                        <span class="badge bg-white text-danger" id="request-count">0</span>
+            <!-- Enhanced Join Requests Notification -->
+            <div id="pending-requests" class="mb-4 d-none">
+                <div class="join-request-toast">
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-user-plus text-white"></i>
+                            <span class="text-white fw-bold small">WANT TO JOIN</span>
+                        </div>
+                        <span class="badge bg-white text-danger rounded-pill" id="request-count">0</span>
                     </div>
-                    <div id="request-list" class="d-flex flex-column gap-1"></div>
+                    <div id="request-list" class="d-flex flex-column"></div>
                 </div>
             </div>
             {% endif %}
@@ -306,15 +400,23 @@
 
             users.forEach(u => {
                 const div = document.createElement("div");
-                div.className = "d-flex justify-content-between align-items-center bg-black p-2 rounded small border border-secondary mb-1";
+                div.className = "request-item d-flex justify-content-between align-items-center mb-2";
                 div.innerHTML = `
-                <span class="text-white text-truncate me-2">${u.username}</span>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-success py-0 px-2" onclick="handleJoinRequest(${u.id}, 'approve', event)" title="Approve">
-                        <i class="fas fa-check" style="font-size: 0.8rem;"></i>
+                <div class="request-user-info">
+                    <div class="user-avatar-small">
+                        <i class="fas fa-user text-white-50"></i>
+                    </div>
+                    <div>
+                        <div class="text-white small fw-bold">${u.username}</div>
+                        <div class="text-white-50" style="font-size: 0.7rem;">wants to join</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="action-btn btn-approve" onclick="handleJoinRequest(${u.id}, 'approve', event)" title="Approve">
+                        <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn btn-danger py-0 px-2" onclick="handleJoinRequest(${u.id}, 'deny', event)" title="Deny">
-                        <i class="fas fa-times" style="font-size: 0.8rem;"></i>
+                    <button class="action-btn btn-deny" onclick="handleJoinRequest(${u.id}, 'deny', event)" title="Deny">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
