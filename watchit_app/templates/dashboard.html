@@ -28,14 +28,14 @@
                 </a>
 
                 {% if movie.imdbID in watchlist_ids %}
-                <form method="POST" action="{% url 'remove_from_watchlist' movie.imdbID %}" class="w-100">
+                <form method="POST" action="{% url 'remove_from_watchlist' movie.imdbID %}" class="w-100 no-loading">
                     {% csrf_token %}
                     <button type="submit" class="premium-btn premium-btn-remove">
                         <i class="fas fa-times me-2"></i>Remove
                     </button>
                 </form>
                 {% else %}
-                <form method="POST" action="{% url 'add_to_watchlist' %}" class="w-100">
+                <form method="POST" action="{% url 'add_to_watchlist' %}" class="w-100 no-loading">
                     {% csrf_token %}
                     <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
                     <input type="hidden" name="title" value="{{ movie.Title }}">

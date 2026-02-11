@@ -4,19 +4,87 @@
 {% block title %}Join Watch Party - WATCHIT{% endblock %}
 
 {% block content %}
-<div class="container-fluid d-flex justify-content-center align-items-center"
-    style="min-height:85vh; background: radial-gradient(circle at top, #1a1a1a, #000);">
+<style>
+    body {
+        background: url('https://w.wallhaven.cc/full/zy/wallhaven-zyxvqy.jpg') no-repeat center center fixed;
+        background-size: cover;
+    }
 
-    <div class="card bg-dark text-white border-0 shadow-lg p-4 p-md-5"
-        style="max-width:420px; width:100%; border-radius:16px;">
+    .auth-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: -1;
+    }
 
+    .glass-card {
+        background: rgba(20, 20, 20, 0.85);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        max-width: 480px;
+        width: 100%;
+        margin: 80px auto;
+    }
+
+    .auth-header {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 3rem;
+        letter-spacing: 1px;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        height: 50px;
+        border-radius: 8px;
+    }
+
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: #e50914 !important;
+        color: white !important;
+        box-shadow: none !important;
+    }
+
+    .btn-auth {
+        background: #e50914;
+        color: white;
+        height: 50px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        border: none;
+        width: 100%;
+    }
+
+    .btn-auth:hover {
+        background: #f6121d;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="auth-overlay"></div>
+
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="glass-card fade-in">
         <!-- Branding -->
         <div class="text-center mb-4">
-            <h1 class="fw-bold text-danger mb-1" style="letter-spacing:1px;">WATCHIT</h1>
+            <h1 class="auth-header mb-1">WATCHIT</h1>
             <p class="text-secondary small">Watch and chat together with your friends.</p>
         </div>
 
-        <h3 class="text-center mb-4">Join a Watch Party</h3>
+        <h3 class="text-center text-white mb-4">Join a Watch Party</h3>
 
         {% if error %}
         <div class="alert alert-danger small text-center rounded-3">
@@ -26,15 +94,14 @@
 
         <form method="POST" autocomplete="off">
             {% csrf_token %}
-
             <div class="mb-4">
                 <label for="room_code" class="form-label text-secondary small">ROOM CODE</label>
-                <input type="text" class="form-control bg-black text-white border-0 text-center fw-bold" id="room_code"
-                    name="room_code" placeholder="AB12CD" required maxlength="6"
+                <input type="text" class="form-control text-center fw-bold" id="room_code" name="room_code"
+                    placeholder="AB12CD" required maxlength="6"
                     style="letter-spacing:4px; font-size:1.4rem; padding:14px; border-radius:10px;">
             </div>
 
-            <button type="submit" class="btn btn-danger w-100 py-2 fw-semibold" style="border-radius:10px;">
+            <button type="submit" class="btn-auth w-100 py-2 fw-semibold">
                 Join Party
             </button>
 
@@ -44,57 +111,9 @@
             </div>
         </form>
 
-        {% if public_parties %}
-        <hr class="border-secondary my-5">
-
-        <div class="text-center mb-4">
-            <h3 class="fw-bold text-primary mb-1"><i class="fas fa-globe me-2"></i>Global Parties</h3>
-            <p class="text-secondary small">Jump into an active public session</p>
-        </div>
-
-        <div class="public-parties-list" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
-            {% for party in public_parties %}
-            <div
-                class="public-party-item p-3 mb-3 rounded-4 border border-secondary bg-black-50 d-flex align-items-center gap-3 transition-all">
-                <img src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
-                    alt="{{ party.movie_title }}"
-                    style="width: 60px; height: 90px; border-radius: 8px; object-fit: cover;">
-                <div class="flex-grow-1 overflow-hidden">
-                    <h6 class="mb-1 fw-bold text-truncate text-white">{{ party.movie_title|default:party.room_code }}
-                    </h6>
-                    <div class="small text-secondary mb-2">Host: {{ party.host.username }}</div>
-                    <a href="{% url 'waiting_room' party.room_code %}"
-                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                        <i class="fas fa-sign-in-alt me-1"></i>Join
-                    </a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <style>
-            .public-party-item {
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            }
-
-            .public-party-item:hover {
-                background: rgba(255, 255, 255, 0.08);
-                border-color: #00d2ff !important;
-                transform: translateY(-2px);
-            }
-
-            .bg-black-50 {
-                background: rgba(0, 0, 0, 0.5);
-            }
-        </style>
-        {% else %}
-        <hr class="border-secondary my-4">
-
-        <div class="text-center text-secondary small">
+        <div class="text-center text-secondary small mt-4">
             Paste the room code and start watching instantly.
         </div>
-        {% endif %}
 
     </div>
 </div>

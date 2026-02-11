@@ -4,8 +4,40 @@
 {% block title %}Waiting for Approval - WATCHIT{% endblock %}
 
 {% block content %}
+<style>
+    body {
+        background: url('https://w.wallhaven.cc/full/zy/wallhaven-zyxvqy.jpg') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .auth-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: -1;
+    }
+
+    .glass-card {
+        background: rgba(20, 20, 20, 0.85);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        max-width: 500px;
+        width: 100%;
+        margin: 80px auto;
+        text-align: center;
+    }
+</style>
+
+<div class="auth-overlay"></div>
+
 <div class="container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="text-center p-5 rounded bg-dark border border-secondary shadow-lg fade-in" style="max-width: 500px;">
+    <div class="glass-card fade-in">
         <div class="mb-4">
             <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
                 <span class="visually-hidden">Loading...</span>

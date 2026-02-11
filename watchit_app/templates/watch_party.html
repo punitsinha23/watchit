@@ -145,7 +145,7 @@
                 <select id="episode-select" class="form-select bg-black text-white border-secondary"></select>
                 {% endif %}
 
-                <button id="update-btn" class="btn btn-success btn-sm">
+                <button id="update-btn" class="btn btn-success btn-sm no-loading">
                     Sync to All
                 </button>
 
@@ -198,11 +198,11 @@
                 </div>
 
                 <div class="card-footer bg-black border-top border-secondary">
-                    <form id="chat-form" class="d-flex gap-2">
+                    <form id="chat-form" class="d-flex gap-2 no-loading">
                         {% csrf_token %}
                         <input id="chat-input" class="form-control bg-dark text-white border-secondary"
                             placeholder="Type message..." required>
-                        <button class="btn btn-danger">
+                        <button class="btn btn-danger no-loading">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </form>

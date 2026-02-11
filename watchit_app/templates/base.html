@@ -893,7 +893,7 @@
                                        style="background: linear-gradient(45deg, #ff00cc, #333399);">
                                         <i class="fas fa-users me-2"></i>Party
                                     </a>
-                                    <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                                    <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100 no-loading">
                                         <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                                         <input type="hidden" name="imdb_id" value="${item.imdbID}">
                                         <input type="hidden" name="title" value="${item.Title}">
@@ -993,6 +993,9 @@
                 const target = e.target.closest('a, button');
                 if (!target) return;
 
+                // Check for no-loading exclusion
+                if (target.classList.contains('no-loading') || target.closest('.no-loading')) return;
+
                 if (target.tagName === 'A') {
                     const href = target.getAttribute('href');
                     const isSamePage = href && (href.startsWith('#') || href.startsWith('javascript:'));
@@ -1009,7 +1012,8 @@
             });
 
             // Form submission listener
-            document.addEventListener('submit', () => {
+            document.addEventListener('submit', (e) => {
+                if (e.target.classList.contains('no-loading') || e.target.closest('.no-loading')) return;
                 startLoading(25);
             });
 
