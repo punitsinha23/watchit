@@ -57,6 +57,8 @@ def create_watch_party(request, imdb_id):
 
 @login_required
 def join_watch_party(request):
+    public_parties = WatchParty.objects.filter(is_active=True, is_private=False).exclude(host=request.user).order_by('-created_at')
+    
     if request.method == 'POST':
         room_code = request.POST.get('room_code', '').upper()
         try:
@@ -65,7 +67,10 @@ def join_watch_party(request):
             # 24hr expiration check
             if (timezone.now() - party.created_at).total_seconds() > 86400:
                 party.delete()
-                return render(request, 'join_party.html', {'error': 'This room has expired after 24 hours.'})
+                return render(request, 'join_party.html', {
+                    'error': 'This room has expired after 24 hours.',
+                    'public_parties': public_parties
+                })
 
             # If already a participant or the host, go straight in
             if request.user == party.host or party.participants.filter(id=request.user.id).exists():
@@ -77,8 +82,11 @@ def join_watch_party(request):
             
             return redirect('waiting_room', room_code=room_code)
         except WatchParty.DoesNotExist:
-            return render(request, 'join_party.html', {'error': 'Invalid or inactive room code'})
-    return render(request, 'join_party.html')
+            return render(request, 'join_party.html', {
+                'error': 'Invalid or inactive room code',
+                'public_parties': public_parties
+            })
+    return render(request, 'join_party.html', {'public_parties': public_parties})
 
 @login_required
 def waiting_room(request, room_code):
@@ -88,6 +96,12 @@ def waiting_room(request, room_code):
         if (timezone.now() - party.created_at).total_seconds() > 86400:
             party.delete()
             return redirect('base')
+        
+        # Add to pending if for some reason they are not there and not host/participant
+        if request.user != party.host and not party.participants.filter(id=request.user.id).exists():
+            if not party.pending_participants.filter(id=request.user.id).exists():
+                party.pending_participants.add(request.user)
+            
     except WatchParty.DoesNotExist:
         return redirect('base')
         
