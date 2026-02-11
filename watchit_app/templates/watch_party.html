@@ -156,9 +156,15 @@
             </div>
             {% endif %}
 
-            <div class="mt-4">
-                <h2 class="text-white">{{ movie.Title }}</h2>
-                <p class="text-white-50">{{ movie.Plot }}</p>
+            <div class="mt-4 d-flex gap-4">
+                {% if movie.Poster and movie.Poster != 'N/A' %}
+                <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" class="rounded shadow-lg"
+                    style="width: 150px; height: 225px; object-fit: cover;">
+                {% endif %}
+                <div>
+                    <h2 class="text-white">{{ movie.Title }}</h2>
+                    <p class="text-white-50">{{ movie.Plot }}</p>
+                </div>
             </div>
 
         </div>

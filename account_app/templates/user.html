@@ -40,10 +40,6 @@
 
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-lg-center">
-          <li class="nav-item"><a class="nav-link" href="#movies-scroll">Movies</a></li>
-          <li class="nav-item"><a class="nav-link" href="#anime-scroll">Anime</a></li>
-          <li class="nav-item"><a class="nav-link" href="#shows-scroll">TV Shows</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'join_watch_party' %}"><i
                 class="fas fa-users me-1"></i>Join Party</a></li>
 
@@ -66,8 +62,6 @@
               style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
               <li><a class="dropdown-item rounded-2 text-white" href="{% url 'user' %}"><i
                     class="fas fa-user me-2"></i>Profile</a></li>
-              <li><a class="dropdown-item rounded-2 text-white" href="{% url 'watchlist' %}"><i
-                    class="fas fa-list me-2"></i>Watchlist</a></li>
               <li>
                 <hr class="dropdown-divider border-secondary">
               </li>
@@ -96,193 +90,267 @@
   <main class="container-fluid profile-main">
     {% block content %}
     <div class="container-fluid mt-5 text-center">
-      <h1 class="display-5 fw-bold mb-5">
+      <h1 class="display-5 fw-bold mb-4">
         Welcome <span class="text-danger">{{ display_name }}</span>
       </h1>
+
+      <!-- FEATURE GUIDE HERO -->
+      <div class="row justify-content-center mb-5 fade-in" style="animation-delay: 0.2s;">
+        <div class="col-lg-10">
+          <div
+            class="premium-hero p-5 rounded-4 shadow-lg text-start position-relative overflow-hidden excellence-card">
+
+            <div class="row align-items-center">
+              <div class="col-md-7">
+                <h2 class="display-6 fw-bold mb-3 text-white">Host Watch Parties</h2>
+                <p class="lead text-white-50 mb-4">Host public sessions or join global parties instantly.</p>
+
+                <div class="d-flex flex-column gap-4 mb-4">
+                  <div class="guide-step d-flex align-items-center gap-3">
+                    <div
+                      class="step-blob d-flex align-items-center justify-content-center rounded-circle bg-danger text-white shadow"
+                      style="width: 44px; height: 44px; flex-shrink: 0;">
+                      <i class="fas fa-search-plus"></i>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">1. Find Your Movie</h5>
+                      <p class="small text-white-50 mb-0">Browse our library and hit the <span
+                          class="badge bg-danger">Party</span> button.</p>
+                    </div>
+                  </div>
+
+                  <div class="guide-step d-flex align-items-center gap-3">
+                    <div
+                      class="step-blob d-flex align-items-center justify-content-center rounded-circle bg-danger text-white shadow"
+                      style="width: 44px; height: 44px; flex-shrink: 0;">
+                      <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">2. Share the Invite</h5>
+                      <p class="small text-white-50 mb-0">Room codes are auto-generated. Just send it to your friends!
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="guide-step d-flex align-items-center gap-3">
+                    <div
+                      class="step-blob d-flex align-items-center justify-content-center rounded-circle bg-danger text-white shadow"
+                      style="width: 44px; height: 44px; flex-shrink: 0;">
+                      <i class="fas fa-comments"></i>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">3. Watch & Engage</h5>
+                      <p class="small text-white-50 mb-0">Real-time chat and synced playback for everyone.</p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="guide-step d-flex align-items-center gap-3 mt-2 pt-3 border-top border-secondary border-opacity-25">
+                    <div
+                      class="step-blob d-flex align-items-center justify-content-center rounded-circle bg-danger text-white shadow"
+                      style="width: 44px; height: 44px; flex-shrink: 0;">
+                      <i class="fas fa-globe"></i>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">Join the Global Community</h5>
+                      <p class="small text-white-50 mb-0">You can also join <strong>Global Public Parties</strong>
+                        hosted by others without needing an invite code!</p>
+                    </div>
+                  </div>
+                </div>
+
+                <a href="{% url 'base' %}"
+                  class="btn btn-danger btn-lg rounded-pill px-5 py-3 shadow-lg fw-bold transition-all"
+                  style="box-shadow: 0 0 20px rgba(229, 9, 20, 0.4) !important;">
+                  <i class="fas fa-play-circle me-2"></i>Start Browsing
+                </a>
+              </div>
+
+              <div class="col-md-5 d-none d-md-block text-center position-relative">
+                <div class="hero-graphic position-relative" style="z-index: 2;">
+                  <div class="floating-tv">
+                    <i class="fas fa-tv fa-8x text-danger opacity-25"></i>
+                    <div class="glow-effect"></div>
+                  </div>
+                  <i class="fas fa-comments position-absolute pulse"
+                    style="top: 0; right: 20%; font-size: 3rem; color: #ff00cc; opacity: 0.6;"></i>
+                  <i class="fas fa-bolt position-absolute jump"
+                    style="bottom: 10%; left: 15%; font-size: 2.5rem; color: #ffcc00; opacity: 0.4;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <section class="fade-in" style="animation-delay: 0.2s;">
-      <h2 class="section-title">Top Movies</h2>
-      <div class="carousel-container mt-4" data-category="movies" data-page="1" data-render-type="premium">
-        <div class="carousel-scroll" id="movies-scroll">
-          {% for item in movies %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
-              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy"
-                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-              <div class="premium-overlay">
-                <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
-                  <i class="fas fa-play me-2"></i>Play
-                </a>
-                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play"
-                  style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                  <i class="fas fa-users me-2"></i>Party
-                </a>
-                <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                  {% csrf_token %}
-                  <input type="hidden" name="imdb_id" value="{{ item.imdbID }}">
-                  <input type="hidden" name="title" value="{{ item.Title }}">
-                  <input type="hidden" name="year" value="{{ item.Year }}">
-                  <input type="hidden" name="poster" value="{{ item.Poster }}">
-                  <button type="submit" class="premium-btn premium-btn-list">
-                    <i class="fas fa-plus me-2"></i>My List
-                  </button>
-                </form>
-              </div>
-            </div>
-            <div class="media-info text-center">
-              <div class="media-title">{{ item.Title }}</div>
-              <div class="media-meta">{{ item.Year }}</div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-
-    <section class="fade-in" style="animation-delay: 0.3s;">
-      <h2 class="section-title">Top Anime</h2>
-      <div class="carousel-container mt-4" data-category="popular_anime" data-page="1" data-render-type="premium">
-        <div class="carousel-scroll" id="anime-scroll">
-          {% for item in anime %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
-              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy"
-                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-              <div class="premium-overlay">
-                <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
-                  <i class="fas fa-play me-2"></i>Play
-                </a>
-                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play"
-                  style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                  <i class="fas fa-users me-2"></i>Party
-                </a>
-                <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                  {% csrf_token %}
-                  <input type="hidden" name="imdb_id" value="{{ item.imdbID }}">
-                  <input type="hidden" name="title" value="{{ item.Title }}">
-                  <input type="hidden" name="year" value="{{ item.Year }}">
-                  <input type="hidden" name="poster" value="{{ item.Poster }}">
-                  <button type="submit" class="premium-btn premium-btn-list">
-                    <i class="fas fa-plus me-2"></i>My List
-                  </button>
-                </form>
-              </div>
-            </div>
-            <div class="media-info text-center">
-              <div class="media-title">{{ item.Title }}</div>
-              <div class="media-meta">{{ item.Year }}</div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-
-    <section class="fade-in" style="animation-delay: 0.4s;">
-      <h2 class="section-title">TV Shows</h2>
-      <div class="carousel-container mt-4" data-category="home_shows" data-page="1" data-render-type="premium">
-        <div class="carousel-scroll" id="shows-scroll">
-          {% for item in shows %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
-              <img src="{{ item.Poster }}" alt="{{ item.Title }}" loading="lazy"
-                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-              <div class="premium-overlay">
-                <a href="{% url 'detail' item.imdbID %}" class="premium-btn premium-btn-play">
-                  <i class="fas fa-play me-2"></i>Play
-                </a>
-                <a href="{% url 'create_watch_party' item.imdbID %}" class="premium-btn premium-btn-play ms-2"
-                  style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                  <i class="fas fa-users me-2"></i>Party
-                </a>
-                <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                  {% csrf_token %}
-                  <input type="hidden" name="imdb_id" value="{{ item.imdbID }}">
-                  <input type="hidden" name="title" value="{{ item.Title }}">
-                  <input type="hidden" name="year" value="{{ item.Year }}">
-                  <input type="hidden" name="poster" value="{{ item.Poster }}">
-                  <button type="submit" class="premium-btn premium-btn-list">
-                    <i class="fas fa-plus me-2"></i>My List
-                  </button>
-                </form>
-              </div>
-            </div>
-            <div class="media-info text-center">
-              <div class="media-title">{{ item.Title }}</div>
-              <div class="media-meta">{{ item.Year }}</div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
     <!-- ACTIVE ROOMS SECTION -->
     {% if hosted_parties or joined_parties %}
-    <section class="fade-in mb-5 px-3" style="animation-delay: 0.1s;">
-      <h2 class="section-title"><i class="fas fa-users-viewfinder me-2"></i>My Active Rooms</h2>
+    <section class="fade-in mb-5" style="animation-delay: 0.4s;">
+      <div class="d-flex align-items-center justify-content-between mb-4 px-3">
+        <h2 class="section-title mb-0"><i class="fas fa-broadcast-tower me-3"></i>Active Live Rooms</h2>
+        <span class="badge rounded-pill bg-danger shadow-sm px-3 py-2">LIVE NOW</span>
+      </div>
       <div class="carousel-container mt-4">
         <div class="carousel-scroll">
-
-          <!-- Hosted Rooms -->
           {% for party in hosted_parties %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
+          <div class="movie-unit">
+            <div class="premium-card excellence-card">
               <img
                 src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
                 alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
                 onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
               <div class="premium-overlay flex-column">
+                <div class="host-badge mb-auto mt-2">HOST</div>
                 <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
-                  <i class="fas fa-play me-2"></i>Enter Room
+                  <i class="fas fa-sign-in-alt me-2"></i>Enter Room
                 </a>
                 <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100"
                   onsubmit="return confirm('Permanently delete this room?')">
                   {% csrf_token %}
                   <button type="submit" class="premium-btn premium-btn-danger">
-                    <i class="fas fa-trash-alt me-2"></i>Delete
+                    <i class="fas fa-trash-alt me-2"></i>Close Room
                   </button>
                 </form>
               </div>
             </div>
-            <div class="media-info text-center">
-              <div class="media-title text-danger">{{ party.movie_title|default:party.room_code }}</div>
-              <div class="media-meta">Room: {{ party.room_code }}</div>
+            <div class="media-info text-center mt-3">
+              <div class="media-title highlighted-text">{{ party.movie_title|default:party.room_code }}</div>
+              <div class="media-meta text-uppercase tracking-wider">
+                CODE: {{ party.room_code }}
+                {% if party.is_private %}
+                <span class="ms-2" title="Private Room"><i class="fas fa-lock text-danger small"></i></span>
+                {% else %}
+                <span class="ms-2" title="Global Room"><i class="fas fa-globe text-primary small"></i></span>
+                {% endif %}
+              </div>
             </div>
           </div>
           {% endfor %}
-
-          <!-- Joined Rooms -->
           {% for party in joined_parties %}
-          <div class="movie-unit fade-in visible">
-            <div class="premium-card">
+          <div class="movie-unit">
+            <div class="premium-card excellence-card">
               <img
                 src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
                 alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
                 onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-              <div class="premium-overlay flex-column">
-                <span class="badge bg-secondary mb-2">GUEST</span>
-                <div class="mb-3 text-center">
-                  <small class="text-white-50 d-block">Room Code</small>
-                  <span class="text-white fw-bold h5">{{ party.room_code }}</span>
-                  <small class="text-white-50 d-block mt-1">Host: {{ party.host.username }}</small>
+              <div class="premium-overlay flex-column p-4 text-center">
+                <span class="badge bg-secondary mb-3 rounded-pill">GUEST</span>
+                <div class="mb-4">
+                  <div class="room-code-display h4 fw-bold text-white mb-1">{{ party.room_code }}</div>
+                  <small class="text-white-50">Host: {{ party.host.username }}</small>
                 </div>
-                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100">
-                  <i class="fas fa-sign-in-alt me-2"></i>Rejoin
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 py-2">
+                  <i class="fas fa-bolt me-2"></i>Rejoin
                 </a>
               </div>
             </div>
-            <div class="media-info text-center">
+            <div class="media-info text-center mt-3">
               <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
-              <div class="media-meta">Hosted by {{ party.host.username }}</div>
+              <div class="media-meta">
+                W/ {{ party.host.username|upper }}
+                {% if party.is_private %}
+                <span class="ms-2" title="Private Room"><i class="fas fa-lock text-danger small"></i></span>
+                {% else %}
+                <span class="ms-2" title="Global Room"><i class="fas fa-globe text-primary small"></i></span>
+                {% endif %}
+              </div>
             </div>
           </div>
           {% endfor %}
-
         </div>
       </div>
     </section>
     {% endif %}
+
+    <!-- GLOBAL PUBLIC PARTIES SECTION -->
+    {% if public_parties %}
+    <section id="global-parties" class="fade-in mb-5" style="animation-delay: 0.5s;">
+      <div class="d-flex align-items-center justify-content-between mb-4 px-3">
+        <h2 class="section-title mb-0"><i class="fas fa-globe me-3"></i>Global Watch Parties</h2>
+        <span class="badge rounded-pill bg-primary shadow-sm px-3 py-2">DISCOVER</span>
+      </div>
+      <div class="carousel-container mt-4">
+        <div class="carousel-scroll">
+          {% for party in public_parties %}
+          <div class="movie-unit">
+            <div class="premium-card excellence-card">
+              <img
+                src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
+                alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+              <div class="premium-overlay flex-column p-4 text-center">
+                <span class="badge bg-danger mb-3 rounded-pill">PUBLIC</span>
+                <div class="mb-4">
+                  <div class="media-title h5 fw-bold text-white mb-1">{{ party.movie_title|default:party.room_code }}
+                  </div>
+                  <small class="text-white-50">Host: {{ party.host.username }}</small>
+                </div>
+                <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 py-2">
+                  <i class="fas fa-sign-in-alt me-2"></i>Join Party
+                </a>
+              </div>
+            </div>
+            <div class="media-info text-center mt-3">
+              <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
+              <div class="media-meta">W/ {{ party.host.username|upper }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- WATCHLIST SECTION -->
+    <section class="fade-in mb-5" style="animation-delay: 0.6s;">
+      <div class="d-flex align-items-center justify-content-between mb-4 px-3">
+        <h2 class="section-title mb-0"><i class="fas fa-layer-group me-3"></i>My Collection</h2>
+        <a href="{% url 'base' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">View All <i
+            class="fas fa-chevron-right ms-1"></i></a>
+      </div>
+      <div class="carousel-container mt-4">
+        <div class="carousel-scroll">
+          {% if watchlist %}
+          {% for item in watchlist %}
+          <div class="movie-unit">
+            <div class="premium-card excellence-card">
+              <img src="{{ item.poster }}" alt="{{ item.movie_title }}" loading="lazy"
+                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+              <div class="premium-overlay">
+                <a href="{% url 'detail' item.imdb_id %}" class="premium-btn premium-btn-play">
+                  <i class="fas fa-play me-2"></i>Details
+                </a>
+                <a href="javascript:void(0);" onclick="openPrivacyModal('{{ item.imdb_id }}')"
+                  class="premium-btn premium-btn-party py-2">
+                  <i class="fas fa-users me-2"></i>Start Party
+                </a>
+                <form method="POST" action="{% url 'remove_from_watchlist' item.imdb_id %}" class="w-100 mt-2">
+                  {% csrf_token %}
+                  <button type="submit" class="premium-btn premium-btn-remove py-1">
+                    <i class="fas fa-times me-2"></i>Remove
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="media-info text-center mt-3">
+              <div class="media-title">{{ item.movie_title }}</div>
+              <div class="media-meta">{{ item.movie_year }}</div>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="p-5 text-center w-100 bg-white-10 rounded-4 border-dashed"
+            style="border: 2px dashed rgba(255,255,255,0.1);">
+            <i class="fas fa-plus-circle fa-3x text-white-10 mb-3" style="opacity: 0.1;"></i>
+            <p class="text-secondary lead">Your cinematic collection is waiting.</p>
+            <a href="{% url 'base' %}" class="text-danger fw-bold">Discover Movies Now →</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
     {% endblock %}
   </main>
 
@@ -297,124 +365,102 @@
       document.querySelector(".search-box").classList.toggle("active");
     });
 
-    // Lazy Loading Script (Adapted from base.html)
-    document.addEventListener("DOMContentLoaded", function () {
-      const containers = document.querySelectorAll('.carousel-container');
-
-      containers.forEach(container => {
-        const scrollContainer = container.querySelector('.carousel-scroll');
-        let isLoading = false;
-        let hasNext = true;
-
-        scrollContainer.addEventListener('scroll', () => {
-          if (isLoading || !hasNext) return;
-          if (scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 300) {
-            loadMore(container);
-          }
-        });
-
-        async function loadMore(container) {
-          if (isLoading || !hasNext) return;
-          isLoading = true;
-
-          const category = container.getAttribute('data-category');
-          let page = parseInt(container.getAttribute('data-page')) + 1;
-          const cacheKey = `watchit_cache_${category}_${page}`;
-
-          // Check Cache
-          const cachedData = getCachedData(cacheKey);
-          if (cachedData) {
-            appendItems(scrollContainer, cachedData, container.getAttribute('data-render-type'));
-            container.setAttribute('data-page', page);
-            isLoading = false;
-            return;
-          }
-
-          try {
-            const response = await fetch(`/fetch-more/?category=${category}&page=${page}`);
-            if (response.ok) {
-              const data = await response.json();
-              if (data.items.length > 0) {
-                appendItems(scrollContainer, data.items, container.getAttribute('data-render-type'));
-                container.setAttribute('data-page', page);
-                setCachedData(cacheKey, data.items);
-                hasNext = data.has_next;
-              } else {
-                hasNext = false;
-              }
-            } else {
-              hasNext = false;
-            }
-          } catch (error) {
-            console.error(error);
-          } finally {
-            isLoading = false;
-          }
-        }
-
-        function appendItems(container, items, renderType) {
-          const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
-          const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
-
-          items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'movie-unit fade-in visible';
-
-            // Premium Card (used in Profile)
-            div.innerHTML = `
-                    <div class="premium-card">
-                        <img src="${item.Poster}" alt="${item.Title}" loading="lazy"
-                                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                        <div class="premium-overlay">
-                            <a href="${item.url}" class="premium-btn premium-btn-play">
-                                <i class="fas fa-play me-2"></i>Play
-                            </a>
-                            <a href="/party/create/${item.imdbID}/" class="premium-btn premium-btn-play" 
-                               style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                <i class="fas fa-users me-2"></i>Party
-                            </a>
-                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-                                <input type="hidden" name="imdb_id" value="${item.imdbID}">
-                                <input type="hidden" name="title" value="${item.Title}">
-                                <input type="hidden" name="year" value="${item.Year}">
-                                <input type="hidden" name="poster" value="${item.Poster}">
-                                <button type="submit" class="premium-btn premium-btn-list">
-                                    <i class="fas fa-plus me-2"></i>My List
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="media-info text-center">
-                        <div class="media-title">${item.Title}</div>
-                        <div class="media-meta">${item.Year}</div>
-                    </div>
-                `;
-            container.appendChild(div);
-          });
-        }
-      });
-    });
-
-    // Cache Helpers
-    function setCachedData(key, data) {
-      localStorage.setItem(key, JSON.stringify({
-        value: data,
-        expiry: Date.now() + 86400000
-      }));
+    let currentImdbId = null;
+    function openPrivacyModal(imdbId) {
+      currentImdbId = imdbId;
+      const modal = new bootstrap.Modal(document.getElementById('privacyModal'));
+      modal.show();
     }
 
-    function getCachedData(key) {
-      const itemStr = localStorage.getItem(key);
-      if (!itemStr) return null;
-      const item = JSON.parse(itemStr);
-      if (Date.now() > item.expiry) {
-        localStorage.removeItem(key);
-        return null;
+    function selectPrivacy(isPrivate) {
+      if (currentImdbId) {
+        window.location.href = `/party/create/${currentImdbId}/?is_private=${isPrivate}`;
       }
-      return item.value;
     }
   </script>
+
+  <!-- Privacy Selection Modal -->
+  <div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-panel border-glow text-white">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt text-danger me-2"></i>Choose Room Privacy</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="privacy-option private p-3 rounded-4 border border-secondary cursor-pointer"
+                onclick="selectPrivacy(true)">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="icon-box bg-danger rounded-circle d-flex align-items-center justify-content-center"
+                    style="width: 50px; height: 50px;">
+                    <i class="fas fa-lock"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-1 fw-bold">Private Room</h5>
+                    <p class="small text-white-50 mb-0">Only people with the code can join.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="privacy-option public p-3 rounded-4 border border-secondary cursor-pointer"
+                onclick="selectPrivacy(false)">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="icon-box bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                    style="width: 50px; height: 50px;">
+                    <i class="fas fa-globe"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-1 fw-bold">Public Room</h5>
+                    <p class="small text-white-50 mb-0">Visible to everyone on the platform.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .glass-panel {
+      background-color: #000 !important;
+      background-image: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(10, 10, 10, 0.99)) !important;
+      backdrop-filter: blur(20px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .privacy-option {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .privacy-option:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #e50914 !important;
+      transform: translateY(-5px);
+    }
+
+    #privacyModal .modal-content,
+    #privacyModal h5,
+    #privacyModal p {
+      color: white !important;
+    }
+
+    .icon-box {
+      transition: transform 0.3s ease;
+    }
+
+    .privacy-option:hover .icon-box {
+      transform: scale(1.1);
+    }
+  </style>
 </body>
 
 </html>

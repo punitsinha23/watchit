@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from account_app.models import Watchlist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 import json
@@ -20,13 +21,18 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
-api_key = config('OMDB_KEY', default='24a15e19')
+api_key = config('OMDB_KEY', default='bd268b10')
+api_key_2 = config('OMDB_KEY_2', default='24a15e19')
 
 # ... (Previous constants)
 
 @login_required
 def create_watch_party(request, imdb_id):
-    # Create a unique 6-character room code
+    # 1. Handle Privacy Selection
+    is_private_str = request.GET.get('is_private', 'true').lower()
+    is_private = is_private_str == 'true'
+
+    # 2. Create a unique 6-character room code
     while True:
         room_code = str(uuid.uuid4())[:6].upper()
         if not WatchParty.objects.filter(room_code=room_code).exists():
@@ -44,7 +50,8 @@ def create_watch_party(request, imdb_id):
         movie_title=movie_title,
         poster_url=poster_url,
         current_season=1,
-        current_episode=1
+        current_episode=1,
+        is_private=is_private
     )
     return redirect('party_room', room_code=room_code)
 
@@ -300,30 +307,44 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
             return db_data
 
     # 3. Fetch from API
-    if imdb_id:
-        url = f"http://www.omdbapi.com/?apikey={api_key}&i={imdb_id}&plot=full"
-        if season:
-            url += f"&Season={season}"
-    elif title:
-        url = f"http://www.omdbapi.com/?apikey={api_key}&t={title}"
-    else:
-        return None
+    keys_to_try = [api_key, api_key_2]
+    
+    for current_key in keys_to_try:
+        if imdb_id:
+            url = f"http://www.omdbapi.com/?apikey={current_key}&i={imdb_id}&plot=full"
+            if season:
+                url += f"&Season={season}"
+        elif title:
+            url = f"http://www.omdbapi.com/?apikey={current_key}&t={title}"
+        else:
+            return None
 
-    try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("Response") == "True":
-                cache.set(cache_key, data, 86400)  # 24 hours
-                return data
-            else:
-                print(f"DEBUG: OMDB API Error for {imdb_id or title}: {data.get('Error')}")
-    except Exception as e:
-        print(f"DEBUG: OMDB Fetch Exception: {e}")
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("Response") == "True":
+                    cache.set(cache_key, data, 86400)  # 24 hours
+                    return data
+                else:
+                    error_msg = data.get("Error", "")
+                    print(f"DEBUG: OMDB API Error for {imdb_id or title} with key {current_key[:4]}...: {error_msg}")
+                    # If it's a limit or key issue, try the next key
+                    if "limit" in error_msg.lower() or "key" in error_msg.lower():
+                        continue
+                    else:
+                        break # Other errors (not found, etc) shouldn't trigger failover
+            elif response.status_code == 401:
+                print(f"DEBUG: OMDB 401 Unauthorized for key {current_key[:4]}...")
+                continue # Try next key
+        except Exception as e:
+            print(f"DEBUG: OMDB Fetch Exception for key {current_key[:4]}...: {e}")
+            continue
         
     # 4. Final Mock Data Fallback (Last resort)
     mock_id = imdb_id or f"tt{hash(title or 'unknown') % 10000000}"
     mock_title = title or "Mock Title"
+
     return {
         "Title": mock_title,
         "Year": "2024",
@@ -369,11 +390,16 @@ def base(request):
     anime_list = [fetch_omdb_data(title=t) for t in animes[:LIMIT] if fetch_omdb_data(title=t)]
     recent_movies = [fetch_omdb_data(title=t) for t in recent_releases[:LIMIT] if fetch_omdb_data(title=t)]
 
+    watchlist_ids = set()
+    if request.user.is_authenticated:
+        watchlist_ids = set(Watchlist.objects.filter(user=request.user).values_list('imdb_id', flat=True))
+
     return render(request, 'base.html', {
         'movies': movies,
         'shows': shows_list,
         'Animes': anime_list,
         'recent_movies': recent_movies,
+        'watchlist_ids': watchlist_ids,
     })
 
 
@@ -462,12 +488,17 @@ def detail_view(request, imdb_id):
         if data and data.get('Poster') != 'N/A':
             recommendations.append(data)
 
+    watchlist_ids = set()
+    if request.user.is_authenticated:
+        watchlist_ids = set(Watchlist.objects.filter(user=request.user).values_list('imdb_id', flat=True))
+
     return render(request, 'detail.html', {
         'movie': movie_data,
         'season_data': season_data,
         'episodes_json': json.dumps(season_data.get('Episodes', [])),
         'recommendations': recommendations,
-        'api_key': api_key
+        'api_key': api_key,
+        'watchlist_ids': watchlist_ids
     })
 
 

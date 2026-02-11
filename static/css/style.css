@@ -1,6 +1,7 @@
 /* Global Variables */
 :root {
     --primary-red: #E50914;
+    --primary-glow: rgba(229, 9, 20, 0.5);
     --background-dark: #141414;
     --background-black: #000000;
     --text-white: #ffffff;
@@ -9,6 +10,8 @@
     --navbar-height: 70px;
     --font-heading: 'Bebas Neue', sans-serif;
     --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 /* Reset & Base Styles */
@@ -449,16 +452,31 @@ ul {
 }
 
 .premium-btn-list {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .premium-btn-list:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25);
     color: white;
     border-color: white;
+    transform: scale(1.02);
+}
+
+.premium-btn-remove {
+    background: rgba(229, 9, 20, 0.2);
+    backdrop-filter: blur(10px);
+    color: var(--primary-red);
+    border: 1px solid rgba(229, 9, 20, 0.4);
+}
+
+.premium-btn-remove:hover {
+    background: rgba(229, 9, 20, 0.4);
+    color: white;
+    border-color: var(--primary-red);
+    transform: scale(1.02);
 }
 
 .premium-btn-danger {

@@ -292,7 +292,8 @@
                     <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{% url 'user' %}">Profile</a>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'user' %}#global-parties"><i
+                                class="fas fa-globe me-1"></i>Global Parties</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'join_watch_party' %}"><i
                                 class="fas fa-users me-1"></i>Join Party</a></li>
 
@@ -309,8 +310,6 @@
                             style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
                             <li><a class="dropdown-item rounded-2 text-white" href="{% url 'user' %}"><i
                                         class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item rounded-2 text-white" href="{% url 'watchlist' %}"><i
-                                        class="fas fa-list me-2"></i>Watchlist</a></li>
                             <li>
                                 <hr class="dropdown-divider border-secondary">
                             </li>
@@ -382,6 +381,28 @@
                 </div>
             </div>
 
+            <div class="carousel-item">
+                <div class="hero-section"
+                    style="background-image:url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=2059&auto=format&fit=crop');">
+                    <div class="hero-content">
+                        <div class="badge bg-danger mb-3 px-3 py-2 rounded-pill shadow-sm">NEW FEATURE</div>
+                        <h1 class="display-3 fw-bold">Global Watch Parties</h1>
+                        <p class="lead mb-4">Join active public rooms and watch with people from around the world. No
+                            invite
+                            needed!</p>
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'user' %}#global-parties"
+                                class="btn btn-danger btn-lg px-5 rounded-pill shadow-lg border-0"
+                                style="background: linear-gradient(45deg, #e50914, #ff00cc);"><i
+                                    class="fas fa-globe me-2"></i>Discover Now</a>
+                            <a href="{% url 'base' %}"
+                                class="btn btn-outline-light btn-lg px-5 rounded-pill backdrop-blur"><i
+                                    class="fas fa-users me-2"></i>Host a Public Room</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -399,10 +420,20 @@
                             <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
                                 <i class="fas fa-play me-2"></i>Play
                             </a>
-                            <a href="{% url 'create_watch_party' movie.imdbID %}" class="premium-btn premium-btn-play"
+                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ movie.imdbID }}')"
+                                class="premium-btn premium-btn-play"
                                 style="background: linear-gradient(45deg, #ff00cc, #333399);">
                                 <i class="fas fa-users me-2"></i>Party
                             </a>
+                            {% if movie.imdbID in watchlist_ids %}
+                            <form method="POST" action="{% url 'remove_from_watchlist' movie.imdbID %}"
+                                class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="premium-btn premium-btn-remove">
+                                    <i class="fas fa-times me-2"></i>Remove
+                                </button>
+                            </form>
+                            {% else %}
                             <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
@@ -413,6 +444,7 @@
                                     <i class="fas fa-plus me-2"></i>My List
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="media-info text-center">
@@ -439,10 +471,20 @@
                             <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
                                 <i class="fas fa-play me-2"></i>Play
                             </a>
-                            <a href="{% url 'create_watch_party' movie.imdbID %}" class="premium-btn premium-btn-play"
+                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ movie.imdbID }}')"
+                                class="premium-btn premium-btn-play"
                                 style="background: linear-gradient(45deg, #ff00cc, #333399);">
                                 <i class="fas fa-users me-2"></i>Party
                             </a>
+                            {% if movie.imdbID in watchlist_ids %}
+                            <form method="POST" action="{% url 'remove_from_watchlist' movie.imdbID %}"
+                                class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="premium-btn premium-btn-remove">
+                                    <i class="fas fa-times me-2"></i>Remove
+                                </button>
+                            </form>
+                            {% else %}
                             <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
@@ -453,6 +495,7 @@
                                     <i class="fas fa-plus me-2"></i>My List
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="media-info text-center">
@@ -480,10 +523,20 @@
                             <a href="{% url 'detail' show.imdbID %}" class="premium-btn premium-btn-play">
                                 <i class="fas fa-play me-2"></i>Play
                             </a>
-                            <a href="{% url 'create_watch_party' show.imdbID %}" class="premium-btn premium-btn-play"
+                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ show.imdbID }}')"
+                                class="premium-btn premium-btn-play"
                                 style="background: linear-gradient(45deg, #ff00cc, #333399);">
                                 <i class="fas fa-users me-2"></i>Party
                             </a>
+                            {% if show.imdbID in watchlist_ids %}
+                            <form method="POST" action="{% url 'remove_from_watchlist' show.imdbID %}"
+                                class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="premium-btn premium-btn-remove">
+                                    <i class="fas fa-times me-2"></i>Remove
+                                </button>
+                            </form>
+                            {% else %}
                             <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ show.imdbID }}">
@@ -494,6 +547,7 @@
                                     <i class="fas fa-plus me-2"></i>My List
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="media-info text-center">
@@ -520,10 +574,20 @@
                             <a href="{% url 'detail' anime.imdbID %}" class="premium-btn premium-btn-play">
                                 <i class="fas fa-play me-2"></i>Play
                             </a>
-                            <a href="{% url 'create_watch_party' anime.imdbID %}" class="premium-btn premium-btn-play"
+                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ anime.imdbID }}')"
+                                class="premium-btn premium-btn-play"
                                 style="background: linear-gradient(45deg, #ff00cc, #333399);">
                                 <i class="fas fa-users me-2"></i>Party
                             </a>
+                            {% if anime.imdbID in watchlist_ids %}
+                            <form method="POST" action="{% url 'remove_from_watchlist' anime.imdbID %}"
+                                class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="premium-btn premium-btn-remove">
+                                    <i class="fas fa-times me-2"></i>Remove
+                                </button>
+                            </form>
+                            {% else %}
                             <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
                                 {% csrf_token %}
                                 <input type="hidden" name="imdb_id" value="{{ anime.imdbID }}">
@@ -534,6 +598,7 @@
                                     <i class="fas fa-plus me-2"></i>My List
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="media-info text-center">
@@ -582,29 +647,114 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- VPN Tip Modal -->
-    <div class="modal fade" id="vpnModal" tabindex="-1" aria-hidden="true">
+    <!-- Privacy Selection Modal -->
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-content glass-panel border-glow text-white">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title"><i class="fas fa-shield-alt text-danger me-2"></i>Streaming Tip</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt text-danger me-2"></i>Choose Room
+                        Privacy</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center py-4">
-                    <i class="fas fa-globe-americas fa-3x text-muted mb-3"></i>
-                    <p class="lead mb-2">Video not loading?</p>
-                    <p class="text-secondary mb-0">If the player gets stuck or refuses to connect, try using a
-                        <strong>VPN</strong>. Some ISPs restrict streaming servers.
-                    </p>
-                </div>
-                <div class="modal-footer border-secondary justify-content-center">
-                    <button type="button" class="btn btn-danger px-4 rounded-pill" data-bs-dismiss="modal">Got
-                        it!</button>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="privacy-option private p-3 rounded-4 border border-secondary cursor-pointer"
+                                onclick="selectPrivacy(true)">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="icon-box bg-danger rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px;">
+                                        <i class="fas fa-lock"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 fw-bold">Private Room</h5>
+                                        <p class="small text-white-50 mb-0">Only people with the code can join.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="privacy-option public p-3 rounded-4 border border-secondary cursor-pointer"
+                                onclick="selectPrivacy(false)">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="icon-box bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px;">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 fw-bold">Public Room</h5>
+                                        <p class="small text-white-50 mb-0">Visible to everyone on the platform.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .glass-panel {
+            background-color: #000 !important;
+            background-image: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(10, 10, 10, 0.99)) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .privacy-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            cursor: pointer;
+        }
+
+        .privacy-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+        }
+
+        .privacy-option.private:hover {
+            border-color: #E50914 !important;
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
+        }
+
+        .privacy-option.public:hover {
+            border-color: #00d2ff !important;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        #privacyModal .modal-content,
+        #privacyModal h5,
+        #privacyModal p {
+            color: white !important;
+        }
+
+        .icon-box {
+            transition: transform 0.3s ease;
+        }
+
+        .privacy-option:hover .icon-box {
+            transform: scale(1.1);
+        }
+    </style>
+
+    <script>
+        let currentImdbId = null;
+        function openPrivacyModal(imdbId) {
+            currentImdbId = imdbId;
+            const modal = new bootstrap.Modal(document.getElementById('privacyModal'));
+            modal.show();
+        }
+
+        function selectPrivacy(isPrivate) {
+            if (currentImdbId) {
+                window.location.href = `/party/create/${currentImdbId}/?is_private=${isPrivate}`;
+            }
+        }
+    </script>
 
     <script>
         const searchIcon = document.querySelector(".search-icon");
@@ -739,7 +889,7 @@
                                     <a href="/watch/${item.imdbID}/" class="premium-btn premium-btn-play">
                                         <i class="fas fa-play me-2"></i>Play
                                     </a>
-                                    <a href="/party/create/${item.imdbID}/" class="premium-btn premium-btn-play" 
+                                    <a href="javascript:void(0);" onclick="openPrivacyModal('${item.imdbID}')" class="premium-btn premium-btn-play" 
                                        style="background: linear-gradient(45deg, #ff00cc, #333399);">
                                         <i class="fas fa-users me-2"></i>Party
                                     </a>
@@ -879,6 +1029,34 @@
         })();
     </script>
 
+    <style>
+        .glass-panel {
+            background-color: #000 !important;
+            background-image: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(10, 10, 10, 0.99)) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .privacy-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .privacy-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #e50914 !important;
+            transform: translateY(-5px);
+        }
+
+        #privacyModal .modal-content,
+        #privacyModal h5,
+        #privacyModal p {
+            color: white !important;
+        }
+    </style>
 </body>
 
 </html>

@@ -11,6 +11,7 @@ class WatchParty(models.Model):
     current_episode = models.IntegerField(default=1)
     current_source = models.CharField(max_length=50, default='vidsrc')
     is_active = models.BooleanField(default=True)
+    is_private = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     participants = models.ManyToManyField(User, related_name='joined_parties', blank=True)
     pending_participants = models.ManyToManyField(User, related_name='pending_parties', blank=True)

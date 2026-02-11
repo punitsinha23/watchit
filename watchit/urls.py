@@ -43,7 +43,7 @@ urlpatterns = [
     path('account/profile/dashboard', account_views.search, name='user_dashboard'),
     path('account/profile/watchlist/add/', account_views.add_to_watchlist, name='add_to_watchlist'),
     path('account/profile/watchlist/remove/<str:imdb_id>/', account_views.remove_from_watchlist, name='remove_from_watchlist'),
-    path('account/profile/watchit', account_views.watchlist_view , name='watchlist'),
+
     
     # Watch Party URLs
     path('party/create/<str:imdb_id>/', watchit_views.create_watch_party, name='create_watch_party'),

@@ -114,57 +114,22 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 @login_required
 @cache_control(private=True, max_age=3600)
 def user(request):
-    # Fetch a few items for each category (Reduced to 12 for speed)
-    INITIAL_LIMIT = 12
-    
-    def fetch_item(item):
-        """Helper to fetch a single item"""
-        kwargs = {}
-        if item.startswith('tt'):
-            kwargs['imdb_id'] = item
-        else:
-            kwargs['title'] = item
-        
-        data = fetch_omdb_data(**kwargs)
-        if data and data.get('Poster') != 'N/A':
-            return data
-        return None
-
-    def get_data_parallel(source_list, limit=12):
-        """Fetch items in parallel using ThreadPoolExecutor"""
-        results = []
-        # Take only the needed amount from source
-        items_to_fetch = source_list[:limit]
-        
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            # Submit all tasks
-            future_to_item = {executor.submit(fetch_item, item): item for item in items_to_fetch}
-            
-            # Collect results as they complete
-            for future in as_completed(future_to_item):
-                data = future.result()
-                if data:
-                    results.append(data)
-                    
-        return results
-
-    # Fetch in parallel
-    # specific limits for each if needed, but 12 is good for one screen row
-    movies_data = get_data_parallel(top_100_movies, limit=INITIAL_LIMIT)
-    anime_data = get_data_parallel(animes, limit=INITIAL_LIMIT)
-    shows_data = get_data_parallel(shows, limit=INITIAL_LIMIT)
-
+    # Fetch active parties
     hosted_parties = WatchParty.objects.filter(host=request.user, is_active=True)
-    # Exclude hosted parties from joined parties to avoid duplication
     joined_parties = request.user.joined_parties.filter(is_active=True).exclude(host=request.user)
+    
+    # Fetch all active public parties (excluding ones the user is already in)
+    public_parties = WatchParty.objects.filter(is_active=True, is_private=False).exclude(host=request.user).exclude(participants=request.user).order_by('-created_at')
+
+    # Fetch watchlist
+    watchlist_items = Watchlist.objects.filter(user=request.user).order_by('-id')
 
     return render(request, 'user.html', {
-        'movies': movies_data,
-        'anime': anime_data,
-        'shows': shows_data,
         'display_name': request.user.username,
         'hosted_parties': hosted_parties,
-        'joined_parties': joined_parties
+        'joined_parties': joined_parties,
+        'public_parties': public_parties,
+        'watchlist': watchlist_items,
     })
 
 
@@ -190,8 +155,8 @@ def add_to_watchlist(request):
         else:
             messages.info(request, "Already in your watchlist.")
     
-    # Redirect to the watchlist page as requested
-    return redirect('watchlist')
+    # Stay on the current page after adding and show a message
+    return redirect(request.META.get('HTTP_REFERER', 'user'))
 
 
 def search(request):
@@ -216,21 +181,18 @@ def search(request):
                 else:
                     error = data.get("Error")
 
+    watchlist_ids = set()
+    if request.user.is_authenticated:
+        watchlist_ids = set(Watchlist.objects.filter(user=request.user).values_list('imdb_id', flat=True))
+
     return render(request, 'user_dashboard.html', {
         'movie_data': movie_data,
-        'error': error
+        'error': error,
+        'watchlist_ids': watchlist_ids
     })
 
 
-@login_required
-def watchlist_view(request):
-    if request.method == "POST":
-        imdb_id = request.POST.get('imdb_id')
-        Watchlist.objects.filter(user=request.user, imdb_id=imdb_id).delete()
-        messages.success(request, "Movie removed from watchlist.")
 
-    watchlist = Watchlist.objects.filter(user=request.user)
-    return render(request, 'watchlist.html', {'watchlist': watchlist})
 
 
 def verify_email(request, uidb64, token):
@@ -322,4 +284,4 @@ def remove_from_watchlist(request, imdb_id):
         messages.success(request, "Movie removed from watchlist.")
     except Watchlist.DoesNotExist:
         messages.error(request, "Movie not found in watchlist.")
-    return redirect('watchlist')
+    return redirect('user')
