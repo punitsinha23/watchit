@@ -143,6 +143,7 @@
     .player-offset {
         margin-top: 20px;
         /* increase if navbar is taller */
+        /*I cant add vidkin api*/
     }
 </style>
 
@@ -182,9 +183,9 @@
         } else {
             // Default to vidsrc.xyz
             if (type === 'movie') {
-                return `https://www.vidking.net/embed/movie/${id}`;
+                return `https://vidsrc.xyz/embed/movie/${id}`;
             } else {
-                return `https://www.vidking.net/embed/tv/${id}/${season}/${episode}`;
+                return `https://vidsrc.xyz/embed/tv/${id}/${season}/${episode}`;
             }
         }
     }
