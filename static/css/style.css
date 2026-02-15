@@ -839,3 +839,22 @@ ul {
 .media-info .media-meta {
     color: #999;
 }
+
+/* Responsive Button Adjustments for Small Screens */
+@media (max-width: 576px) {
+    .premium-btn {
+        font-size: 0.7rem !important;
+        padding: 5px 0 !important;
+        margin-top: 2px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .premium-overlay {
+        padding: 8px !important;
+    }
+
+    .premium-btn i {
+        font-size: 0.65rem !important;
+        margin-right: 3px !important;
+    }
+}

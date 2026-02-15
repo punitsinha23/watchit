@@ -191,6 +191,21 @@
         <h2 class="section-title mb-0"><i class="fas fa-broadcast-tower me-3"></i>Active Live Rooms</h2>
         <span class="badge rounded-pill bg-danger shadow-sm px-3 py-2">LIVE NOW</span>
       </div>
+
+      {% if not public_parties %}
+      <div class="px-3 mb-3">
+        <div class="alert alert-dark border-secondary bg-black-20 rounded-4 d-flex align-items-center gap-3 py-3">
+          <div class="icon-blob bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+            style="width: 40px; height: 40px; flex-shrink: 0;">
+            <i class="fas fa-globe"></i>
+          </div>
+          <div>
+            <p class="mb-0 fw-bold text-white">No global party available, make one!</p>
+            <p class="small text-white-50 mb-0">Host a public room to let others join you.</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
       <div class="carousel-container mt-4">
         <div class="carousel-scroll">
           {% for party in hosted_parties %}
