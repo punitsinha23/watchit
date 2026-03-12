@@ -43,7 +43,7 @@
                     <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
                         <i class="fas fa-play me-2"></i>Play
                     </a>
-                    <a href="{% url 'create_watch_party' movie.imdbID %}" class="premium-btn premium-btn-play"
+                    <a href="javascript:void(0);" onclick="openPrivacyModal('{{ movie.imdbID }}')" class="premium-btn py-2"
                         style="background: linear-gradient(45deg, #ff00cc, #333399);">
                         <i class="fas fa-users me-2"></i>Party
                     </a>
@@ -87,4 +87,91 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered" style="z-index: 1080;">
+        <div class="modal-content"
+            style="position: relative; z-index: 1080; background: linear-gradient(145deg, #1a1a1a, #0d0d0d); border: 1px solid #2a2a2a; border-radius: 16px; color: white;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt text-danger me-2"></i>Choose Room Type
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex flex-column gap-3">
+                    <div class="privacy-option rounded-3 p-3" onclick="selectPrivacy(true)"
+                        style="cursor:pointer; background: rgba(229,9,20,0.07); border: 1px solid rgba(229,9,20,0.2); transition: all 0.2s;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center justify-content-center bg-danger rounded-circle text-white"
+                                style="width:46px;height:46px;flex-shrink:0;">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">Private Room</h6>
+                                <small class="text-white-50">Only people with the code can join.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="privacy-option rounded-3 p-3" onclick="selectPrivacy(false)"
+                        style="cursor:pointer; background: rgba(13,110,253,0.07); border: 1px solid rgba(13,110,253,0.2); transition: all 0.2s;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center justify-content-center bg-primary rounded-circle text-white"
+                                style="width:46px;height:46px;flex-shrink:0;">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">Public Room</h6>
+                                <small class="text-white-50">Visible to everyone and joinable by anyone.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentImdbId = null;
+    let privacyModalInstance = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('privacyModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            privacyModalInstance = new bootstrap.Modal(modalEl);
+        }
+    });
+
+    function openPrivacyModal(imdbId) {
+        currentImdbId = imdbId;
+        if (privacyModalInstance) {
+            privacyModalInstance.show();
+        } else {
+            // Fallback if DOMContentLoaded hasn't run or bootstrap is delayed
+            const modalEl = document.getElementById('privacyModal');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                privacyModalInstance = new bootstrap.Modal(modalEl);
+                privacyModalInstance.show();
+            }
+        }
+    }
+
+    function selectPrivacy(isPrivate) {
+        if (currentImdbId) {
+            window.location.href = `/party/create/${currentImdbId}/?is_private=${isPrivate}`;
+        }
+    }
+</script>
+<style>
+    .privacy-option {
+        position: relative;
+        z-index: 1070;
+    }
+
+    .privacy-option:hover {
+        transform: translateY(-2px);
+        border-color: rgba(229, 9, 20, 0.5) !important;
+    }
+</style>
 {% endblock %}

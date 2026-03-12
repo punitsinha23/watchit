@@ -33,13 +33,28 @@
             border-bottom: 1px solid #333;
         }
 
-        /* Mobile menu background */
+        /* Mobile menu background & global refinements */
         @media (max-width: 991.98px) {
+            body {
+                padding-top: 70px;
+            }
             .navbar-collapse {
                 background-color: #000;
                 padding: 1rem;
                 margin-top: 1rem;
                 border-radius: 8px;
+            }
+            .container, .container-fluid {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+            .hero-section {
+                padding-bottom: 2rem;
+                min-height: 400px;
+            }
+            .hero-content {
+                padding-left: 5%;
+                padding-right: 5%;
             }
         }
 
@@ -59,38 +74,75 @@
             color: #e50914 !important;
         }
 
-        /* Hero Section Improvements */
+        /* Premium Hero Section */
         .hero-section {
-            height: 80vh;
+            height: 85vh;
+            min-height: 600px;
             background-size: cover;
-            background-position: center;
+            background-position: center top;
             position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding-bottom: 5rem;
         }
 
-        /* Gradient Overlay */
+        /* Cinematic Gradient Overlay */
         .hero-section::after {
             content: '';
             position: absolute;
-            top: 10;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to top, #141414 0%, rgba(20, 20, 20, 0.6) 50%, rgba(20, 20, 20, 0.4) 100%);
+            inset: 0;
+            background: linear-gradient(to top, #141414 0%, rgba(20, 20, 20, 0.8) 20%, transparent 60%),
+                        linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 100%);
+            z-index: 1;
         }
 
         .hero-content {
-            position: absolute;
-            bottom: 25%;
-            left: 5%;
+            position: relative;
             z-index: 2;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            padding-left: 5%;
+            max-width: 800px;
         }
 
         .hero-content h1 {
-            font-family: 'Bebas Neue', serif;
-            font-size: 4rem;
-            margin-bottom: 1rem;
+            font-family: var(--font-heading);
+            font-size: clamp(3rem, 6vw, 5rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .hero-content p.lead {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #ddd;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            max-width: 600px;
+            margin-bottom: 2rem !important;
+        }
+
+        .hero-btn-primary {
+            background: linear-gradient(135deg, #e50914, #b8070e);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(229, 9, 20, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .hero-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(229, 9, 20, 0.4);
+            color: white;
         }
 
 
@@ -299,17 +351,16 @@
 
                     <!-- Desktop Profile Dropdown -->
                     <li class="nav-item dropdown d-none d-lg-block">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
-                            data-bs-toggle="dropdown">
-                            <div class="profile-icon-placeholder d-flex align-items-center justify-content-center bg-danger text-white rounded-circle"
-                                style="width: 32px; height: 32px; font-size: 0.8rem;">
-                                <i class="fas fa-user"></i>
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="profile-avatar-nav d-flex align-items-center justify-content-center bg-danger text-white rounded-circle"
+                                style="width: 32px; height: 32px; font-size: 0.75rem; font-weight: 700;">
+                                {{ user.username|first|upper }}
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2"
-                            style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+                            style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 10px; min-width: 180px;">
                             <li><a class="dropdown-item rounded-2 text-white" href="{% url 'user' %}"><i
-                                        class="fas fa-user me-2"></i>Profile</a></li>
+                                        class="fas fa-user me-2 text-danger"></i>Profile</a></li>
                             <li>
                                 <hr class="dropdown-divider border-secondary">
                             </li>
@@ -347,9 +398,7 @@
                         <h1>Breaking Bad</h1>
                         <p class="lead mb-4">A high school chemistry teacher diagnosed with inoperable lung cancer turns
                             to manufacturing and selling methamphetamine in order to secure his family's future.</p>
-                        <a href="{% url 'detail' 'tt0903747' %}" class="btn btn-danger btn-lg px-5 rounded-pill"><i
-                                class="fas fa-play me-2"></i>Watch
-                            Now</a>
+                        <a href="{% url 'detail' 'tt0903747' %}" class="hero-btn-primary"><i class="fas fa-play me-2"></i> Watch Now</a>
                     </div>
                 </div>
             </div>
@@ -361,9 +410,7 @@
                         <h1>Stranger Things</h1>
                         <p class="lead mb-4">When a young boy disappears, his mother, a police chief and his friends
                             must confront terrifying supernatural forces in order to get him back.</p>
-                        <a href="{% url 'detail' 'tt0944947' %}" class="btn btn-danger btn-lg px-5 rounded-pill"><i
-                                class="fas fa-play me-2"></i>Watch
-                            Now</a>
+                        <a href="{% url 'detail' 'tt0944947' %}" class="hero-btn-primary"><i class="fas fa-play me-2"></i> Watch Now</a>
                     </div>
                 </div>
             </div>
@@ -374,9 +421,7 @@
                         <h1>Rick and Morty</h1>
                         <p class="lead mb-4">An animated series that follows the exploits of a super scientist and his
                             not-so-bright grandson.</p>
-                        <a href="{% url 'detail' 'tt3032476' %}" class="btn btn-danger btn-lg px-5 rounded-pill"><i
-                                class="fas fa-play me-2"></i>Watch
-                            Now</a>
+                        <a href="{% url 'detail' 'tt3032476' %}" class="hero-btn-primary"><i class="fas fa-play me-2"></i> Watch Now</a>
                     </div>
                 </div>
             </div>
@@ -390,14 +435,13 @@
                         <p class="lead mb-4">Join active public rooms and watch with people from around the world. No
                             invite
                             needed!</p>
-                        <div class="d-flex gap-3">
-                            <a href="{% url 'user' %}#global-parties"
-                                class="btn btn-danger btn-lg px-5 rounded-pill shadow-lg border-0"
-                                style="background: linear-gradient(45deg, #e50914, #ff00cc);"><i
-                                    class="fas fa-globe me-2"></i>Discover Now</a>
-                            <a href="{% url 'base' %}"
-                                class="btn btn-outline-light btn-lg px-5 rounded-pill backdrop-blur"><i
-                                    class="fas fa-users me-2"></i>Host a Public Room</a>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="{% url 'user' %}#global-parties" class="hero-btn-primary" style="background: linear-gradient(45deg, #ff00cc, #333399); box-shadow: 0 10px 20px rgba(255, 0, 204, 0.3);">
+                                <i class="fas fa-globe me-2"></i> Discover Now
+                            </a>
+                            <a href="{% url 'base' %}" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold d-flex align-items-center" style="border-width: 2px;">
+                                <i class="fas fa-users me-2"></i> Host a Public Room
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -407,8 +451,21 @@
     </div>
 
     <!-- Recently Released Movies Scroller -->
-    <div class="container-fluid mt-5 px-4">
-        <h2 class="section-header">RECENTLY RELEASED</h2>
+    <div class="container-fluid mt-5 px-lg-4 profile-body">
+        <div class="profile-section-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="section-icon-blob" style="background: rgba(229,9,20,0.15); color: #e50914;">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div>
+                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Recently Released</h2>
+                    <p class="section-sub mb-0">The newest additions to the platform</p>
+                </div>
+            </div>
+            <span class="live-badge" style="background: rgba(229,9,20,0.15); color: #ff4d4d; border: 1px solid rgba(229,9,20,0.3);">
+                NEW
+            </span>
+        </div>
         <div class="carousel-container" data-category="recent_movies" data-page="1">
             <div class="carousel-scroll">
                 {% for movie in recent_movies %}
@@ -458,8 +515,19 @@
     </div>
 
     <!-- Popular Movies Scroller -->
-    <div class="container-fluid mt-5 px-4">
-        <h2 class="section-header">POPULAR MOVIES</h2>
+    <div class="container-fluid mt-5 px-lg-4 profile-body">
+        <div class="profile-section-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="section-icon-blob" style="background: rgba(13,110,253,0.15); color: #4e8eff;">
+                    <i class="fas fa-film"></i>
+                </div>
+                <div>
+                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Popular Movies</h2>
+                    <p class="section-sub mb-0">What everyone is watching right now</p>
+                </div>
+            </div>
+            <span class="discover-badge">TRENDING</span>
+        </div>
         <div class="carousel-container" data-category="popular_movies" data-page="1">
             <div class="carousel-scroll">
                 {% for movie in movies %}
@@ -509,8 +577,18 @@
     </div>
 
     <!-- Popular Shows Scroller -->
-    <div class="container-fluid mt-5 px-4">
-        <h2 class="section-header">POPULAR SHOWS</h2>
+    <div class="container-fluid mt-5 px-lg-4 profile-body">
+        <div class="profile-section-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="section-icon-blob" style="background: rgba(255,193,7,0.15); color: #ffca2c;">
+                    <i class="fas fa-tv"></i>
+                </div>
+                <div>
+                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Popular Shows</h2>
+                    <p class="section-sub mb-0">Binge-worthy series to start today</p>
+                </div>
+            </div>
+        </div>
         <div class="carousel-container" data-category="home_shows" data-page="1">
             <div class="carousel-scroll">
                 {% for show in shows %}
@@ -561,8 +639,18 @@
     </div>
 
     <!-- Popular Anime Scroller -->
-    <div class="container-fluid mt-5 mb-5 px-4">
-        <h2 class="section-header">POPULAR ANIME</h2>
+    <div class="container-fluid mt-5 mb-5 px-lg-4 profile-body">
+        <div class="profile-section-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="section-icon-blob" style="background: rgba(111,66,193,0.15); color: #d63384;">
+                    <i class="fas fa-dragon"></i>
+                </div>
+                <div>
+                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Popular Anime</h2>
+                    <p class="section-sub mb-0">Top-rated anime series and movies</p>
+                </div>
+            </div>
+        </div>
         <div class="carousel-container" data-category="popular_anime" data-page="1">
             <div class="carousel-scroll">
                 {% for anime in Animes %}

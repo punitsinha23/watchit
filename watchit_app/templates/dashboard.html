@@ -4,10 +4,21 @@
 {% block content %}
 {% if movie_data %}
 <br>
-<h2 class="section-title text-center">HERE YOU GO!</h2>
+{% if fuzzy_suggestion %}
+<div class="container text-center mb-3">
+    <div class="alert alert-warning d-inline-block px-4 py-2 rounded-pill"
+        style="background:rgba(255,193,7,0.15); border:1px solid rgba(255,193,7,0.4); color:#ffc107;">
+        <i class="fas fa-spell-check me-2"></i>
+        Exact match not found — showing results for <strong>"{{ fuzzy_suggestion }}"</strong> instead
+    </div>
+</div>
+{% endif %}
+<h2 class="section-title text-center">HERE YOU GO! <span class="badge bg-secondary"
+        style="font-size:0.5em; vertical-align:middle;">{{ movie_data|length }} results</span></h2>
 <div class="container-fluid mt-4">
     <div class="media-grid">
         {% for movie in movie_data %}
+
         <div class="media-card fade-in position-relative">
             <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
                 onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">

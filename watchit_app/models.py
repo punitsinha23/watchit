@@ -9,7 +9,7 @@ class WatchParty(models.Model):
     poster_url = models.URLField(max_length=500, blank=True, null=True)
     current_season = models.IntegerField(default=1)
     current_episode = models.IntegerField(default=1)
-    current_source = models.CharField(max_length=50, default='vidsrc')
+    current_source = models.CharField(max_length=50, default='embedmaster')
     is_active = models.BooleanField(default=True)
     is_private = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

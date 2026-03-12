@@ -7,24 +7,18 @@ import random
 import requests
 import time
 from django.utils import timezone
-
-from .data import keyword, shows, top_100_movies, animes, anime_ids
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
 from decouple import config
 from .models import WatchParty, PartyMessage
+from .data import keyword, shows, top_100_movies, animes, anime_ids
 import uuid
-from django.utils import timezone
-from django.http import JsonResponse
 from django.db.models import Q
-from django.views.decorators.csrf import csrf_exempt
 
-api_key = config('OMDB_KEY', default='bd268b10')
-api_key_2 = config('OMDB_KEY_2', default='24a15e19')
-
-# ... (Previous constants)
+api_key = config('OMDB_KEY')
+api_key_2 = config('OMDB_KEY_2')
 
 @login_required
 def create_watch_party(request, imdb_id):
@@ -154,11 +148,6 @@ def party_room(request, room_code):
     season_data = {}
     if movie_data.get('Type') == 'series':
         season_data = fetch_omdb_data(imdb_id=party.imdb_id, season=party.current_season) or {}
-    
-    # Simple recommendation logic (can share with detail view)
-    all_recs = top_100_movies + anime_ids
-    recommendations = []
-    # (Optional: Recommendations logic similar to detail_view, omitted for brevity if needed)
 
     return render(request, 'watch_party.html', {
         'party': party,
@@ -169,6 +158,7 @@ def party_room(request, room_code):
         'api_key': api_key
     })
 
+@login_required
 def api_party_status(request, room_code):
     try:
         party = WatchParty.objects.get(room_code=room_code, is_active=True)
@@ -211,7 +201,6 @@ def api_party_status(request, room_code):
         'pending_users': [{'id': u.id, 'username': u.username} for u in party.pending_participants.all()] if request.user == party.host else []
     })
 
-@csrf_exempt
 @login_required
 def api_handle_join_request(request, room_code):
     if request.method != 'POST':
@@ -222,9 +211,12 @@ def api_handle_join_request(request, room_code):
     except WatchParty.DoesNotExist:
         return JsonResponse({'error': 'Party not found or unauthorized'}, status=404)
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     user_id = data.get('user_id')
-    action = data.get('action') # 'approve' or 'deny'
+    action = data.get('action')  # 'approve' or 'deny'
     
     try:
         user_to_handle = User.objects.get(id=user_id)
@@ -235,7 +227,6 @@ def api_handle_join_request(request, room_code):
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
 
-@csrf_exempt
 @login_required
 def delete_party(request, room_code):
     try:
@@ -246,7 +237,6 @@ def delete_party(request, room_code):
         return redirect('base')
 
 
-@csrf_exempt
 @login_required
 def api_party_update(request, room_code):
     if request.method != 'POST':
@@ -260,7 +250,10 @@ def api_party_update(request, room_code):
     if request.user != party.host:
         return JsonResponse({'error': 'Only host can update settings'}, status=403)
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     party.current_season = data.get('season', party.current_season)
     party.current_episode = data.get('episode', party.current_episode)
     party.current_source = data.get('source', party.current_source)
@@ -268,7 +261,6 @@ def api_party_update(request, room_code):
     
     return JsonResponse({'status': 'ok'})
 
-@csrf_exempt
 @login_required
 def api_party_chat(request, room_code):
     if request.method != 'POST':
@@ -279,7 +271,10 @@ def api_party_chat(request, room_code):
     except WatchParty.DoesNotExist:
         return JsonResponse({'error': 'Party not found'}, status=404)
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     text = data.get('text', '').strip()
     if text:
         PartyMessage.objects.create(party=party, user=request.user, text=text)
@@ -342,12 +337,11 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
                     return data
                 else:
                     error_msg = data.get("Error", "")
-                    print(f"DEBUG: OMDB API Error for {imdb_id or title} with key {current_key[:4]}...: {error_msg}")
                     # If it's a limit or key issue, try the next key
                     if "limit" in error_msg.lower() or "key" in error_msg.lower():
                         continue
                     else:
-                        break # Other errors (not found, etc) shouldn't trigger failover
+                        break  # Other errors (not found, etc.) shouldn't trigger failover
             elif response.status_code == 401:
                 print(f"DEBUG: OMDB 401 Unauthorized for key {current_key[:4]}...")
                 continue # Try next key
@@ -399,10 +393,10 @@ def base(request):
         if 'trial_start_time' not in request.session:
             request.session['trial_start_time'] = time.time()
     
-    movies = [fetch_omdb_data(title=t) for t in keyword[:LIMIT] if fetch_omdb_data(title=t)]
-    shows_list = [fetch_omdb_data(title=t) for t in shows[:LIMIT] if fetch_omdb_data(title=t)]
-    anime_list = [fetch_omdb_data(title=t) for t in animes[:LIMIT] if fetch_omdb_data(title=t)]
-    recent_movies = [fetch_omdb_data(title=t) for t in recent_releases[:LIMIT] if fetch_omdb_data(title=t)]
+    movies = [data for t in keyword[:LIMIT] if (data := fetch_omdb_data(title=t))]
+    shows_list = [data for t in shows[:LIMIT] if (data := fetch_omdb_data(title=t))]
+    anime_list = [data for t in animes[:LIMIT] if (data := fetch_omdb_data(title=t))]
+    recent_movies = [data for t in recent_releases[:LIMIT] if (data := fetch_omdb_data(title=t))]
 
     watchlist_ids = set()
     if request.user.is_authenticated:
@@ -417,47 +411,99 @@ def base(request):
     })
 
 
+def _omdb_search(query, max_pages=3):
+    """
+    Fetch up to max_pages * 10 results from OMDB for a given query.
+    Returns a list of movie dicts or an empty list.
+    """
+    results = []
+    for page in range(1, max_pages + 1):
+        url = f"http://www.omdbapi.com/?apikey={api_key}&s={query}&page={page}"
+        try:
+            resp = requests.get(url, timeout=5)
+            if resp.status_code != 200:
+                break
+            data = resp.json()
+            if data.get("Response") != "True":
+                break
+            batch = data.get("Search", [])
+            results.extend(batch)
+            # If this page has fewer than 10 results, there are no more pages
+            if len(batch) < 10:
+                break
+        except Exception:
+            break
+    return results
+
+
+def _fuzzy_omdb_search(query, max_pages=3):
+    """
+    Try an exact OMDB search first. If no results, progressively shorten the
+    query (removing the last character each time, down to 4 chars) to provide
+    typo-tolerant 'did you mean'-style results.
+    """
+    # Exact search first
+    results = _omdb_search(query, max_pages)
+    if results:
+        return results, None
+
+    # Fallback: try progressively shorter prefixes
+    MIN_LEN = 4
+    for trim_len in range(len(query) - 1, MIN_LEN - 1, -1):
+        prefix = query[:trim_len]
+        results = _omdb_search(prefix, max_pages=1)
+        if results:
+            return results, prefix  # return prefix so UI can hint "Showing results for: ..."
+
+    return [], None
+
+
 @cache_control(private=True, max_age=3600)
 def dashboard(request):
     movie_data = None
     error = None
+    fuzzy_suggestion = None
 
     if request.method == "POST":
-        movie_title = request.POST.get('title')
+        movie_title = request.POST.get('title', '').strip()
 
         if not movie_title:
             error = "Please enter a movie title."
             return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
 
         cache_key = f"search_{movie_title.lower()}".replace(" ", "_")
-        cached_results = cache.get(cache_key)
+        cached = cache.get(cache_key)
 
-        if cached_results:
-            movie_data = cached_results
+        if cached:
+            movie_data = cached.get('results')
+            fuzzy_suggestion = cached.get('suggestion')
         else:
             try:
-                api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"
-                response = requests.get(api_url, timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("Response") == "True":
-                        movie_data = data.get("Search", [])
-                        cache.set(cache_key, movie_data, 3600)  # 1 hour
-                    else:
-                        error = data.get("Error", "No results found.")
+                movie_data, fuzzy_suggestion = _fuzzy_omdb_search(movie_title)
+                if movie_data:
+                    cache.set(cache_key, {'results': movie_data, 'suggestion': fuzzy_suggestion}, 3600)
                 else:
-                    error = "Failed to fetch data from OMDb API."
+                    error = f"No results found for \"{movie_title}\". Try a different spelling."
             except Exception as e:
                 error = f"An error occurred: {str(e)}"
 
-    return render(request, 'dashboard.html', {'movie_data': movie_data, 'error': error})
+    watchlist_ids = set()
+    if request.user.is_authenticated:
+        watchlist_ids = set(Watchlist.objects.filter(user=request.user).values_list('imdb_id', flat=True))
+
+    return render(request, 'dashboard.html', {
+        'movie_data': movie_data,
+        'error': error,
+        'watchlist_ids': watchlist_ids,
+        'fuzzy_suggestion': fuzzy_suggestion,
+    })
 
 
 def movie_view(request):
     paginator = Paginator(top_100_movies, 28)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
-    movies = [fetch_omdb_data(imdb_id=i) for i in page_obj.object_list if fetch_omdb_data(imdb_id=i)]
+    movies = [data for i in page_obj.object_list if (data := fetch_omdb_data(imdb_id=i))]
 
     return render(request, 'movies.html', {'page_obj': page_obj, 'movies': movies})
 
@@ -466,7 +512,7 @@ def anime_view(request):
     paginator = Paginator(anime_ids, 20)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
-    animes_list = [fetch_omdb_data(imdb_id=i) for i in page_obj.object_list if fetch_omdb_data(imdb_id=i)]
+    animes_list = [data for i in page_obj.object_list if (data := fetch_omdb_data(imdb_id=i))]
 
     return render(request, 'anime.html', {'page_obj': page_obj, 'animes': animes_list})
 
@@ -475,7 +521,7 @@ def shows_view(request):
     paginator = Paginator(shows, 20)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
-    shows_list = [fetch_omdb_data(title=t) for t in page_obj.object_list if fetch_omdb_data(title=t)]
+    shows_list = [data for t in page_obj.object_list if (data := fetch_omdb_data(title=t))]
 
     return render(request, 'shows.html', {'page_obj': page_obj, 'shows': shows_list})
 
@@ -520,26 +566,8 @@ def fetch_more_items(request):
     category = request.GET.get('category')
     page = int(request.GET.get('page', 1))
 
-    # Recent releases for fetch_more_items (same list as above)
-    recent_releases = [
-        "Oppenheimer", "Barbie", "Dune: Part Two", "Poor Things", 
-        "The Holdovers", "Killers of the Flower Moon", "Past Lives",
-        "Anatomy of a Fall", "The Zone of Interest", "Ferrari",
-        "The Boy and the Heron", "Saltburn", "All of Us Strangers",
-        "May December", "The Iron Claw", "Maestro", "The Beekeeper",
-        "Mean Girls", "Dream Scenario", "The Color Purple", "American Fiction",
-        "Priscilla", "The Wonderful Story of Henry Sugar", "Society of the Snow",
-        "The Teachers' Lounge", "Fallen Leaves", "Perfect Days",
-        "Drive-Away Dolls", "Love Lies Bleeding", "Immaculate",
-        "Civil War", "Late Night with the Devil", "Abigail",
-        "The Fall Guy", "IF", "Furiosa: A Mad Max Saga",
-        "Hit Man", "Bad Boys: Ride or Die", "Inside Out 2",
-        "A Quiet Place: Day One", "Longlegs", "Deadpool & Wolverine",
-        "Trap", "Alien: Romulus", "Blink Twice",
-        "Beetlejuice Beetlejuice", "The Substance", "Speak No Evil",
-        "Megalopolis", "The Wild Robot", "Smile 2"
-    ]
-    
+
+
     config_map = {
         'movies': (top_100_movies, 28, True),
         'anime': (anime_ids, 20, True),

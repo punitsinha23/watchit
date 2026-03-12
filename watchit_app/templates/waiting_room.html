@@ -51,7 +51,7 @@
         </p>
         <div class="p-3 bg-black rounded border border-secondary mb-4">
             <small class="text-white-50 d-block mb-1">Watching:</small>
-            <span class="text-white h5">{{ party.imdb_id }}</span>
+            <span class="text-white h5">{{ party.movie_title|default:party.imdb_id }}</span>
         </div>
         <div id="status-message" class="text-info small mb-0">
             <i class="fas fa-sync fa-spin me-2"></i>Checking status...

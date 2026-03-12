@@ -15,14 +15,10 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.crypto import get_random_string
 from django.utils.timezone import now
 from datetime import timedelta
-
-
-import requests
-import uuid
-from django.utils.timezone import now
-from datetime import timedelta
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
+import requests
+import uuid
 
 from .forms import myform, loginform
 from .models import Watchlist, PasswordResetToken
@@ -140,9 +136,6 @@ def add_to_watchlist(request):
     """
     if request.method == "POST":
         imdb_id = request.POST.get('imdb_id')
-        print(f"Watchlist Add Request: {request.POST}") # DEBUG LOG
-        
-        # Check if item exists to avoid duplicates
         if not Watchlist.objects.filter(user=request.user, imdb_id=imdb_id).exists():
             Watchlist.objects.create(
                 user=request.user,
@@ -172,14 +165,27 @@ def search(request):
         if not movie_title:
             error = "Please enter a movie title."
         else:
-            api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}"
-            response = requests.get(api_url)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("Response") == "True":
-                    movie_data = data.get("Search", [])
-                else:
-                    error = data.get("Error")
+            movie_data = []
+            for page in range(1, 4):
+                api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}&page={page}"
+                try:
+                    response = requests.get(api_url, timeout=5)
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get("Response") == "True":
+                            batch = data.get("Search", [])
+                            movie_data.extend(batch)
+                            if len(batch) < 10:
+                                break
+                        else:
+                            if page == 1:
+                                error = data.get("Error")
+                                movie_data = None
+                            break
+                    else:
+                        break
+                except Exception:
+                    break
 
     watchlist_ids = set()
     if request.user.is_authenticated:
@@ -221,13 +227,10 @@ def forgot_password(request):
         user = User.objects.filter(email=email).first()
 
         if user:
-            # Create or update token
-            PasswordResetToken.objects.update_or_create(
+            token_obj, _ = PasswordResetToken.objects.update_or_create(
                 user=user,
                 defaults={'token': uuid.uuid4(), 'created_at': now()}
             )
-            
-            token_obj = PasswordResetToken.objects.get(user=user)
             reset_link = request.build_absolute_uri(
                 reverse('reset_password', args=[str(token_obj.token)])
             )
@@ -243,6 +246,7 @@ def forgot_password(request):
         # Always show success message for security (prevent email enumeration)
         messages.success(request, "If an account exists with this email, a reset link has been sent.")
         return redirect('forgot_password') 
+
 
     return render(request, 'forgot_password.html')
 
@@ -277,6 +281,7 @@ def reset_password(request, token):
     return render(request, 'reset_password.html')
 
 
+@login_required
 def remove_from_watchlist(request, imdb_id):
     try:
         watchlist_item = Watchlist.objects.get(user=request.user, imdb_id=imdb_id)

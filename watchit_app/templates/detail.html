@@ -23,10 +23,10 @@
                     <div class="flex-grow-1">
                         <label class="text-secondary small mb-1">Source</label>
                         <select id="source-select" class="form-select bg-dark text-white border-secondary">
-                            <option value="vidsrc">Server 1 (Vidsrc.xyz)</option>
-                            <option value="vidsrcto">Server 2 (Vidsrc.to)</option>
-                            <option value="vidsrcme">Server 3 (Vidsrc.me)</option>
-                            <option value="superembed">Server 4 (SuperEmbed)</option>
+                            <option value="embedmaster">EmbedMaster</option>
+                            <option value="vidsrc">Vidsrc (XYZ)</option>
+                            <option value="vidsrcto">Vidsrc (TO)</option>
+                            <option value="vidsrcme">Vidsrc (ME)</option>
                         </select>
                     </div>
 
@@ -142,8 +142,26 @@
 
     .player-offset {
         margin-top: 20px;
-        /* increase if navbar is taller */
-        /*I cant add vidkin api*/
+    }
+    
+    @media (max-width: 767px) {
+        .display-4 {
+            font-size: 2rem !important;
+        }
+        .player-offset {
+            margin-top: 10px;
+        }
+        .mb-5 {
+            margin-bottom: 2rem !important;
+        }
+        .my-5 {
+            margin-top: 2rem !important;
+            margin-bottom: 2rem !important;
+        }
+        .section-title {
+            font-size: 1.5rem !important;
+            padding-left: 1rem !important;
+        }
     }
 </style>
 
@@ -159,10 +177,16 @@
 
     let currentSeason = 1;
     let currentEpisode = 1;
-    let currentSource = 'vidsrc';
+    let currentSource = 'embedmaster';
 
     function getSourceUrl(source, type, id, season, episode) {
-        if (source === 'vidsrcto') {
+        if (source === 'embedmaster') {
+            if (type === 'movie') {
+                return `https://embedmaster.link/zca6ls5u4o3pucq2/movie/${id}`;
+            } else {
+                return `https://embedmaster.link/zca6ls5u4o3pucq2/tv/${id}/${season}/${episode}`;
+            }
+        } else if (source === 'vidsrcto') {
             if (type === 'movie') {
                 return `https://vidsrc.to/embed/movie/${id}`;
             } else {

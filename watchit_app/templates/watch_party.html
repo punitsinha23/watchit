@@ -94,23 +94,97 @@
         background: rgba(255, 255, 255, 0.2);
         transform: scale(1.1);
     }
+
+    /* Chat toggling transitions */
+    #video-section,
+    #chat-section {
+        transition: width 0.3s ease-in-out, flex 0.3s ease-in-out, max-width 0.3s ease-in-out;
+    }
+
+    #chat-section {
+        transition: width 0.3s ease-in-out, flex 0.3s ease-in-out, max-width 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    }
+
+    .chat-hidden-state {
+        transform: translateX(100%);
+        opacity: 0;
+        width: 0 !important;
+        flex: 0 0 0% !important;
+        max-width: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+    }
+
+    /* Mobile specific chat refinements */
+    @media (max-width: 767px) {
+        #chat-section {
+            padding-left: 5px !important;
+            padding-right: 5px !important;
+        }
+        #chat-messages {
+            height: 300px !important;
+            font-size: 0.8rem;
+        }
+        .card-header, .card-footer {
+            padding: 0.5rem !important;
+        }
+        #chat-input {
+            font-size: 0.8rem;
+            padding: 0.4rem;
+        }
+        #video-section h4 {
+            font-size: 1rem;
+        }
+        .player-container {
+            margin-bottom: 10px;
+        }
+        #video-section h4 {
+            font-size: 1.1rem !important;
+        }
+        .room-info-small {
+            font-size: 0.75rem !important;
+        }
+        .host-controls-mobile {
+            padding: 0.75rem !important;
+            gap: 0.5rem !important;
+        }
+        .host-controls-mobile select, .host-controls-mobile button {
+            font-size: 0.85rem !important;
+            padding: 0.4rem 0.6rem !important;
+        }
+        .movie-info-wrap {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            text-align: center !important;
+        }
+        .movie-info-wrap img {
+            width: 120px !important;
+            height: 180px !important;
+        }
+    }
 </style>
 <div class="container-fluid mt-4 fade-in">
-    <div class="row">
+    <div class="row" style="overflow-x: hidden;">
 
         <!-- ================= PLAYER SECTION ================= -->
-        <div class="col-lg-9 col-md-8">
+        <div id="video-section" class="col-9 col-md-8 col-lg-9">
 
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-2 gap-2">
                 <h4 class="text-white m-0">
                     Room:
                     <span class="text-danger fw-bold">{{ party.room_code }}</span>
                 </h4>
-                <div class="text-secondary small">
-                    <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-                    Room expires 24h after creation
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-secondary room-info-small">
+                        <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                        Expires in 24h
+                    </div>
+                    <span class="badge bg-secondary" id="active-viewers">Loading...</span>
                 </div>
-                <span class="badge bg-secondary" id="active-viewers">Loading...</span>
             </div>
 
             <div class="player-container position-relative bg-black rounded overflow-hidden shadow-lg"
@@ -122,21 +196,21 @@
 
             <!-- HOST CONTROLS -->
             {% if is_host %}
-            <div class="d-flex flex-wrap gap-3 align-items-center mt-3 p-3 rounded bg-dark border border-secondary">
+            <div class="d-flex flex-wrap gap-3 align-items-center mt-3 p-3 rounded bg-dark border border-secondary host-controls-mobile">
 
                 <span class="badge bg-danger">HOST CONTROLS</span>
 
                 <select id="source-select" class="form-select bg-black text-white border-secondary">
-                    <option value="vidsrc">Server 1</option>
-                    <option value="vidsrcto">Server 2</option>
-                    <option value="vidsrcme">Server 3</option>
-                    <option value="superembed">Server 4</option>
+                    <option value="embedmaster" {% if party.current_source == 'embedmaster' %}selected{% endif %}>EmbedMaster</option>
+                    <option value="vidsrc" {% if party.current_source == 'vidsrc' %}selected{% endif %}>Vidsrc (XYZ)</option>
+                    <option value="vidsrcto" {% if party.current_source == 'vidsrcto' %}selected{% endif %}>Vidsrc (TO)</option>
+                    <option value="vidsrcme" {% if party.current_source == 'vidsrcme' %}selected{% endif %}>Vidsrc (ME)</option>
                 </select>
 
                 {% if movie.Type == 'series' %}
                 <select id="season-select" class="form-select bg-black text-white border-secondary">
                     {% for i in "x"|rjust:movie.totalSeasons %}
-                    <option value="{{ forloop.counter }}">
+                    <option value="{{ forloop.counter }}" {% if forloop.counter == party.current_season %}selected{% endif %}>
                         Season {{ forloop.counter }}
                     </option>
                     {% endfor %}
@@ -156,21 +230,21 @@
             </div>
             {% endif %}
 
-            <div class="mt-4 d-flex gap-4">
+            <div class="mt-4 d-flex gap-4 movie-info-wrap">
                 {% if movie.Poster and movie.Poster != 'N/A' %}
                 <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" class="rounded shadow-lg"
                     style="width: 150px; height: 225px; object-fit: cover;">
                 {% endif %}
                 <div>
-                    <h2 class="text-white">{{ movie.Title }}</h2>
-                    <p class="text-white-50">{{ movie.Plot }}</p>
+                    <h2 class="text-white h4 h2-md">{{ movie.Title }}</h2>
+                    <p class="text-white-50 small">{{ movie.Plot }}</p>
                 </div>
             </div>
 
         </div>
 
         <!-- ================= CHAT SECTION ================= -->
-        <div class="col-lg-3 col-md-4">
+        <div id="chat-section" class="col-3 col-md-4 col-lg-3">
 
             {% if is_host %}
             <!-- Enhanced Join Requests Notification -->
@@ -190,8 +264,13 @@
 
             <div class="card bg-dark border-secondary h-100" style="max-height:80vh;">
 
-                <div class="card-header bg-black border-bottom border-secondary text-white fw-bold">
-                    Live Chat 🔴
+                <div
+                    class="card-header bg-black border-bottom border-secondary text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>Live Chat 🔴</span>
+                    <button id="hide-chat-btn" class="btn btn-sm btn-outline-secondary text-white border-0 py-0"
+                        title="Hide Chat">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
 
                 <div id="chat-messages" class="card-body overflow-auto" style="height:400px; scroll-behavior:smooth;">
@@ -213,6 +292,15 @@
 
     </div>
 </div>
+
+<!-- Show Chat Button (Floating) -->
+<button id="show-chat-btn"
+    class="btn btn-danger position-fixed d-none shadow-lg d-flex align-items-center justify-content-center"
+    style="top: 50%; right: 0; transform: translateY(-50%); z-index: 1050; border-radius: 8px 0 0 8px; padding: 15px 10px; width: 45px;"
+    title="Show Chat">
+    <i class="fas fa-chevron-left me-1"></i>
+    <i class="fas fa-comments"></i>
+</button>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -236,13 +324,33 @@
 
         const viewerBadge = document.getElementById("active-viewers");
 
+        /* ================= HIDE/SHOW CHAT TOGGLE ================= */
+        const videoSection = document.getElementById('video-section');
+        const chatSection = document.getElementById('chat-section');
+        const hideChatBtn = document.getElementById('hide-chat-btn');
+        const showChatBtn = document.getElementById('show-chat-btn');
+
+        hideChatBtn?.addEventListener('click', () => {
+            chatSection.classList.add('chat-hidden-state');
+            videoSection.classList.remove('col-lg-9', 'col-md-8');
+            videoSection.classList.add('col-lg-12', 'col-md-12');
+            setTimeout(() => showChatBtn.classList.remove('d-none'), 300);
+        });
+
+        showChatBtn?.addEventListener('click', () => {
+            showChatBtn.classList.add('d-none');
+            videoSection.classList.remove('col-lg-12', 'col-md-12');
+            videoSection.classList.add('col-lg-9', 'col-md-8');
+            chatSection.classList.remove('chat-hidden-state');
+        });
+
         let lastMsgId = 0;
         let polling = false;
 
         let currentState = {
             season: parseInt("{{ party.current_season|default:1 }}"),
             episode: parseInt("{{ party.current_episode|default:1 }}"),
-            source: "{{ party.current_source|default:'vidsrc' }}"
+            source: "{{ party.current_source|default:'embedmaster' }}"
         };
 
         console.log("DEBUG: Initial State", currentState);
@@ -265,6 +373,12 @@
         /* ================= VIDEO SOURCE ================= */
 
         function getSourceUrl(source, season, episode) {
+
+            if (source === "embedmaster") {
+                return TYPE === "movie"
+                    ? `https://embedmaster.link/zca6ls5u4o3pucq2/movie/${IMDB_ID}`
+                    : `https://embedmaster.link/zca6ls5u4o3pucq2/tv/${IMDB_ID}/${season}/${episode}`;
+            }
 
             if (source === "vidsrcto") {
                 return TYPE === "movie"
@@ -299,6 +413,20 @@
 
             if (player.src !== newUrl) {
                 player.src = newUrl;
+            }
+
+            // Sync dropdowns if they exist (Guests may have them disabled or hidden, but keeping in sync is good)
+            if (sourceSelect && sourceSelect.value !== state.source) {
+                sourceSelect.value = state.source;
+            }
+            if (seasonSelect && parseInt(seasonSelect.value) !== state.season) {
+                seasonSelect.value = state.season;
+                loadEpisodes(state.season); // Reload episodes for new season
+            }
+            if (episodeSelect && parseInt(episodeSelect.value) !== state.episode) {
+                // We'll trust loadEpisodes to set the value if season changed, 
+                // but if only episode changed:
+                episodeSelect.value = state.episode;
             }
 
             currentState = { ...state };
@@ -411,13 +539,15 @@
             users.forEach(u => {
                 const div = document.createElement("div");
                 div.className = "request-item d-flex justify-content-between align-items-center mb-2";
+
+                // Build HTML without injecting username directly to avoid XSS
                 div.innerHTML = `
                 <div class="request-user-info">
                     <div class="user-avatar-small">
                         <i class="fas fa-user text-white-50"></i>
                     </div>
                     <div>
-                        <div class="text-white small fw-bold">${u.username}</div>
+                        <div class="text-white small fw-bold username-label"></div>
                         <div class="text-white-50" style="font-size: 0.7rem;">wants to join</div>
                     </div>
                 </div>
@@ -430,6 +560,8 @@
                     </button>
                 </div>
             `;
+                // Set username safely via textContent to prevent XSS
+                div.querySelector('.username-label').textContent = u.username;
                 list.appendChild(div);
             });
         }
@@ -454,8 +586,8 @@
                 const data = await res.json();
 
                 if (data.status === 'ok') {
-                    // Success - remove row
-                    btn.closest('.d-flex').remove();
+                    // Success - remove the entire request card
+                    btn.closest('.request-item').remove();
                     // Update count
                     const count = document.getElementById("request-count");
                     const newCount = parseInt(count.textContent) - 1;
@@ -475,7 +607,7 @@
             }
         }
 
-        setInterval(pollServer, 2000);
+        setInterval(pollServer, 1000);
 
         /* ================= CHAT ================= */
 
@@ -549,6 +681,11 @@
 
                         episodeSelect.appendChild(opt);
                     });
+                    
+                    // Double check value is set (useful for initial load)
+                    if (episodeSelect.value != currentState.episode) {
+                        episodeSelect.value = currentState.episode;
+                    }
                 });
         }
 
@@ -560,9 +697,13 @@
             seasonSelect?.addEventListener("change", function () {
                 // Update episodes when season changes
                 loadEpisodes(this.value);
-                // Default to ep 1
-                episodeSelect.value = 1;
-                syncState();
+                // Default to first available option after episodes load
+                setTimeout(() => {
+                    if (episodeSelect && episodeSelect.options.length > 0) {
+                        episodeSelect.selectedIndex = 0;
+                    }
+                    syncState();
+                }, 100);
             });
             episodeSelect?.addEventListener("change", syncState);
             document.getElementById("update-btn")?.addEventListener("click", syncState);
