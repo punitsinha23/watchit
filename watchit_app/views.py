@@ -17,8 +17,8 @@ from .data import keyword, shows, top_100_movies, animes, anime_ids
 import uuid
 from django.db.models import Q
 
-api_key = config('OMDB_KEY')
-api_key_2 = config('OMDB_KEY_2')
+api_key = config('OMDB_KEY', default='')
+api_key_2 = config('OMDB_KEY_2', default='')
 
 @login_required
 def create_watch_party(request, imdb_id):
