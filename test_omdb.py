@@ -9,7 +9,7 @@ django.setup()
 
 from decouple import config
 
-api_key = config('OMDB_API_KEY', default='593db72e')
+api_key = config('OMDB_KEY_2', default='593db72e')
 imdb_id = 'tt1234567' # Sample IMDb ID
 
 print(f"DEBUG: Testing with API Key: {api_key}")

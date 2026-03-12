@@ -9,7 +9,7 @@ django.setup()
 from watchit_app.models import WatchParty
 from decouple import config
 
-api_key = config('OMDB_API_KEY', default='24a15e19')
+api_key = config('OMDB_KEY_2', default='24a15e19')
 
 def backfill_metadata():
     parties = WatchParty.objects.filter(movie_title__isnull=True) | WatchParty.objects.filter(movie_title="")

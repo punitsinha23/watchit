@@ -26,7 +26,7 @@ from watchit_app.models import WatchParty
 
 
 from decouple import config
-api_key = config('OMDB_API_KEY')
+api_key = config('OMDB_KEY_2', default='')
 
 
 def signup_view(request):
