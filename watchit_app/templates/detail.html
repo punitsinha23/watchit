@@ -239,8 +239,10 @@
         const seasonSelect = document.getElementById('season-select');
         const episodeSelect = document.getElementById('episode-select');
 
-        // Load Season 1 initially
-        loadSeason(1);
+        // Load Season 1 only if not already populated server-side
+        if (episodeSelect.options.length <= 1 && (episodeSelect.options[0]?.text === 'No episodes' || episodeSelect.options[0]?.text === '')) {
+            loadSeason(1);
+        }
 
         seasonSelect.addEventListener('change', function () {
             currentSeason = this.value;

@@ -34,6 +34,9 @@ def create_watch_party(request, imdb_id):
             
     # Use the robust fetch_omdb_data helper
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
+    if not movie_data:
+        return redirect('base')
+        
     movie_title = movie_data.get('Title', '')
     poster_url = movie_data.get('Poster', '')
 
@@ -42,7 +45,9 @@ def create_watch_party(request, imdb_id):
         host=request.user,
         imdb_id=imdb_id,
         movie_title=movie_title,
+        movie_type=movie_data.get('Type', 'movie'),
         poster_url=poster_url,
+        total_seasons=int(movie_data.get('totalSeasons', 0)) if movie_data.get('totalSeasons', '0').isdigit() else 0,
         current_season=1,
         current_episode=1,
         is_private=is_private
@@ -143,6 +148,16 @@ def party_room(request, room_code):
     movie_data = fetch_omdb_data(imdb_id=party.imdb_id)
     if not movie_data:
         return redirect('base')
+
+    # Persist metadata to DB if missing
+    if not party.movie_title or not party.total_seasons:
+        party.movie_title = movie_data.get('Title', party.movie_title)
+        party.movie_type = movie_data.get('Type', party.movie_type)
+        try:
+            party.total_seasons = int(movie_data.get('totalSeasons', party.total_seasons))
+        except (ValueError, TypeError):
+            pass
+        party.save()
 
     # Normalize totalSeasons
     try:
@@ -315,6 +330,8 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
                 "Title": existing_party.movie_title,
                 "Poster": existing_party.poster_url,
                 "imdbID": existing_party.imdb_id,
+                "Type": existing_party.movie_type,
+                "totalSeasons": str(existing_party.total_seasons),
                 "Response": "True"
             }
             cache.set(cache_key, db_data, 86400)
@@ -365,15 +382,32 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
     mock_id = imdb_id or f"tt{hash(title or 'unknown') % 10000000}"
     mock_title = title or "Mock Title"
 
-    return {
+    # Try to infer type
+    inferred_type = "movie"
+    # Check if we have this IMDB ID as a series in our DB
+    existing_party = WatchParty.objects.filter(imdb_id=imdb_id).first() if imdb_id else None
+    
+    if season or (existing_party and existing_party.movie_type == 'series') or (title and any(s.lower() in title.lower() for s in ["series", "season", "show"])):
+        inferred_type = "series"
+
+    res = {
         "Title": mock_title,
         "Year": "2024",
         "imdbID": mock_id,
-        "Type": "movie",
+        "Type": inferred_type,
         "Poster": "https://via.placeholder.com/300x450.png?text=" + mock_title.replace(" ", "+"),
         "Plot": "Live data currently unavailable.",
-        "Response": "True"
+        "Response": "True",
+        "totalSeasons": "1" if inferred_type == "series" else "0"
     }
+
+    if season:
+        res["Episodes"] = [
+            {"Title": f"Episode {i}", "Episode": str(i), "imdbID": f"{mock_id}e{i}"}
+            for i in range(1, 21) # Mock 20 episodes so they can at least try to watch
+        ]
+
+    return res
 
 
 # Recent releases (2023-2024) - 50 movies
@@ -548,9 +582,19 @@ def detail_view(request, imdb_id):
     if not movie_data:
         return redirect('base')
 
-    # Normalize totalSeasons
+    # Normalize totalSeasons and save back to first party if possible
     try:
-        movie_data['totalSeasons'] = int(movie_data.get('totalSeasons', 0))
+        total_seasons = int(movie_data.get('totalSeasons', 0))
+        movie_data['totalSeasons'] = total_seasons
+        # Try to update an existing watch party with this data so it's persisted in DB
+        # for future fetch_omdb_data calls
+        party_to_update = WatchParty.objects.filter(imdb_id=imdb_id).first()
+        if party_to_update:
+            if not party_to_update.movie_title:
+                party_to_update.movie_title = movie_data.get('Title')
+            party_to_update.movie_type = movie_data.get('Type', 'movie')
+            party_to_update.total_seasons = total_seasons
+            party_to_update.save()
     except (ValueError, TypeError):
         movie_data['totalSeasons'] = 0
 
