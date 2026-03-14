@@ -140,10 +140,15 @@ def party_room(request, room_code):
         return redirect('waiting_room', room_code=room_code)
 
 
-    # Fetch movie data using existing helper
     movie_data = fetch_omdb_data(imdb_id=party.imdb_id)
     if not movie_data:
         return redirect('base')
+
+    # Normalize totalSeasons
+    try:
+        movie_data['totalSeasons'] = int(movie_data.get('totalSeasons', 0))
+    except (ValueError, TypeError):
+        movie_data['totalSeasons'] = 0
 
     season_data = {}
     if movie_data.get('Type') == 'series':
@@ -329,6 +334,11 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
             return None
 
         try:
+            # Check if this key is currently "bad" (last trial returned 401)
+            bad_key_cache = f"bad_key_{current_key}"
+            if cache.get(bad_key_cache):
+                continue
+
             response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 data = response.json()
@@ -339,11 +349,13 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
                     error_msg = data.get("Error", "")
                     # If it's a limit or key issue, try the next key
                     if "limit" in error_msg.lower() or "key" in error_msg.lower():
+                        cache.set(bad_key_cache, True, 600) # mark bad for 10 mins
                         continue
                     else:
                         break  # Other errors (not found, etc.) shouldn't trigger failover
             elif response.status_code == 401:
                 print(f"DEBUG: OMDB 401 Unauthorized for key {current_key[:4]}...")
+                cache.set(bad_key_cache, True, 600) # mark bad for 10 mins
                 continue # Try next key
         except Exception as e:
             print(f"DEBUG: OMDB Fetch Exception for key {current_key[:4]}...: {e}")
@@ -535,6 +547,12 @@ def detail_view(request, imdb_id):
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
     if not movie_data:
         return redirect('base')
+
+    # Normalize totalSeasons
+    try:
+        movie_data['totalSeasons'] = int(movie_data.get('totalSeasons', 0))
+    except (ValueError, TypeError):
+        movie_data['totalSeasons'] = 0
 
     season_data = {}
     if movie_data.get('Type') == 'series':

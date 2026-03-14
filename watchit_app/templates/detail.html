@@ -42,7 +42,11 @@
                     <div class="flex-grow-1">
                         <label class="text-secondary small mb-1">Episode</label>
                         <select id="episode-select" class="form-select bg-dark text-white border-secondary">
-                            <!-- Populated via JS -->
+                            {% for ep in season_data.Episodes %}
+                            <option value="{{ ep.Episode }}">Episode {{ ep.Episode }}: {{ ep.Title }}</option>
+                            {% empty %}
+                            <option>No episodes</option>
+                            {% endfor %}
                         </select>
                     </div>
                     {% endif %}
