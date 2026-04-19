@@ -58,6 +58,9 @@ urlpatterns = [
     path('party/api/check-approval/<str:room_code>/', watchit_views.api_check_approval, name='api_check_approval'),
     path('party/api/handle-request/<str:room_code>/', watchit_views.api_handle_join_request, name='api_handle_join_request'),
     path('party/delete/<str:room_code>/', watchit_views.delete_party, name='delete_party'),
+    
+    # allauth URLs
+    path('accounts/', include('allauth.urls')),
 ] 
 
 

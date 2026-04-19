@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load socialaccount %}
 
 
 {% block content %}
@@ -178,6 +179,14 @@
                 </a>
             </div>
 
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            <a href="{% provider_login_url 'google' %}" class="btn-google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20">
+                Continue with Google
+            </a>
 
             <div class="auth-footer">
                 New to WATCHIT?
