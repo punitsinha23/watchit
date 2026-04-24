@@ -27,4 +27,7 @@ PyJWT>=2.8.0
 # Cryptography for secure operations
 cryptography>=41.0.0
 
+# Social Authentication
+django-allauth>=0.54.0
+
 
