@@ -12,6 +12,10 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['watchit-eta.vercel.app', '.vercel.app', 'localhost', '127.0.0.1']
 
+# Security settings for Vercel
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False # Vercel handles this at the edge
+
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'django.contrib.admin',
@@ -158,6 +162,7 @@ ACCOUNT_SIGNUP_FIELDS = ['email'] # email is required, password is provided by a
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
 
 # Google Provider Settings (Optional but good for data consistency)
 SOCIALACCOUNT_PROVIDERS = {
