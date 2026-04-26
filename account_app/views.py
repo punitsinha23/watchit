@@ -50,13 +50,16 @@ def signup_view(request):
                 reverse('verify_email', args=[uid, token])
             )
 
-            send_mail(
-                "Verify Your Email - WATCHIT",
-                f"Click the link to verify your email and activate your account: {verify_link}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    "Verify Your Email - WATCHIT",
+                    f"Click the link to verify your email and activate your account: {verify_link}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"Error sending verification email: {e}")
 
             messages.success(request, "Sign-up successful. Please check your email to verify your account.")
             return redirect('verify')

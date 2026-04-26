@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from watchit_app import views as watchit_views
 from account_app import views as account_views
-from . import settings 
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required 
@@ -61,6 +61,9 @@ urlpatterns = [
     
     # allauth URLs
     path('accounts/', include('allauth.urls')),
+    
+    # Episode Rating Chart
+    path('show/<str:show_id>/ratings/', watchit_views.show_episode_chart, name='episode_chart'),
 ] 
 
 

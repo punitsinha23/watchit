@@ -77,6 +77,31 @@
         </div>
     </div>
 
+    <!-- Episode Ratings Chart -->
+    {% if tmdb_id %}
+    <div id="ratings-section" class="row justify-content-center mt-5">
+        <div class="col-lg-10">
+            <h2 class="section-title mb-4">Episode Ratings</h2>
+            <div class="bg-dark p-4 rounded shadow-sm text-start" id="ratings-container-wrapper">
+                <div class="text-center">
+                    <button id="fetch-chart-btn" class="btn btn-outline-danger btn-lg">
+                        <i class="fas fa-star me-2"></i>Show Episode Ratings
+                    </button>
+                </div>
+                <div id="ratings-wrapper" class="d-none mt-4 text-start">
+                    <!-- Episodes will be injected here by season -->
+                </div>
+                <div id="ratings-loading" class="text-center text-secondary mt-3 d-none">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Fetching latest ratings from TMDB...
+                </div>
+                <div id="ratings-empty" class="text-center text-secondary mt-3 d-none">
+                    No rating data available for this show.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <hr class="border-secondary opacity-25 my-5">
 
     <!-- Recommendations -->
@@ -147,25 +172,48 @@
     .player-offset {
         margin-top: 20px;
     }
-    
+
     @media (max-width: 767px) {
         .display-4 {
             font-size: 2rem !important;
         }
+
         .player-offset {
             margin-top: 10px;
         }
+
         .mb-5 {
             margin-bottom: 2rem !important;
         }
+
         .my-5 {
             margin-top: 2rem !important;
             margin-bottom: 2rem !important;
         }
+
         .section-title {
             font-size: 1.5rem !important;
             padding-left: 1rem !important;
         }
+    }
+
+    /* Custom Scrollbar for the Chart */
+    #chart-wrapper::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    #chart-wrapper::-webkit-scrollbar-track {
+        background: #1a1a1a;
+        border-radius: 8px;
+    }
+
+    #chart-wrapper::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 8px;
+    }
+
+    #chart-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
 </style>
 
@@ -280,5 +328,80 @@
         }
     });
 </script>
+
+<!-- Rating Logic (List View) -->
+{% if movie.imdbID %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fetchBtn = document.getElementById('fetch-chart-btn');
+        const ratingsWrapper = document.getElementById('ratings-wrapper');
+        const imdbId = "{{ movie.imdbID }}";
+        const loadingEl = document.getElementById('ratings-loading');
+        const emptyEl = document.getElementById('ratings-empty');
+
+        if (!imdbId || !fetchBtn) return;
+
+        fetchBtn.addEventListener('click', function () {
+            fetchBtn.classList.add('d-none');
+            loadingEl.classList.remove('d-none');
+            emptyEl.classList.add('d-none');
+
+            fetch(`/show/${imdbId}/ratings/`)
+                .then(res => res.json())
+                .then(data => {
+                    loadingEl.classList.add('d-none');
+
+                    if (!data.data || data.data.length === 0) {
+                        emptyEl.classList.remove('d-none');
+                        fetchBtn.classList.remove('d-none');
+                        return;
+                    }
+
+                    ratingsWrapper.classList.remove('d-none');
+                    
+                    // Group ratings by season
+                    const seasons = {};
+                    data.data.forEach(ep => {
+                        if (!seasons[ep.season]) seasons[ep.season] = [];
+                        seasons[ep.season].push(ep);
+                    });
+
+                    let htmlContent = '';
+                    for (const season in seasons) {
+                        htmlContent += `<div class="d-flex align-items-start mb-3">
+                            <h5 class="text-secondary mb-0 me-3 mt-1" style="min-width: 80px; font-weight: 600;">S${season}</h5>
+                            <div class="d-flex flex-wrap gap-2">`;
+                        
+                        seasons[season].forEach(ep => {
+                            const rating = parseFloat(ep.rating);
+                            let colorClass = 'bg-secondary';
+                            if (rating >= 9) colorClass = 'bg-primary';
+                            else if (rating >= 8) colorClass = 'bg-success';
+                            else if (rating >= 7) colorClass = 'bg-warning text-dark';
+                            else if (rating > 0) colorClass = 'bg-danger';
+
+                            const displayRating = rating > 0 ? rating.toFixed(1) : '—';
+                            
+                            htmlContent += `<div class="badge ${colorClass} p-2 rounded shadow-sm" 
+                                                 style="min-width: 38px; cursor: help; font-size: 0.9rem;" 
+                                                 title="${ep.name}: ${displayRating}">
+                                                 ${displayRating}
+                                            </div>`;
+                        });
+                        
+                        htmlContent += `</div></div>`;
+                    }
+                    ratingsWrapper.innerHTML = htmlContent;
+                })
+                .catch(err => {
+                    loadingEl.classList.add('d-none');
+                    emptyEl.textContent = 'Connection interrupted. Please try again.';
+                    emptyEl.classList.remove('d-none');
+                    fetchBtn.classList.remove('d-none');
+                });
+        });
+    });
+</script>
+{% endif %}
 
 {% endblock %}

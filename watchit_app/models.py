@@ -30,4 +30,29 @@ class PartyMessage(models.Model):
     def __str__(self):
         return f"{self.user.username}: {self.text[:20]}"
 
+class EpisodeRating(models.Model):
+    show_id = models.CharField(max_length=50)  # TMDB show ID
+    season_number = models.IntegerField()
+    episode_number = models.IntegerField()
+    episode_name = models.CharField(max_length=255)
+    rating = models.DecimalField(max_digits=4, decimal_places=2)
+    vote_count = models.IntegerField()
+    air_date = models.DateField(null=True, blank=True)
+    fetched_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ('show_id', 'season_number', 'episode_number')
+        ordering = ['season_number', 'episode_number']
+
+    def __str__(self):
+        return f"S{self.season_number}E{self.episode_number} - {self.episode_name}"
+
+
+class ShowMapping(models.Model):
+    """Cache IMDB ID to TMDB ID mapping so we don't need API calls on every page load."""
+    imdb_id = models.CharField(max_length=20, unique=True)
+    tmdb_id = models.CharField(max_length=50)
+    show_name = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.imdb_id} -> {self.tmdb_id} ({self.show_name})"

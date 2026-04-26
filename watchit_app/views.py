@@ -12,10 +12,12 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
 from decouple import config
-from .models import WatchParty, PartyMessage
+from .models import WatchParty, PartyMessage, EpisodeRating, ShowMapping
 from .data import keyword, shows, top_100_movies, animes, anime_ids
 import uuid
 from django.db.models import Q
+from django.conf import settings
+from django.urls import reverse
 
 api_key = config('OMDB_KEY', default='')
 api_key_2 = config('OMDB_KEY_2', default='')
@@ -614,14 +616,63 @@ def detail_view(request, imdb_id):
     if request.user.is_authenticated:
         watchlist_ids = set(Watchlist.objects.filter(user=request.user).values_list('imdb_id', flat=True))
 
+    tmdb_id = None
+    if movie_data.get('Type') == 'series':
+        tmdb_id = fetch_tmdb_id_from_imdb(imdb_id)
+
     return render(request, 'detail.html', {
         'movie': movie_data,
         'season_data': season_data,
         'episodes_json': json.dumps(season_data.get('Episodes', [])),
         'recommendations': recommendations,
         'api_key': api_key,
-        'watchlist_ids': watchlist_ids
+        'watchlist_ids': watchlist_ids,
+        'tmdb_id': tmdb_id
     })
+
+
+def fetch_tmdb_id_from_imdb(imdb_id):
+    """
+    Helper to get TMDB TV show ID from IMDB ID.
+    First checks the local ShowMapping cache, then falls back to TMDB API.
+    """
+    # 1. Check local DB cache first (instant, no API call)
+    try:
+        mapping = ShowMapping.objects.get(imdb_id=imdb_id)
+        return mapping.tmdb_id
+    except ShowMapping.DoesNotExist:
+        pass
+
+    # 2. Fall back to TMDB API
+    tmdb_key = settings.TMDB_API_KEY
+    if not tmdb_key:
+        return None
+
+    url = f"https://api.themoviedb.org/3/find/{imdb_id}?api_key={tmdb_key}&external_source=imdb_id"
+    
+    # Retry on WinError 10054 (Connection Reset)
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, timeout=10)
+            if resp.status_code == 200:
+                tv_results = resp.json().get('tv_results', [])
+                if tv_results:
+                    tmdb_id = tv_results[0].get('id')
+                    ShowMapping.objects.update_or_create(
+                        imdb_id=imdb_id,
+                        defaults={'tmdb_id': str(tmdb_id), 'show_name': tv_results[0].get('name', '')}
+                    )
+                    return tmdb_id
+            elif resp.status_code == 429:
+                time.sleep(1)
+                continue
+            break
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            time.sleep(0.5)
+            continue
+    return None
+    
+    return None
 
 
 def fetch_more_items(request):
@@ -701,3 +752,91 @@ def check_trial_status(request):
         'trial_duration': TRIAL_DURATION
     })
 
+
+def show_episode_chart(request, show_id):
+    """
+    Groups ratings by season for the UI.
+    Resolves IMDB ID to TMDB ID if needed.
+    """
+    # 1. Resolve ID if it looks like an IMDB ID (starts with tt)
+    tmdb_id = show_id
+    if str(show_id).startswith('tt'):
+        tmdb_id = fetch_tmdb_id_from_imdb(show_id)
+        if not tmdb_id:
+            return JsonResponse({'error': 'ID resolution failed', 'data': []})
+
+    # 2. Check for data and repair if missing
+    _auto_fetch_ratings(tmdb_id)
+    
+    ratings = EpisodeRating.objects.filter(show_id=tmdb_id).order_by('season_number', 'episode_number')
+    
+    data = []
+    for r in ratings:
+        data.append({
+            'season': r.season_number,
+            'episode': r.episode_number,
+            'label': f"S{r.season_number}E{r.episode_number}",
+            'name': r.episode_name,
+            'rating': float(r.rating)
+        })
+        
+    return JsonResponse({'data': data})
+
+
+def _auto_fetch_ratings(show_id):
+    """
+    Background helper for TMDB data synchronization.
+    """
+    api_key = settings.TMDB_API_KEY
+    if not api_key:
+        return
+    
+    base_url = "https://api.themoviedb.org/3"
+    
+    try:
+        # 1. Get show structure
+        response = requests.get(f"{base_url}/tv/{show_id}?api_key={api_key}", timeout=10)
+        if response.status_code != 200:
+            return
+        
+        show_data = response.json()
+        seasons = show_data.get('seasons', [])
+        
+        # 2. Repair missing seasons only
+        existing_seasons = set(EpisodeRating.objects.filter(show_id=show_id).values_list('season_number', flat=True))
+        
+        for season in seasons:
+            s_num = season.get('season_number')
+            if s_num == 0 or s_num in existing_seasons:
+                continue
+            
+            # Retry loop for network connection resets (10054)
+            for attempt in range(3):
+                try:
+                    time.sleep(0.35) # Rate limit protection
+                    s_resp = requests.get(
+                        f"{base_url}/tv/{show_id}/season/{s_num}?api_key={api_key}",
+                        timeout=20
+                    )
+                    if s_resp.status_code == 200:
+                        for ep in s_resp.json().get('episodes', []):
+                            if ep.get('vote_count', 0) > 0:
+                                EpisodeRating.objects.update_or_create(
+                                    show_id=show_id, season_number=s_num,
+                                    episode_number=ep.get('episode_number'),
+                                    defaults={
+                                        'episode_name': ep.get('name', ''),
+                                        'rating': ep.get('vote_average', 0.0),
+                                        'vote_count': ep.get('vote_count'),
+                                        'air_date': ep.get('air_date') or None
+                                    }
+                                )
+                        break
+                    elif s_resp.status_code == 429:
+                        time.sleep(2)
+                        continue
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                    time.sleep(1)
+                    continue
+    except Exception as e:
+        print(f"Fetch failure for {show_id}: {e}")
