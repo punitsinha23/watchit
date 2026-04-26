@@ -637,10 +637,12 @@ def fetch_tmdb_id_from_imdb(imdb_id):
     First checks the local ShowMapping cache, then falls back to TMDB API.
     """
     # 1. Check local DB cache first (instant, no API call)
+    from django.db.utils import ProgrammingError
     try:
         mapping = ShowMapping.objects.get(imdb_id=imdb_id)
         return mapping.tmdb_id
-    except ShowMapping.DoesNotExist:
+    except (ShowMapping.DoesNotExist, ProgrammingError):
+        # Fall back to API if table is missing or entry not found
         pass
 
     # 2. Fall back to TMDB API
@@ -658,10 +660,13 @@ def fetch_tmdb_id_from_imdb(imdb_id):
                 tv_results = resp.json().get('tv_results', [])
                 if tv_results:
                     tmdb_id = tv_results[0].get('id')
-                    ShowMapping.objects.update_or_create(
-                        imdb_id=imdb_id,
-                        defaults={'tmdb_id': str(tmdb_id), 'show_name': tv_results[0].get('name', '')}
-                    )
+                    try:
+                        ShowMapping.objects.update_or_create(
+                            imdb_id=imdb_id,
+                            defaults={'tmdb_id': str(tmdb_id), 'show_name': tv_results[0].get('name', '')}
+                        )
+                    except ProgrammingError:
+                        pass
                     return tmdb_id
             elif resp.status_code == 429:
                 time.sleep(1)
@@ -670,8 +675,6 @@ def fetch_tmdb_id_from_imdb(imdb_id):
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             time.sleep(0.5)
             continue
-    return None
-    
     return None
 
 
@@ -766,9 +769,12 @@ def show_episode_chart(request, show_id):
             return JsonResponse({'error': 'ID resolution failed', 'data': []})
 
     # 2. Check for data and repair if missing
-    _auto_fetch_ratings(tmdb_id)
-    
-    ratings = EpisodeRating.objects.filter(show_id=tmdb_id).order_by('season_number', 'episode_number')
+    from django.db.utils import ProgrammingError
+    try:
+        _auto_fetch_ratings(tmdb_id)
+        ratings = EpisodeRating.objects.filter(show_id=tmdb_id).order_by('season_number', 'episode_number')
+    except (EpisodeRating.DoesNotExist, ProgrammingError):
+        return JsonResponse({'error': 'Ratings database not initialized', 'data': []})
     
     data = []
     for r in ratings:
@@ -821,16 +827,19 @@ def _auto_fetch_ratings(show_id):
                     if s_resp.status_code == 200:
                         for ep in s_resp.json().get('episodes', []):
                             if ep.get('vote_count', 0) > 0:
-                                EpisodeRating.objects.update_or_create(
-                                    show_id=show_id, season_number=s_num,
-                                    episode_number=ep.get('episode_number'),
-                                    defaults={
-                                        'episode_name': ep.get('name', ''),
-                                        'rating': ep.get('vote_average', 0.0),
-                                        'vote_count': ep.get('vote_count'),
-                                        'air_date': ep.get('air_date') or None
-                                    }
-                                )
+                                try:
+                                    EpisodeRating.objects.update_or_create(
+                                        show_id=show_id, season_number=s_num,
+                                        episode_number=ep.get('episode_number'),
+                                        defaults={
+                                            'episode_name': ep.get('name', ''),
+                                            'rating': ep.get('vote_average', 0.0),
+                                            'vote_count': ep.get('vote_count'),
+                                            'air_date': ep.get('air_date') or None
+                                        }
+                                    )
+                                except ProgrammingError:
+                                    pass
                         break
                     elif s_resp.status_code == 429:
                         time.sleep(2)
