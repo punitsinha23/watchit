@@ -1,26 +1,53 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from account_app.models import Watchlist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 import json
+import logging
 import random
+import re
 import requests
 import time
 from django.utils import timezone
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.views.decorators.cache import cache_control
+from django.db.models import Max
+from django.views.decorators.http import require_POST
 from decouple import config
 from .models import WatchParty, PartyMessage, EpisodeRating, ShowMapping
 from .data import keyword, shows, top_100_movies, animes, anime_ids
 import uuid
-from django.db.models import Q
+from datetime import timedelta
 from django.conf import settings
 from django.urls import reverse
 
+logger = logging.getLogger(__name__)
+
 api_key = config('OMDB_KEY', default='')
 api_key_2 = config('OMDB_KEY_2', default='')
+
+OMDB_URL = "https://www.omdbapi.com/"
+PARTY_TTL_SECONDS = 24 * 60 * 60
+ALLOWED_SOURCES = {'embedmaster', 'vidsrc', 'vidsrcto', 'vidsrcme', 'superembed'}
+MAX_CHAT_LENGTH = 1000
+IMDB_ID_RE = re.compile(r'^tt\d{5,10}$')
+
+
+def _get_live_party(room_code, **filters):
+    """Return the active party for room_code, deleting it if it is older than 24 hours."""
+    party = WatchParty.objects.filter(room_code=room_code, is_active=True, **filters).first()
+    if party and (timezone.now() - party.created_at).total_seconds() > PARTY_TTL_SECONDS:
+        party.delete()
+        return None
+    return party
+
+
+def _is_member(party, user):
+    """Host or approved participant."""
+    return user == party.host or party.participants.filter(id=user.id).exists()
+
 
 @login_required
 def create_watch_party(request, imdb_id):
@@ -33,12 +60,11 @@ def create_watch_party(request, imdb_id):
         room_code = str(uuid.uuid4())[:6].upper()
         if not WatchParty.objects.filter(room_code=room_code).exists():
             break
-            
-    # Use the robust fetch_omdb_data helper
+
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
     if not movie_data:
         return redirect('base')
-        
+
     movie_title = movie_data.get('Title', '')
     poster_url = movie_data.get('Poster', '')
 
@@ -49,7 +75,7 @@ def create_watch_party(request, imdb_id):
         movie_title=movie_title,
         movie_type=movie_data.get('Type', 'movie'),
         poster_url=poster_url,
-        total_seasons=int(movie_data.get('totalSeasons', 0)) if movie_data.get('totalSeasons', '0').isdigit() else 0,
+        total_seasons=int(movie_data.get('totalSeasons', 0)) if str(movie_data.get('totalSeasons', '0')).isdigit() else 0,
         current_season=1,
         current_episode=1,
         is_private=is_private
@@ -59,97 +85,71 @@ def create_watch_party(request, imdb_id):
 @login_required
 def join_watch_party(request):
     public_parties = WatchParty.objects.filter(is_active=True, is_private=False).exclude(host=request.user).order_by('-created_at')
-    
-    if request.method == 'POST':
-        room_code = request.POST.get('room_code', '').upper()
-        try:
-            party = WatchParty.objects.get(room_code=room_code, is_active=True)
-            
-            # 24hr expiration check
-            if (timezone.now() - party.created_at).total_seconds() > 86400:
-                party.delete()
-                return render(request, 'join_party.html', {
-                    'error': 'This room has expired after 24 hours.',
-                    'public_parties': public_parties
-                })
 
-            # If already a participant or the host, go straight in
-            if request.user == party.host or party.participants.filter(id=request.user.id).exists():
-                return redirect('party_room', room_code=room_code)
-            
-            # Add to pending if not already there
-            if not party.pending_participants.filter(id=request.user.id).exists():
-                party.pending_participants.add(request.user)
-            
-            return redirect('waiting_room', room_code=room_code)
-        except WatchParty.DoesNotExist:
+    if request.method == 'POST':
+        room_code = request.POST.get('room_code', '').strip().upper()
+        party = _get_live_party(room_code)
+        if not party:
             return render(request, 'join_party.html', {
-                'error': 'Invalid or inactive room code',
+                'error': 'Invalid or expired room code',
                 'public_parties': public_parties
             })
+
+        # If already a participant or the host, go straight in
+        if _is_member(party, request.user):
+            return redirect('party_room', room_code=room_code)
+
+        party.pending_participants.add(request.user)
+        return redirect('waiting_room', room_code=room_code)
     return render(request, 'join_party.html', {'public_parties': public_parties})
 
 @login_required
 def waiting_room(request, room_code):
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True)
-        # 24hr expiration check
-        if (timezone.now() - party.created_at).total_seconds() > 86400:
-            party.delete()
-            return redirect('base')
-        
-        # Add to pending if for some reason they are not there and not host/participant
-        if request.user != party.host and not party.participants.filter(id=request.user.id).exists():
-            if not party.pending_participants.filter(id=request.user.id).exists():
-                party.pending_participants.add(request.user)
-            
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code)
+    if not party:
         return redirect('base')
-        
-    if request.user == party.host or party.participants.filter(id=request.user.id).exists():
+
+    if _is_member(party, request.user):
         return redirect('party_room', room_code=room_code)
-        
+
+    party.pending_participants.add(request.user)
     return render(request, 'waiting_room.html', {'party': party})
 
 @login_required
 def api_check_approval(request, room_code):
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True)
-        # 24hr expiration check
-        if (timezone.now() - party.created_at).total_seconds() > 86400:
-            party.delete()
-            return JsonResponse({'status': 'room_gone'})
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code)
+    if not party:
         return JsonResponse({'status': 'room_gone'})
-        
+
     if party.participants.filter(id=request.user.id).exists():
         return JsonResponse({'status': 'approved'})
-    
+
     if not party.pending_participants.filter(id=request.user.id).exists():
         return JsonResponse({'status': 'denied'})
-        
+
     return JsonResponse({'status': 'pending'})
 
 
 @login_required
 def party_room(request, room_code):
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True)
-        # 24hr expiration check
-        if (timezone.now() - party.created_at).total_seconds() > 86400:
-            party.delete()
-            return redirect('base')
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code)
+    if not party:
         return redirect('base')
 
     # Access check: Host or Participant only
-    if request.user != party.host and not party.participants.filter(id=request.user.id).exists():
+    if not _is_member(party, request.user):
         return redirect('waiting_room', room_code=room_code)
-
 
     movie_data = fetch_omdb_data(imdb_id=party.imdb_id)
     if not movie_data:
-        return redirect('base')
+        # OMDb unavailable: fall back to the metadata stored on the party
+        movie_data = {
+            'Title': party.movie_title or '',
+            'Poster': party.poster_url or '',
+            'imdbID': party.imdb_id,
+            'Type': party.movie_type,
+            'totalSeasons': party.total_seasons,
+        }
 
     # Persist metadata to DB if missing
     if not party.movie_title or not party.total_seasons:
@@ -175,43 +175,43 @@ def party_room(request, room_code):
         'party': party,
         'movie': movie_data,
         'season_data': season_data,
-        'episodes_json': json.dumps(season_data.get('Episodes', [])),
         'is_host': request.user == party.host,
-        'api_key': api_key
     })
 
 @login_required
 def api_party_status(request, room_code):
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True)
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code)
+    if not party:
         return JsonResponse({'error': 'Party not found'}, status=404)
 
+    if not _is_member(party, request.user):
+        return JsonResponse({'error': 'Not a participant'}, status=403)
+
     # Fetch messages since 'last_msg_id' if provided
-    last_msg_id = request.GET.get('last_msg_id', 0)
-    messages = party.messages.filter(id__gt=last_msg_id).order_by('timestamp')
-    
+    try:
+        last_msg_id = int(request.GET.get('last_msg_id', 0))
+    except ValueError:
+        last_msg_id = 0
+    new_messages = party.messages.filter(id__gt=last_msg_id).select_related('user').order_by('timestamp')
+
     msgs_data = [{
         'id': m.id,
         'user': m.user.username,
         'text': m.text,
         'timestamp': m.timestamp.strftime('%H:%M')
-    } for m in messages]
+    } for m in new_messages]
 
     # Viewer tracking
     current_time = time.time()
     v_cache_key = f"viewers_{room_code}"
     # Structure: {user_id: last_heartbeat_timestamp}
     viewers_map = cache.get(v_cache_key, {})
-    
-    # Update current user
-    if request.user.is_authenticated:
-        viewers_map[str(request.user.id)] = current_time
-    
+    viewers_map[str(request.user.id)] = current_time
+
     # Clean up old viewers (inactive for > 15 seconds)
     active_viewers_map = {uid: ts for uid, ts in viewers_map.items() if current_time - ts < 15}
     cache.set(v_cache_key, active_viewers_map, 30) # short TTL
-    
+
     viewer_count = len(active_viewers_map)
 
     return JsonResponse({
@@ -224,13 +224,10 @@ def api_party_status(request, room_code):
     })
 
 @login_required
+@require_POST
 def api_handle_join_request(request, room_code):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-        
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True, host=request.user)
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code, host=request.user)
+    if not party:
         return JsonResponse({'error': 'Party not found or unauthorized'}, status=404)
 
     try:
@@ -239,34 +236,29 @@ def api_handle_join_request(request, room_code):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     user_id = data.get('user_id')
     action = data.get('action')  # 'approve' or 'deny'
-    
-    try:
-        user_to_handle = User.objects.get(id=user_id)
-        party.pending_participants.remove(user_to_handle)
-        if action == 'approve':
-            party.participants.add(user_to_handle)
-        return JsonResponse({'status': 'ok'})
-    except User.DoesNotExist:
+
+    # Only users who actually asked to join can be approved
+    user_to_handle = party.pending_participants.filter(id=user_id).first()
+    if not user_to_handle:
         return JsonResponse({'error': 'User not found'}, status=404)
 
+    party.pending_participants.remove(user_to_handle)
+    if action == 'approve':
+        party.participants.add(user_to_handle)
+    return JsonResponse({'status': 'ok'})
+
 @login_required
+@require_POST
 def delete_party(request, room_code):
-    try:
-        party = WatchParty.objects.get(room_code=room_code, host=request.user)
-        party.delete()
-        return redirect('user') 
-    except WatchParty.DoesNotExist:
-        return redirect('base')
+    WatchParty.objects.filter(room_code=room_code, host=request.user).delete()
+    return redirect('user')
 
 
 @login_required
+@require_POST
 def api_party_update(request, room_code):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-        
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True)
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code)
+    if not party:
         return JsonResponse({'error': 'Party not found'}, status=404)
 
     if request.user != party.host:
@@ -276,42 +268,72 @@ def api_party_update(request, room_code):
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    party.current_season = data.get('season', party.current_season)
-    party.current_episode = data.get('episode', party.current_episode)
-    party.current_source = data.get('source', party.current_source)
-    party.save()
-    
+
+    try:
+        season = int(data.get('season', party.current_season))
+        episode = int(data.get('episode', party.current_episode))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Season and episode must be integers'}, status=400)
+    source = data.get('source', party.current_source)
+    if season < 1 or episode < 1 or source not in ALLOWED_SOURCES:
+        return JsonResponse({'error': 'Invalid season, episode or source'}, status=400)
+
+    party.current_season = season
+    party.current_episode = episode
+    party.current_source = source
+    party.save(update_fields=['current_season', 'current_episode', 'current_source'])
+
     return JsonResponse({'status': 'ok'})
 
 @login_required
+@require_POST
 def api_party_chat(request, room_code):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-        
-    try:
-        party = WatchParty.objects.get(room_code=room_code, is_active=True)
-    except WatchParty.DoesNotExist:
+    party = _get_live_party(room_code)
+    if not party:
         return JsonResponse({'error': 'Party not found'}, status=404)
+
+    if not _is_member(party, request.user):
+        return JsonResponse({'error': 'Not a participant'}, status=403)
 
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    text = data.get('text', '').strip()
+    text = str(data.get('text', '')).strip()[:MAX_CHAT_LENGTH]
     if text:
         PartyMessage.objects.create(party=party, user=request.user, text=text)
 
     return JsonResponse({'status': 'ok'})
 
 
+def api_season_episodes(request, imdb_id, season):
+    """Server-side proxy so the OMDb key never reaches the browser."""
+    if not IMDB_ID_RE.match(imdb_id) or not 1 <= season <= 100:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    data = fetch_omdb_data(imdb_id=imdb_id, season=season) or {}
+    return JsonResponse({'Episodes': data.get('Episodes', [])})
+
 # Free trial duration in seconds (45 minutes)
 TRIAL_DURATION = 45 * 60  # 2700 seconds
 
 
+def _trial_remaining(request):
+    """Seconds left in an anonymous user's free trial, starting it if needed."""
+    trial_start = request.session.get('trial_start_time')
+    if not trial_start:
+        trial_start = time.time()
+        request.session['trial_start_time'] = trial_start
+    return max(0, TRIAL_DURATION - (time.time() - trial_start))
+
+
 def fetch_omdb_data(imdb_id=None, title=None, season=None):
     """
-    Helper to fetch data from OMDb API with caching and database fallback.
+    Fetch data from the OMDb API, with caching and a fallback to metadata
+    stored on existing watch parties. Returns None when nothing is found.
     """
+    if not imdb_id and not title:
+        return None
+
     # 1. Check Cache First
     raw_key = f"omdb_{imdb_id or title}_{season or 'main'}"
     cache_key = raw_key.replace(" ", "_")
@@ -319,97 +341,57 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
     if cached_data:
         return cached_data
 
-    # 2. Check Database for existing metadata (if it's a main fetch)
-    if not season:
-        existing_party = None
-        if imdb_id:
-            existing_party = WatchParty.objects.filter(imdb_id=imdb_id).exclude(movie_title="").exclude(movie_title__isnull=True).first()
-        elif title:
-            existing_party = WatchParty.objects.filter(movie_title__icontains=title).exclude(poster_url="").first()
-        
-        if existing_party:
-            db_data = {
-                "Title": existing_party.movie_title,
-                "Poster": existing_party.poster_url,
-                "imdbID": existing_party.imdb_id,
-                "Type": existing_party.movie_type,
-                "totalSeasons": str(existing_party.total_seasons),
-                "Response": "True"
-            }
-            cache.set(cache_key, db_data, 86400)
-            return db_data
+    # 2. Fetch from API
+    params = {'i': imdb_id, 'plot': 'full'} if imdb_id else {'t': title}
+    if imdb_id and season:
+        params['Season'] = season
 
-    # 3. Fetch from API
-    keys_to_try = [api_key, api_key_2]
-    
-    for current_key in keys_to_try:
-        if imdb_id:
-            url = f"http://www.omdbapi.com/?apikey={current_key}&i={imdb_id}&plot=full"
-            if season:
-                url += f"&Season={season}"
-        elif title:
-            url = f"http://www.omdbapi.com/?apikey={current_key}&t={title}"
-        else:
-            return None
+    for current_key in [api_key, api_key_2]:
+        if not current_key:
+            continue
+        # Skip keys that recently hit their limit or were rejected
+        bad_key_cache = f"bad_key_{current_key}"
+        if cache.get(bad_key_cache):
+            continue
 
         try:
-            # Check if this key is currently "bad" (last trial returned 401)
-            bad_key_cache = f"bad_key_{current_key}"
-            if cache.get(bad_key_cache):
-                continue
-
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("Response") == "True":
-                    cache.set(cache_key, data, 86400)  # 24 hours
-                    return data
-                else:
-                    error_msg = data.get("Error", "")
-                    # If it's a limit or key issue, try the next key
-                    if "limit" in error_msg.lower() or "key" in error_msg.lower():
-                        cache.set(bad_key_cache, True, 600) # mark bad for 10 mins
-                        continue
-                    else:
-                        break  # Other errors (not found, etc.) shouldn't trigger failover
-            elif response.status_code == 401:
-                print(f"DEBUG: OMDB 401 Unauthorized for key {current_key[:4]}...")
-                cache.set(bad_key_cache, True, 600) # mark bad for 10 mins
-                continue # Try next key
-        except Exception as e:
-            print(f"DEBUG: OMDB Fetch Exception for key {current_key[:4]}...: {e}")
+            response = requests.get(OMDB_URL, params={**params, 'apikey': current_key}, timeout=5)
+        except requests.RequestException as e:
+            logger.warning("OMDb request failed for key %s...: %s", current_key[:4], e)
             continue
-        
-    # 4. Final Mock Data Fallback (Last resort)
-    mock_id = imdb_id or f"tt{hash(title or 'unknown') % 10000000}"
-    mock_title = title or "Mock Title"
 
-    # Try to infer type
-    inferred_type = "movie"
-    # Check if we have this IMDB ID as a series in our DB
-    existing_party = WatchParty.objects.filter(imdb_id=imdb_id).first() if imdb_id else None
-    
-    if season or (existing_party and existing_party.movie_type == 'series') or (title and any(s.lower() in title.lower() for s in ["series", "season", "show"])):
-        inferred_type = "series"
+        if response.status_code == 401:
+            cache.set(bad_key_cache, True, 600)  # mark bad for 10 mins
+            continue
+        if response.status_code != 200:
+            continue
 
-    res = {
-        "Title": mock_title,
-        "Year": "2024",
-        "imdbID": mock_id,
-        "Type": inferred_type,
-        "Poster": "https://via.placeholder.com/300x450.png?text=" + mock_title.replace(" ", "+"),
-        "Plot": "Live data currently unavailable.",
-        "Response": "True",
-        "totalSeasons": "1" if inferred_type == "series" else "0"
-    }
+        data = response.json()
+        if data.get("Response") == "True":
+            cache.set(cache_key, data, 86400)  # 24 hours
+            return data
 
+        error_msg = data.get("Error", "").lower()
+        if "limit" in error_msg or "key" in error_msg:
+            cache.set(bad_key_cache, True, 600)
+            continue
+        break  # Not found etc. -- another key won't help
+
+    # 3. Fallback: metadata stored on an existing party (main lookups only)
     if season:
-        res["Episodes"] = [
-            {"Title": f"Episode {i}", "Episode": str(i), "imdbID": f"{mock_id}e{i}"}
-            for i in range(1, 21) # Mock 20 episodes so they can at least try to watch
-        ]
-
-    return res
+        return None
+    parties = WatchParty.objects.exclude(movie_title="").exclude(movie_title__isnull=True)
+    party = parties.filter(imdb_id=imdb_id).first() if imdb_id else parties.filter(movie_title__iexact=title).first()
+    if not party:
+        return None
+    return {
+        "Title": party.movie_title,
+        "Poster": party.poster_url,
+        "imdbID": party.imdb_id,
+        "Type": party.movie_type,
+        "totalSeasons": str(party.total_seasons),
+        "Response": "True",
+    }
 
 
 # Recent releases (2023-2024) - 50 movies
@@ -432,7 +414,6 @@ recent_releases = [
     "Megalopolis", "The Wild Robot", "Smile 2"
 ]
 
-@cache_control(private=True, max_age=3600)
 def base(request):
     LIMIT = 10  # Initial load: 10 items for fast loading, more via lazy load
     
@@ -466,9 +447,8 @@ def _omdb_search(query, max_pages=3):
     """
     results = []
     for page in range(1, max_pages + 1):
-        url = f"http://www.omdbapi.com/?apikey={api_key}&s={query}&page={page}"
         try:
-            resp = requests.get(url, timeout=5)
+            resp = requests.get(OMDB_URL, params={'apikey': api_key, 's': query, 'page': page}, timeout=5)
             if resp.status_code != 200:
                 break
             data = resp.json()
@@ -506,7 +486,6 @@ def _fuzzy_omdb_search(query, max_pages=3):
     return [], None
 
 
-@cache_control(private=True, max_age=3600)
 def dashboard(request):
     movie_data = None
     error = None
@@ -578,8 +557,11 @@ def about_view(request):
     return render(request, 'about.html')
 
 
-@cache_control(private=True, max_age=3600)
 def detail_view(request, imdb_id):
+    if not request.user.is_authenticated and _trial_remaining(request) <= 0:
+        messages.info(request, "Your free trial has ended. Log in to keep watching.")
+        return redirect('login')
+
     movie_data = fetch_omdb_data(imdb_id=imdb_id)
     if not movie_data:
         return redirect('base')
@@ -623,9 +605,8 @@ def detail_view(request, imdb_id):
     return render(request, 'detail.html', {
         'movie': movie_data,
         'season_data': season_data,
-        'episodes_json': json.dumps(season_data.get('Episodes', [])),
+        'episodes': season_data.get('Episodes', []),
         'recommendations': recommendations,
-        'api_key': api_key,
         'watchlist_ids': watchlist_ids,
         'tmdb_id': tmdb_id
     })
@@ -650,12 +631,13 @@ def fetch_tmdb_id_from_imdb(imdb_id):
     if not tmdb_key:
         return None
 
-    url = f"https://api.themoviedb.org/3/find/{imdb_id}?api_key={tmdb_key}&external_source=imdb_id"
-    
+    url = f"https://api.themoviedb.org/3/find/{imdb_id}"
+    params = {'api_key': tmdb_key, 'external_source': 'imdb_id'}
+
     # Retry on WinError 10054 (Connection Reset)
     for attempt in range(3):
         try:
-            resp = requests.get(url, timeout=10)
+            resp = requests.get(url, params=params, timeout=10)
             if resp.status_code == 200:
                 tv_results = resp.json().get('tv_results', [])
                 if tv_results:
@@ -680,9 +662,10 @@ def fetch_tmdb_id_from_imdb(imdb_id):
 
 def fetch_more_items(request):
     category = request.GET.get('category')
-    page = int(request.GET.get('page', 1))
-
-
+    try:
+        page = max(1, int(request.GET.get('page', 1)))
+    except ValueError:
+        return JsonResponse({'error': 'Invalid page'}, status=400)
 
     config_map = {
         'movies': (top_100_movies, 28, True),
@@ -701,8 +684,6 @@ def fetch_more_items(request):
     start, end = (page - 1) * per_page, page * per_page
 
     items = []
-    from django.urls import reverse
-
     is_authenticated = request.user.is_authenticated
     login_url = reverse('login')
 
@@ -736,15 +717,7 @@ def check_trial_status(request):
             'authenticated': True
         })
     
-    # Get or initialize trial start time
-    trial_start = request.session.get('trial_start_time')
-    if not trial_start:
-        trial_start = time.time()
-        request.session['trial_start_time'] = trial_start
-    
-    # Calculate elapsed and remaining time
-    elapsed = time.time() - trial_start
-    remaining = max(0, TRIAL_DURATION - elapsed)
+    remaining = _trial_remaining(request)
     
     return JsonResponse({
         'trial_active': True,
@@ -771,7 +744,9 @@ def show_episode_chart(request, show_id):
     # 2. Check for data and repair if missing
     from django.db.utils import ProgrammingError
     try:
-        _auto_fetch_ratings(tmdb_id)
+        last_fetch = EpisodeRating.objects.filter(show_id=tmdb_id).aggregate(Max('fetched_at'))['fetched_at__max']
+        if not last_fetch or timezone.now() - last_fetch > timedelta(days=1):
+            _auto_fetch_ratings(tmdb_id)
         ratings = EpisodeRating.objects.filter(show_id=tmdb_id).order_by('season_number', 'episode_number')
     except (EpisodeRating.DoesNotExist, ProgrammingError):
         return JsonResponse({'error': 'Ratings database not initialized', 'data': []})
@@ -808,12 +783,13 @@ def _auto_fetch_ratings(show_id):
         show_data = response.json()
         seasons = show_data.get('seasons', [])
         
-        # 2. Repair missing seasons only
+        # 2. Fetch missing seasons, and always refresh the latest one (it may still be airing)
         existing_seasons = set(EpisodeRating.objects.filter(show_id=show_id).values_list('season_number', flat=True))
+        latest_season = max((s.get('season_number') or 0 for s in seasons), default=0)
         
         for season in seasons:
             s_num = season.get('season_number')
-            if s_num == 0 or s_num in existing_seasons:
+            if s_num == 0 or (s_num in existing_seasons and s_num != latest_season):
                 continue
             
             # Retry loop for network connection resets (10054)
@@ -847,5 +823,5 @@ def _auto_fetch_ratings(show_id):
                 except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
                     time.sleep(1)
                     continue
-    except Exception as e:
-        print(f"Fetch failure for {show_id}: {e}")
+    except Exception:
+        logger.exception("Episode rating fetch failed for %s", show_id)
