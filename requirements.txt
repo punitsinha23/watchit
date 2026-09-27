@@ -7,9 +7,6 @@ gunicorn>=21.2.0
 # Static file serving
 whitenoise>=6.6.0
 
-# Frontend integration (if using Vite)
-django-vite>=3.0.0
-
 # HTTP requests library
 requests>=2.31.0
 
@@ -21,13 +18,8 @@ psycopg2-binary>=2.9.9
 
 
 
-# JWT token handling
-PyJWT>=2.8.0
-
-# Cryptography for secure operations
-cryptography>=41.0.0
-
-# Social Authentication
-django-allauth>=0.54.0
+# Social Authentication (settings use ACCOUNT_LOGIN_METHODS / ACCOUNT_SIGNUP_FIELDS, added in 65.4)
+# The [socialaccount] extra pulls in PyJWT[crypto] for Google sign-in.
+django-allauth[socialaccount]>=65.4.0
 
 

@@ -337,7 +337,6 @@
         const ROOM_CODE = "{{ party.room_code }}";
         const IMDB_ID = "{{ party.imdb_id }}";
         const TYPE = "{{ movie.Type|lower }}";
-        const API_KEY = "{{ api_key }}";
         const IS_HOST = "{{ is_host }}" === "True";
 
         const player = document.getElementById("video-player");
@@ -664,10 +663,10 @@
 
             div.innerHTML = `
             <small class="text-secondary" style="font-size:0.7em;">
-                ${msg.timestamp}
+                ${escapeHtml(msg.timestamp)}
             </small>
             <div>
-                <span class="text-danger fw-bold">${msg.user}:</span>
+                <span class="text-danger fw-bold">${escapeHtml(msg.user)}:</span>
                 <span class="text-white">${escapeHtml(msg.text)}</span>
             </div>
         `;
@@ -688,8 +687,8 @@
 
             if (!episodeSelect) return;
 
-            // Fetch episodes from OMDB
-            fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${IMDB_ID}&Season=${season}`)
+            // Fetch episodes via the server so the OMDb key stays private
+            fetch(`/api/episodes/${encodeURIComponent(IMDB_ID)}/${encodeURIComponent(season)}/`)
                 .then(res => res.json())
                 .then(data => {
 

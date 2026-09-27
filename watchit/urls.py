@@ -22,7 +22,7 @@ from account_app import views as account_views
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
-from django.contrib.auth.decorators import login_required 
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -59,6 +59,10 @@ urlpatterns = [
     path('party/api/handle-request/<str:room_code>/', watchit_views.api_handle_join_request, name='api_handle_join_request'),
     path('party/delete/<str:room_code>/', watchit_views.delete_party, name='delete_party'),
     
+    path('api/episodes/<str:imdb_id>/<int:season>/', watchit_views.api_season_episodes, name='api_season_episodes'),
+
+    # allauth's own signup skips our email verification, so send it to ours
+    path('accounts/signup/', RedirectView.as_view(pattern_name='signup', permanent=False)),
     # allauth URLs
     path('accounts/', include('allauth.urls')),
     

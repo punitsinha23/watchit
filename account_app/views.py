@@ -2,7 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_control
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 
 from django.urls import reverse
@@ -11,12 +14,13 @@ from django.conf import settings
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str, force_bytes
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode, url_has_allowed_host_and_scheme
 from django.utils.crypto import get_random_string
 from django.utils.timezone import now
 from datetime import timedelta
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
+import logging
 import requests
 import uuid
 
@@ -28,15 +32,23 @@ from watchit_app.models import WatchParty
 from decouple import config
 api_key = config('OMDB_KEY_2', default='')
 
+logger = logging.getLogger(__name__)
+
 
 def signup_view(request):
     if request.method == "POST":
-        form = myform(request.POST)
-        email = request.POST.get("email")
+        email = request.POST.get("email", "").strip()
 
-        if User.objects.filter(email=email).exists():
+        existing = User.objects.filter(email__iexact=email)
+        if existing.filter(is_active=True).exists():
             messages.error(request, "User with this email already exists.")
             return redirect('signup')
+        # An unverified account never proved ownership of the email, so it
+        # must not block the real owner. Replace it (this also lets people
+        # retry when the verification email never arrived).
+        existing.filter(is_active=False, last_login__isnull=True).delete()
+
+        form = myform(request.POST)
 
         if form.is_valid():
             user = form.save(commit=False)
@@ -58,8 +70,8 @@ def signup_view(request):
                     [email],
                     fail_silently=False,
                 )
-            except Exception as e:
-                print(f"Error sending verification email: {e}")
+            except Exception:
+                logger.exception("Error sending verification email")
 
             messages.success(request, "Sign-up successful. Please check your email to verify your account.")
             return redirect('verify')
@@ -76,28 +88,25 @@ def login_view(request):
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')
 
-            try:
-                user_obj = User.objects.get(email=email)
-                user = authenticate(
-                    request,
-                    username=user_obj.username,
-                    password=password
-                )
-
+            candidates = User.objects.filter(email__iexact=email)
+            for candidate in candidates:
+                user = authenticate(request, username=candidate.username, password=password)
                 if user:
                     login(request, user)
                     messages.success(request, "You have successfully logged in.")
                     return redirect('user')
-                else:
-                    messages.error(request, "Invalid email or password.")
-            except User.DoesNotExist:
-                messages.error(request, "User with this email does not exist.")
+
+            if any(not c.is_active and c.check_password(password) for c in candidates):
+                messages.error(request, "Please verify your email before logging in.")
+            else:
+                messages.error(request, "Invalid email or password.")
     else:
         form = loginform()
 
     return render(request, 'login.html', {'form': form})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
@@ -111,7 +120,7 @@ import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 @login_required
-@cache_control(private=True, max_age=3600)
+@never_cache
 def user(request):
     # Fetch active parties
     hosted_parties = WatchParty.objects.filter(host=request.user, is_active=True)
@@ -152,7 +161,10 @@ def add_to_watchlist(request):
             messages.info(request, "Already in your watchlist.")
     
     # Stay on the current page after adding and show a message
-    return redirect(request.META.get('HTTP_REFERER', 'user'))
+    referer = request.META.get('HTTP_REFERER')
+    if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return redirect(referer)
+    return redirect('user')
 
 
 def search(request):
@@ -170,9 +182,12 @@ def search(request):
         else:
             movie_data = []
             for page in range(1, 4):
-                api_url = f"http://www.omdbapi.com/?apikey={api_key}&s={movie_title}&page={page}"
                 try:
-                    response = requests.get(api_url, timeout=5)
+                    response = requests.get(
+                        "https://www.omdbapi.com/",
+                        params={'apikey': api_key, 's': movie_title, 'page': page},
+                        timeout=5,
+                    )
                     if response.status_code == 200:
                         data = response.json()
                         if data.get("Response") == "True":
@@ -227,7 +242,7 @@ def verify(request):
 def forgot_password(request):
     if request.method == "POST":
         email = request.POST.get('email')
-        user = User.objects.filter(email=email).first()
+        user = User.objects.filter(email__iexact=email, is_active=True).first() if email else None
 
         if user:
             token_obj, _ = PasswordResetToken.objects.update_or_create(
@@ -238,13 +253,16 @@ def forgot_password(request):
                 reverse('reset_password', args=[str(token_obj.token)])
             )
 
-            send_mail(
-                "Reset Your Password - WATCHIT",
-                f"Click the link to reset your password: {reset_link}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    "Reset Your Password - WATCHIT",
+                    f"Click the link to reset your password: {reset_link}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception("Error sending password reset email")
 
         # Always show success message for security (prevent email enumeration)
         messages.success(request, "If an account exists with this email, a reset link has been sent.")
@@ -270,10 +288,16 @@ def reset_password(request, token):
         password = request.POST.get('password')
         confirm = request.POST.get('confirm_password')
 
-        if password != confirm:
+        user = reset_token.user
+        if not password or password != confirm:
             messages.error(request, "Passwords do not match.")
+            return render(request, 'reset_password.html')
+        try:
+            validate_password(password, user=user)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
         else:
-            user = reset_token.user
             user.set_password(password)
             user.save()
             reset_token.delete() # Consume token
@@ -285,6 +309,7 @@ def reset_password(request, token):
 
 
 @login_required
+@require_POST
 def remove_from_watchlist(request, imdb_id):
     try:
         watchlist_item = Watchlist.objects.get(user=request.user, imdb_id=imdb_id)

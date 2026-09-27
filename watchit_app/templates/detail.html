@@ -218,9 +218,7 @@
 </style>
 
 <!-- Episode data passed via JSON script tag -->
-<script id="episodes-data" type="application/json">
-    {{ episodes_json|safe }}
-</script>
+{{ episodes|json_script:"episodes-data" }}
 <script>
     const imdbId = "{{ movie.imdbID }}";
     const type = "{{ movie.Type }}";
@@ -303,7 +301,7 @@
         });
 
         function loadSeason(season) {
-            fetch(`https://www.omdbapi.com/?apikey={{ api_key }}&i=${imdbId}&Season=${season}`)
+            fetch(`/api/episodes/${encodeURIComponent(imdbId)}/${encodeURIComponent(season)}/`)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.Episodes) {
@@ -338,6 +336,12 @@
         const imdbId = "{{ movie.imdbID }}";
         const loadingEl = document.getElementById('ratings-loading');
         const emptyEl = document.getElementById('ratings-empty');
+
+        function escapeAttr(text) {
+            return String(text ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
 
         if (!imdbId || !fetchBtn) return;
 
@@ -384,7 +388,7 @@
                             
                             htmlContent += `<div class="badge ${colorClass} p-2 rounded shadow-sm" 
                                                  style="min-width: 38px; cursor: help; font-size: 0.9rem;" 
-                                                 title="${ep.name}: ${displayRating}">
+                                                 title="${escapeAttr(ep.name)}: ${displayRating}">
                                                  ${displayRating}
                                             </div>`;
                         });
