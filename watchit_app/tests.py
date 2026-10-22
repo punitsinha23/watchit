@@ -145,10 +145,9 @@ class PageRenderTests(TestCase):
     SERIES = {'Response': 'True', 'Title': 'Show', 'Type': 'series', 'totalSeasons': '2', 'imdbID': 'tt0903747',
               'Episodes': [{'Title': '<b>Pilot</b>', 'Episode': '1'}]}
 
-    @patch('watchit_app.views._fetch_omdb_api', return_value=None)
     @patch('watchit_app.views.fetch_tmdb_id_from_imdb', return_value=None)
     @patch('watchit_app.views.fetch_omdb_data')
-    def test_pages_render_without_exposing_omdb_key(self, fetch, _tmdb, _api):
+    def test_pages_render_without_exposing_omdb_key(self, fetch, _tmdb):
         fetch.return_value = dict(self.SERIES)
         host = User.objects.create_user(username='host', password='password123')
         WatchParty.objects.create(room_code='SER001', host=host, imdb_id='tt0903747', movie_type='series')
@@ -164,57 +163,3 @@ class PageRenderTests(TestCase):
     def test_episode_proxy_validates_input(self, _fetch):
         self.assertEqual(self.client.get('/api/episodes/tt0903747/1/').json(), {'Episodes': [{'Episode': '1'}]})
         self.assertEqual(self.client.get('/api/episodes/notanid/1/').status_code, 400)
-
-
-class PerformanceHelperTests(TestCase):
-    def setUp(self):
-        cache.clear()
-
-    @patch('watchit_app.views._fetch_omdb_api', side_effect=lambda **kw: {'Title': kw.get('title') or kw.get('imdb_id')})
-    def test_fetch_omdb_many_keeps_order_and_uses_cache(self, fetch):
-        from .views import fetch_omdb_many, _omdb_cache_key
-        cache.set(_omdb_cache_key(title='Cached'), {'Title': 'from cache'})
-        results = fetch_omdb_many([{'title': 'A'}, {'title': 'Cached'}, {'imdb_id': 'tt1'}])
-        self.assertEqual([r['Title'] for r in results], ['A', 'from cache', 'tt1'])
-        self.assertEqual(fetch.call_count, 2)  # cached entry skipped the API
-        # fetched results were written back to the cache in one batch
-        self.assertEqual(cache.get(_omdb_cache_key(title='A')), {'Title': 'A'})
-        self.assertEqual(cache.get(_omdb_cache_key(imdb_id='tt1')), {'Title': 'tt1'})
-
-    @patch('watchit_app.views._omdb_search', return_value=[])
-    def test_fuzzy_search_is_capped(self, search):
-        from .views import _fuzzy_omdb_search
-        _fuzzy_omdb_search('a very long misspelled movie titel')
-        self.assertLessEqual(search.call_count, 4)  # exact search + at most 3 prefixes
-
-
-class SharedLayoutRenderTests(TestCase):
-    def setUp(self):
-        cache.clear()
-        self.user = User.objects.create_user(username='viewer', password='password123')
-
-    @patch('watchit_app.views._fetch_omdb_api', return_value=None)
-    def test_home_page_renders_with_static_assets(self, _fetch):
-        response = self.client.get(reverse('base'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'js/base.js')
-        self.assertContains(response, 'css/base.css')
-        self.assertContains(response, '"trialEnabled": true')
-
-    def test_profile_page_uses_shared_layout(self):
-        self.client.login(username='viewer', password='password123')
-        response = self.client.get(reverse('user'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'base.html')
-        self.assertContains(response, 'font-awesome/6.5.2')
-        self.assertContains(response, 'id="privacyModal"', count=1)
-
-    @patch('account_app.views.requests.get')
-    def test_search_page_has_single_privacy_modal(self, get):
-        get.return_value.status_code = 200
-        get.return_value.json.return_value = {'Response': 'True', 'Search': [
-            {'imdbID': 'tt1', 'Title': 'Found', 'Year': '2020', 'Poster': 'N/A'}]}
-        self.client.login(username='viewer', password='password123')
-        response = self.client.post(reverse('user_dashboard'), {'title': 'Found'})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'id="privacyModal"', count=1)

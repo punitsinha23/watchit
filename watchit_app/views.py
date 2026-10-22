@@ -19,7 +19,6 @@ from decouple import config
 from .models import WatchParty, PartyMessage, EpisodeRating, ShowMapping
 from .data import keyword, shows, top_100_movies, animes, anime_ids
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from django.conf import settings
 from django.urls import reverse
@@ -33,7 +32,6 @@ OMDB_URL = "https://www.omdbapi.com/"
 PARTY_TTL_SECONDS = 24 * 60 * 60
 ALLOWED_SOURCES = {'embedmaster', 'vidsrc', 'vidsrcto', 'vidsrcme', 'superembed'}
 MAX_CHAT_LENGTH = 1000
-OMDB_WORKERS = 8
 IMDB_ID_RE = re.compile(r'^tt\d{5,10}$')
 
 
@@ -328,40 +326,6 @@ def _trial_remaining(request):
     return max(0, TRIAL_DURATION - (time.time() - trial_start))
 
 
-def _omdb_cache_key(imdb_id=None, title=None, season=None):
-    return f"omdb_{imdb_id or title}_{season or 'main'}".replace(" ", "_")
-
-
-def fetch_omdb_many(lookups):
-    """
-    Run fetch_omdb_data for each kwargs dict in `lookups` and return the
-    results in the same order (None for misses). Cached entries are read in a
-    single query; only cache misses hit the API, concurrently. Worker threads
-    only do network I/O -- all cache writes happen here in one batch, which
-    avoids lost writes from concurrent DB-cache inserts.
-    """
-    keys = [_omdb_cache_key(**kw) for kw in lookups]
-    cached = cache.get_many(keys)
-    results = [cached.get(k) for k in keys]
-    missing = [i for i, r in enumerate(results) if r is None]
-    if not missing:
-        return results
-
-    with ThreadPoolExecutor(max_workers=min(OMDB_WORKERS, len(missing))) as pool:
-        fetched = list(pool.map(lambda kw: _fetch_omdb_api(**kw), [lookups[i] for i in missing]))
-
-    to_cache = {}
-    for i, data in zip(missing, fetched):
-        if data:
-            results[i] = data
-            to_cache[keys[i]] = data
-        else:
-            results[i] = _party_fallback(**lookups[i])
-    if to_cache:
-        cache.set_many(to_cache, 86400)  # 24 hours
-    return results
-
-
 def fetch_omdb_data(imdb_id=None, title=None, season=None):
     """
     Fetch data from the OMDb API, with caching and a fallback to metadata
@@ -370,32 +334,24 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
     if not imdb_id and not title:
         return None
 
-    cache_key = _omdb_cache_key(imdb_id, title, season)
+    # 1. Check Cache First
+    raw_key = f"omdb_{imdb_id or title}_{season or 'main'}"
+    cache_key = raw_key.replace(" ", "_")
     cached_data = cache.get(cache_key)
     if cached_data:
         return cached_data
 
-    data = _fetch_omdb_api(imdb_id, title, season)
-    if data:
-        cache.set(cache_key, data, 86400)  # 24 hours
-        return data
-    return _party_fallback(imdb_id, title, season)
-
-
-def _fetch_omdb_api(imdb_id=None, title=None, season=None):
-    """
-    Query OMDb, failing over between the two API keys. Network only: no
-    cache writes or DB access, so it is safe to run in worker threads.
-    """
-    if not imdb_id and not title:
-        return None
-
+    # 2. Fetch from API
     params = {'i': imdb_id, 'plot': 'full'} if imdb_id else {'t': title}
     if imdb_id and season:
         params['Season'] = season
 
     for current_key in [api_key, api_key_2]:
-        if not current_key or current_key in _bad_omdb_keys():
+        if not current_key:
+            continue
+        # Skip keys that recently hit their limit or were rejected
+        bad_key_cache = f"bad_key_{current_key}"
+        if cache.get(bad_key_cache):
             continue
 
         try:
@@ -405,39 +361,23 @@ def _fetch_omdb_api(imdb_id=None, title=None, season=None):
             continue
 
         if response.status_code == 401:
-            _mark_omdb_key_bad(current_key)
+            cache.set(bad_key_cache, True, 600)  # mark bad for 10 mins
             continue
         if response.status_code != 200:
             continue
 
         data = response.json()
         if data.get("Response") == "True":
+            cache.set(cache_key, data, 86400)  # 24 hours
             return data
 
         error_msg = data.get("Error", "").lower()
         if "limit" in error_msg or "key" in error_msg:
-            _mark_omdb_key_bad(current_key)
+            cache.set(bad_key_cache, True, 600)
             continue
         break  # Not found etc. -- another key won't help
-    return None
 
-
-# Keys that recently hit their limit or were rejected are skipped for 10 minutes.
-# Kept in process memory so worker threads never write to the DB cache.
-_omdb_bad_keys = {}
-
-
-def _bad_omdb_keys():
-    now = time.time()
-    return {k for k, until in list(_omdb_bad_keys.items()) if until > now}
-
-
-def _mark_omdb_key_bad(key):
-    _omdb_bad_keys[key] = time.time() + 600
-
-
-def _party_fallback(imdb_id=None, title=None, season=None):
-    """Metadata stored on an existing party, for when OMDb is unavailable (main lookups only)."""
+    # 3. Fallback: metadata stored on an existing party (main lookups only)
     if season:
         return None
     parties = WatchParty.objects.exclude(movie_title="").exclude(movie_title__isnull=True)
