@@ -21,7 +21,7 @@
 
         <div class="media-card fade-in position-relative">
             <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
+                onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
             <div class="media-info">
                 <div class="media-title">{{ movie.Title }}</div>
             </div>

@@ -133,7 +133,7 @@ shows = [
         "The Wire",
         "Stranger Things",
         "Friends",
-        "The Office (US)",
+        "The Office",
         "Sherlock",
         "Narcos",
         "Chernobyl",
@@ -255,11 +255,11 @@ shows = [
         ]
 
 animes = [
-    "Attack on Titan (Shingeki no Kyojin)",
-    "Naruto / Naruto: Shippuden",
+    "Attack on Titan",
+    "Naruto: Shippuden",
     "Demon Slayer (Kimetsu no Yaiba)",
     "One Piece",
-    "My Hero Academia (Boku no Hero Academia)",
+    "My Hero Academia",
     "Jujutsu Kaisen",
     "Death Note",
     "Fullmetal Alchemist: Brotherhood",
