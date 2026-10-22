@@ -72,6 +72,10 @@
         background: #f6121d;
         transform: translateY(-2px);
     }
+
+    #room_code::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
 </style>
 
 <div class="auth-overlay"></div>
@@ -97,7 +101,7 @@
             <div class="mb-4">
                 <label for="room_code" class="form-label text-secondary small">ROOM CODE</label>
                 <input type="text" class="form-control text-center fw-bold" id="room_code" name="room_code"
-                    placeholder="AB12CD" required maxlength="6"
+                    placeholder="AB12CD" required maxlength="6" value="{{ prefill_code }}" autofocus
                     style="letter-spacing:4px; font-size:1.4rem; padding:14px; border-radius:10px;">
             </div>
 

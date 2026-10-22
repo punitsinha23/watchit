@@ -61,3 +61,18 @@ class PasswordResetTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('N3w-strong-pass!'))
         self.assertFalse(PasswordResetToken.objects.exists())
+
+
+class LoginNextTests(TestCase):
+    def setUp(self):
+        User.objects.create_user('a', 'a@example.com', 'Str0ng-pass-1')
+
+    def test_login_returns_to_safe_next_url(self):
+        response = self.client.post(reverse('login') + '?next=/party/join/%3Fcode%3DAB12CD',
+                                    {'email': 'a@example.com', 'password': 'Str0ng-pass-1'})
+        self.assertRedirects(response, '/party/join/?code=AB12CD', fetch_redirect_response=False)
+
+    def test_login_ignores_external_next_url(self):
+        response = self.client.post(reverse('login') + '?next=https://evil.example/',
+                                    {'email': 'a@example.com', 'password': 'Str0ng-pass-1'})
+        self.assertRedirects(response, reverse('user'), fetch_redirect_response=False)

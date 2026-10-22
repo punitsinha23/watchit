@@ -447,3 +447,12 @@ anime_ids = [
     "tt0185133", "tt0131179", "tt0816397", "tt9335498", "tt3398540", "tt12343534", "tt3895150", "tt5897304", 
 ]
 
+
+
+# The lists above contain repeats; drop them (keeping order) so rows and
+# infinite scroll don't show the same title twice.
+keyword = list(dict.fromkeys(keyword))
+shows = list(dict.fromkeys(shows))
+animes = list(dict.fromkeys(animes))
+top_100_movies = list(dict.fromkeys(top_100_movies))
+anime_ids = list(dict.fromkeys(anime_ids))

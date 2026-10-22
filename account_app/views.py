@@ -94,6 +94,10 @@ def login_view(request):
                 if user:
                     login(request, user)
                     messages.success(request, "You have successfully logged in.")
+                    # e.g. an invite link that required logging in first
+                    next_url = request.GET.get('next')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                        return redirect(next_url)
                     return redirect('user')
 
             if any(not c.is_active and c.check_password(password) for c in candidates):

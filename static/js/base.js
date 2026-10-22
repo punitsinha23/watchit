@@ -23,6 +23,29 @@ function selectPrivacy(isPrivate) {
     }
 }
 
+/* ================= INVITE LINKS ================= */
+
+// Any .js-copy-invite button with data-room-code copies a join link for that room
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.js-copy-invite');
+    if (!btn) return;
+    e.preventDefault();
+
+    const url = `${location.origin}/party/join/?code=${encodeURIComponent(btn.dataset.roomCode)}`;
+    let copied = false;
+    try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+    } catch (err) {
+        window.prompt('Copy this invite link:', url);
+    }
+
+    const label = btn.querySelector('span') || btn;
+    const original = label.textContent;
+    label.textContent = copied ? 'Link copied!' : original;
+    setTimeout(() => { label.textContent = original; }, 2000);
+});
+
 /* ================= SEARCH ================= */
 
 const searchIcon = document.querySelector(".search-icon");
@@ -135,53 +158,212 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
+        // Builds the same markup as templates/partials/media_card.html
         function appendItems(container, items) {
             const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
             const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+            const has = (v) => v && v !== 'N/A';
 
             items.forEach(item => {
                 const id = escapeHtml(item.imdbID);
                 const title = escapeHtml(item.Title);
-                const year = escapeHtml(item.Year);
-                const poster = escapeHtml(item.Poster);
+                const year = has(item.Year) ? escapeHtml(item.Year) : '';
+                const poster = has(item.Poster) ? escapeHtml(item.Poster) : WATCHIT.posterPlaceholder;
+                const type = item.Type === 'series' ? 'Series' : item.Type === 'movie' ? 'Movie' : '';
 
-                const div = document.createElement('div');
-                div.className = 'movie-unit fade-in visible';
-                div.innerHTML = `
-                    <div class="premium-card">
-                        <img src="${poster}" alt="${title}" loading="lazy"
+                const card = document.createElement('article');
+                card.className = 'mcard';
+                card.innerHTML = `
+                    <a href="/watch/${id}/" class="mcard-poster" aria-label="${title}">
+                        <img src="${poster}" alt="" loading="lazy"
                              onerror="this.onerror=null; this.src='${WATCHIT.posterPlaceholder}'">
-                        <div class="premium-overlay">
-                            <a href="/watch/${id}/" class="premium-btn premium-btn-play">
-                                <i class="fas fa-play me-2"></i>Play
-                            </a>
-                            <a href="javascript:void(0);" data-imdb-id="${id}" class="premium-btn premium-btn-play js-open-party"
-                               style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                <i class="fas fa-users me-2"></i>Party
-                            </a>
-                            <form method="POST" action="${WATCHIT.addToWatchlistUrl}" class="d-inline w-100 no-loading">
-                                <input type="hidden" name="csrfmiddlewaretoken" value="${escapeHtml(csrfToken)}">
-                                <input type="hidden" name="imdb_id" value="${id}">
-                                <input type="hidden" name="title" value="${title}">
-                                <input type="hidden" name="year" value="${year}">
-                                <input type="hidden" name="poster" value="${poster}">
-                                <button type="submit" class="premium-btn premium-btn-list">
-                                    <i class="fas fa-plus me-2"></i>My List
-                                </button>
-                            </form>
-                        </div>
+                        ${has(item.imdbRating) ? `<span class="mcard-rating"><i class="fas fa-star"></i>${escapeHtml(item.imdbRating)}</span>` : ''}
+                        <span class="mcard-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                    </a>
+                    <div class="mcard-actions">
+                        <button type="button" class="mcard-icon no-loading js-open-party" title="Start a watch party"
+                                aria-label="Start a watch party for ${title}">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        ${WATCHIT.authenticated ? `
+                        <form method="POST" action="${WATCHIT.addToWatchlistUrl}" class="no-loading">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${escapeHtml(csrfToken)}">
+                            <input type="hidden" name="imdb_id" value="${id}">
+                            <input type="hidden" name="title" value="${title}">
+                            <input type="hidden" name="year" value="${year}">
+                            <input type="hidden" name="poster" value="${has(item.Poster) ? escapeHtml(item.Poster) : ''}">
+                            <button type="submit" class="mcard-icon" title="Add to My List" aria-label="Add ${title} to My List">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </form>` : ''}
                     </div>
-                    <div class="media-info text-center">
-                        <div class="media-title">${title}</div>
-                        <div class="media-meta">${year}</div>
+                    <div class="mcard-info">
+                        <h3 class="mcard-title" title="${title}">${title}</h3>
+                        <div class="mcard-meta">${year ? `<span>${year}</span>` : ''}${type ? `<span>${type}</span>` : ''}</div>
                     </div>
                 `;
-                div.querySelector('.js-open-party').addEventListener('click', () => openPrivacyModal(item.imdbID));
-                container.appendChild(div);
+                card.querySelector('.js-open-party').addEventListener('click', () => openPrivacyModal(item.imdbID));
+                container.appendChild(card);
             });
         }
     });
 });
+
+/* ================= FEATURED HERO ================= */
+
+// Auto-advances every SLIDE_MS. A JS timer drives it (so it also runs for
+// reduced-motion users); the tab progress bar is a CSS animation kept in sync.
+// It only stops for the pause button or while the browser tab is hidden.
+(function () {
+    const hero = document.getElementById('featureHero');
+    if (!hero) return;
+
+    const SLIDE_MS = 7000;
+    const slides = [...hero.querySelectorAll('.fh-slide')];
+    const tabs = [...hero.querySelectorAll('.fh-tab')];
+    const toggle = hero.querySelector('.fh-toggle');
+    let current = Math.max(0, slides.findIndex(s => s.classList.contains('is-active')));
+    let timer = null;
+    let startedAt = 0;
+    let remaining = SLIDE_MS;
+    let userPaused = false;
+
+    hero.style.setProperty('--fh-duration', `${SLIDE_MS}ms`);
+    if (slides.length < 2) {
+        hero.querySelector('.fh-controls')?.remove();
+        return;
+    }
+
+    function startTimer(ms) {
+        clearTimeout(timer);
+        startedAt = Date.now();
+        remaining = ms;
+        timer = setTimeout(() => show(current + 1), ms);
+    }
+
+    function stopTimer() {
+        if (timer === null) return;
+        clearTimeout(timer);
+        timer = null;
+        remaining = Math.max(0, remaining - (Date.now() - startedAt));
+    }
+
+    function running() {
+        return !userPaused && !document.hidden;
+    }
+
+    function show(index) {
+        clearTimeout(timer);  // a manual change replaces the pending auto-advance
+        current = (index + slides.length) % slides.length;
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('is-active', i === current);
+            slide.setAttribute('aria-hidden', i === current ? 'false' : 'true');
+        });
+        tabs.forEach((tab, i) => {
+            tab.classList.toggle('is-active', i === current);
+            tab.setAttribute('aria-selected', i === current ? 'true' : 'false');
+        });
+        timer = null;
+        remaining = SLIDE_MS;
+        if (running()) startTimer(SLIDE_MS);
+    }
+
+    function setPaused(paused) {
+        userPaused = paused;
+        hero.classList.toggle('is-paused', paused);
+        toggle.innerHTML = `<i class="fas fa-${paused ? 'play' : 'pause'}"></i>`;
+        const label = paused ? 'Play slideshow' : 'Pause slideshow';
+        toggle.setAttribute('aria-label', label);
+        toggle.title = label;
+        if (paused) stopTimer();
+        else if (!document.hidden) startTimer(remaining);
+    }
+
+    tabs.forEach((tab, i) => tab.addEventListener('click', () => show(i)));
+    toggle.addEventListener('click', () => setPaused(!userPaused));
+
+    // Arrow keys move between tabs
+    hero.querySelector('.fh-tabs').addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        show(current + (e.key === 'ArrowRight' ? 1 : -1));
+        tabs[current].focus();
+    });
+
+    // Don't advance while the browser tab is in the background
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopTimer();
+            hero.classList.add('is-paused');
+        } else if (!userPaused) {
+            hero.classList.remove('is-paused');
+            startTimer(remaining);
+        }
+    });
+
+    // Swipe on touch screens
+    let touchX = null;
+    hero.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    hero.addEventListener('touchend', (e) => {
+        if (touchX === null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        touchX = null;
+        if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+
+    startTimer(SLIDE_MS);
+})();
+
+/* ================= ROW ARROWS ================= */
+
+// Mouse users can't scroll horizontal rows without a trackpad, so add arrows
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.carousel-container').forEach(container => {
+        const scroller = container.querySelector('.carousel-scroll');
+        if (!scroller) return;
+
+        const makeArrow = (dir) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `row-arrow ${dir} no-loading`;
+            btn.setAttribute('aria-label', dir === 'prev' ? 'Scroll left' : 'Scroll right');
+            btn.innerHTML = `<i class="fas fa-chevron-${dir === 'prev' ? 'left' : 'right'}"></i>`;
+            btn.addEventListener('click', () => {
+                const step = scroller.clientWidth * 0.8;
+                scroller.scrollBy({ left: dir === 'prev' ? -step : step, behavior: 'smooth' });
+            });
+            container.appendChild(btn);
+            return btn;
+        };
+        const prev = makeArrow('prev');
+        const next = makeArrow('next');
+
+        const update = () => {
+            prev.hidden = scroller.scrollLeft <= 5;
+            next.hidden = scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 5;
+        };
+        scroller.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        new MutationObserver(update).observe(scroller, { childList: true });  // infinite scroll adds cards
+        update();
+    });
+});
+
+/* ================= TOUCH: TAP TO OPEN CARD ================= */
+
+// On touch screens the poster buttons are hidden until the card is tapped once
+if (window.matchMedia('(hover: none)').matches) {
+    document.addEventListener('click', (e) => {
+        const card = e.target.closest('.premium-card');
+        document.querySelectorAll('.premium-card.touch-open').forEach(c => {
+            if (c !== card) c.classList.remove('touch-open');
+        });
+        if (card && !card.classList.contains('touch-open')) {
+            e.preventDefault();
+            card.classList.add('touch-open');
+        }
+    }, true);
+}
 
 // LocalStorage wrapper with expiry (storage can be unavailable, e.g. private mode)
 function setCachedData(key, data) {
