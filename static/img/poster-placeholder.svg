@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450">
+  <rect width="300" height="450" fill="#1f1f1f"/>
+  <g fill="none" stroke="#555" stroke-width="8" stroke-linejoin="round">
+    <rect x="95" y="175" width="110" height="80" rx="8"/>
+    <path d="M95 195h110M120 175l-12 20M150 175l-12 20M180 175l-12 20"/>
+  </g>
+  <text x="150" y="300" fill="#777" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">No poster</text>
+</svg>

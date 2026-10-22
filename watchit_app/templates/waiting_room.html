@@ -86,8 +86,9 @@
         }
     }
 
-    // Poll every 3 seconds
-    setInterval(checkStatus, 3000);
+    // Poll every 3 seconds while the tab is visible; check at once when it comes back
+    setInterval(() => { if (!document.hidden) checkStatus(); }, 3000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkStatus(); });
     checkStatus(); // Initial check
 </script>
 {% endblock %}

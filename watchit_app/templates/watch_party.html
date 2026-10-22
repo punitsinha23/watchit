@@ -505,13 +505,16 @@
 
         async function pollServer() {
 
-            if (polling) return;
+            if (polling) return true;
             polling = true;
+            let ok = false;
 
             try {
 
                 const res = await fetch(`/party/api/status/${ROOM_CODE}/?last_msg_id=${lastMsgId}`);
+                if (!res.ok) throw new Error(`Status ${res.status}`);
                 const data = await res.json();
+                ok = true;
 
                 /* viewer count */
                 if (viewerBadge && data.viewers !== undefined) {
@@ -545,6 +548,7 @@
             }
 
             polling = false;
+            return ok;
         }
 
         function updatePendingRequests(users) {
@@ -633,7 +637,31 @@
             }
         }
 
-        setInterval(pollServer, 1000);
+        // Poll every 2.5s while the tab is visible; back off on errors, pause when hidden
+        const POLL_INTERVAL = 2500;
+        const MAX_POLL_INTERVAL = 30000;
+        let pollDelay = POLL_INTERVAL;
+        let pollTimer = null;
+
+        async function pollLoop() {
+            clearTimeout(pollTimer);
+            const ok = await pollServer();
+            pollDelay = ok ? POLL_INTERVAL : Math.min(pollDelay * 2, MAX_POLL_INTERVAL);
+            if (!document.hidden) {
+                pollTimer = setTimeout(pollLoop, pollDelay);
+            }
+        }
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                clearTimeout(pollTimer);
+            } else {
+                pollDelay = POLL_INTERVAL;
+                pollLoop();
+            }
+        });
+
+        pollLoop();
 
         /* ================= CHAT ================= */
 
@@ -654,6 +682,7 @@
             });
 
             chatInput.value = "";
+            pollLoop(); // show the new message right away
         });
 
         function appendMessage(msg) {

@@ -19,6 +19,7 @@ from decouple import config
 from .models import WatchParty, PartyMessage, EpisodeRating, ShowMapping
 from .data import keyword, shows, top_100_movies, animes, anime_ids
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from django.conf import settings
 from django.urls import reverse
@@ -32,6 +33,7 @@ OMDB_URL = "https://www.omdbapi.com/"
 PARTY_TTL_SECONDS = 24 * 60 * 60
 ALLOWED_SOURCES = {'embedmaster', 'vidsrc', 'vidsrcto', 'vidsrcme', 'superembed'}
 MAX_CHAT_LENGTH = 1000
+OMDB_WORKERS = 8
 IMDB_ID_RE = re.compile(r'^tt\d{5,10}$')
 
 
@@ -326,6 +328,40 @@ def _trial_remaining(request):
     return max(0, TRIAL_DURATION - (time.time() - trial_start))
 
 
+def _omdb_cache_key(imdb_id=None, title=None, season=None):
+    return f"omdb_{imdb_id or title}_{season or 'main'}".replace(" ", "_")
+
+
+def fetch_omdb_many(lookups):
+    """
+    Run fetch_omdb_data for each kwargs dict in `lookups` and return the
+    results in the same order (None for misses). Cached entries are read in a
+    single query; only cache misses hit the API, concurrently. Worker threads
+    only do network I/O -- all cache writes happen here in one batch, which
+    avoids lost writes from concurrent DB-cache inserts.
+    """
+    keys = [_omdb_cache_key(**kw) for kw in lookups]
+    cached = cache.get_many(keys)
+    results = [cached.get(k) for k in keys]
+    missing = [i for i, r in enumerate(results) if r is None]
+    if not missing:
+        return results
+
+    with ThreadPoolExecutor(max_workers=min(OMDB_WORKERS, len(missing))) as pool:
+        fetched = list(pool.map(lambda kw: _fetch_omdb_api(**kw), [lookups[i] for i in missing]))
+
+    to_cache = {}
+    for i, data in zip(missing, fetched):
+        if data:
+            results[i] = data
+            to_cache[keys[i]] = data
+        else:
+            results[i] = _party_fallback(**lookups[i])
+    if to_cache:
+        cache.set_many(to_cache, 86400)  # 24 hours
+    return results
+
+
 def fetch_omdb_data(imdb_id=None, title=None, season=None):
     """
     Fetch data from the OMDb API, with caching and a fallback to metadata
@@ -334,24 +370,32 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
     if not imdb_id and not title:
         return None
 
-    # 1. Check Cache First
-    raw_key = f"omdb_{imdb_id or title}_{season or 'main'}"
-    cache_key = raw_key.replace(" ", "_")
+    cache_key = _omdb_cache_key(imdb_id, title, season)
     cached_data = cache.get(cache_key)
     if cached_data:
         return cached_data
 
-    # 2. Fetch from API
+    data = _fetch_omdb_api(imdb_id, title, season)
+    if data:
+        cache.set(cache_key, data, 86400)  # 24 hours
+        return data
+    return _party_fallback(imdb_id, title, season)
+
+
+def _fetch_omdb_api(imdb_id=None, title=None, season=None):
+    """
+    Query OMDb, failing over between the two API keys. Network only: no
+    cache writes or DB access, so it is safe to run in worker threads.
+    """
+    if not imdb_id and not title:
+        return None
+
     params = {'i': imdb_id, 'plot': 'full'} if imdb_id else {'t': title}
     if imdb_id and season:
         params['Season'] = season
 
     for current_key in [api_key, api_key_2]:
-        if not current_key:
-            continue
-        # Skip keys that recently hit their limit or were rejected
-        bad_key_cache = f"bad_key_{current_key}"
-        if cache.get(bad_key_cache):
+        if not current_key or current_key in _bad_omdb_keys():
             continue
 
         try:
@@ -361,23 +405,39 @@ def fetch_omdb_data(imdb_id=None, title=None, season=None):
             continue
 
         if response.status_code == 401:
-            cache.set(bad_key_cache, True, 600)  # mark bad for 10 mins
+            _mark_omdb_key_bad(current_key)
             continue
         if response.status_code != 200:
             continue
 
         data = response.json()
         if data.get("Response") == "True":
-            cache.set(cache_key, data, 86400)  # 24 hours
             return data
 
         error_msg = data.get("Error", "").lower()
         if "limit" in error_msg or "key" in error_msg:
-            cache.set(bad_key_cache, True, 600)
+            _mark_omdb_key_bad(current_key)
             continue
         break  # Not found etc. -- another key won't help
+    return None
 
-    # 3. Fallback: metadata stored on an existing party (main lookups only)
+
+# Keys that recently hit their limit or were rejected are skipped for 10 minutes.
+# Kept in process memory so worker threads never write to the DB cache.
+_omdb_bad_keys = {}
+
+
+def _bad_omdb_keys():
+    now = time.time()
+    return {k for k, until in list(_omdb_bad_keys.items()) if until > now}
+
+
+def _mark_omdb_key_bad(key):
+    _omdb_bad_keys[key] = time.time() + 600
+
+
+def _party_fallback(imdb_id=None, title=None, season=None):
+    """Metadata stored on an existing party, for when OMDb is unavailable (main lookups only)."""
     if season:
         return None
     parties = WatchParty.objects.exclude(movie_title="").exclude(movie_title__isnull=True)
@@ -422,10 +482,11 @@ def base(request):
         if 'trial_start_time' not in request.session:
             request.session['trial_start_time'] = time.time()
     
-    movies = [data for t in keyword[:LIMIT] if (data := fetch_omdb_data(title=t))]
-    shows_list = [data for t in shows[:LIMIT] if (data := fetch_omdb_data(title=t))]
-    anime_list = [data for t in animes[:LIMIT] if (data := fetch_omdb_data(title=t))]
-    recent_movies = [data for t in recent_releases[:LIMIT] if (data := fetch_omdb_data(title=t))]
+    rows = [keyword[:LIMIT], shows[:LIMIT], animes[:LIMIT], recent_releases[:LIMIT]]
+    results = fetch_omdb_many([{'title': t} for row in rows for t in row])
+    movies, shows_list, anime_list, recent_movies = (
+        [data for data in results[i * LIMIT:(i + 1) * LIMIT] if data] for i in range(len(rows))
+    )
 
     watchlist_ids = set()
     if request.user.is_authenticated:
@@ -475,11 +536,26 @@ def _fuzzy_omdb_search(query, max_pages=3):
     if results:
         return results, None
 
-    # Fallback: try progressively shorter prefixes
-    MIN_LEN = 4
-    for trim_len in range(len(query) - 1, MIN_LEN - 1, -1):
-        prefix = query[:trim_len]
-        results = _omdb_search(prefix, max_pages=1)
+    # Fallback: a few progressively shorter prefixes, searched concurrently
+    MIN_LEN, MAX_ATTEMPTS = 4, 3
+    candidates = []
+    words = query.split()
+    for prefix in [
+        ' '.join(words[:-1]) if len(words) > 1 else '',  # drop the last word
+        query[:-1],
+        query[:-2],
+        query[:max(MIN_LEN, int(len(query) * 0.75))],
+    ]:
+        prefix = prefix.strip()
+        if len(prefix) >= MIN_LEN and prefix != query and prefix not in candidates:
+            candidates.append(prefix)
+    candidates = candidates[:MAX_ATTEMPTS]
+    if not candidates:
+        return [], None
+
+    with ThreadPoolExecutor(max_workers=len(candidates)) as pool:
+        attempts = list(pool.map(lambda q: _omdb_search(q, max_pages=1), candidates))
+    for prefix, results in zip(candidates, attempts):
         if results:
             return results, prefix  # return prefix so UI can hint "Showing results for: ..."
 
@@ -589,8 +665,8 @@ def detail_view(request, imdb_id):
     all_recs = top_100_movies + anime_ids
     recommendations = []
 
-    for rec_id in random.sample(all_recs, min(len(all_recs), 12)):
-        data = fetch_omdb_data(imdb_id=rec_id)
+    rec_ids = random.sample(all_recs, min(len(all_recs), 12))
+    for data in fetch_omdb_many([{'imdb_id': rec_id} for rec_id in rec_ids]):
         if data and data.get('Poster') != 'N/A':
             recommendations.append(data)
 
@@ -687,8 +763,8 @@ def fetch_more_items(request):
     is_authenticated = request.user.is_authenticated
     login_url = reverse('login')
 
-    for item in all_items[start:end]:
-        data = fetch_omdb_data(imdb_id=item if use_id else None, title=None if use_id else item)
+    lookups = [{'imdb_id': item} if use_id else {'title': item} for item in all_items[start:end]]
+    for data in fetch_omdb_many(lookups):
         if data:
             imdb_id = data.get('imdbID')
             destination_url = reverse('detail', args=[imdb_id]) if is_authenticated else login_url

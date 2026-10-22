@@ -143,10 +143,14 @@ WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 
 # CACHE SETTINGS
+# Stored in the database so it survives serverless cold starts and is shared
+# by every instance (OMDb responses, viewer counts). The table is created by
+# watchit_app migration 0011.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'watchit_cache',
+        'OPTIONS': {'MAX_ENTRIES': 20000},
     }
 }
 
