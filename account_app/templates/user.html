@@ -1,502 +1,9 @@
+{% extends 'base.html' %}
 {% load static %}
-<!doctype html>
-<html lang="en">
 
-<head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F10VJPLPD8"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+{% block title %}WATCHIT | {{ display_name }}'s Profile{% endblock %}
 
-    gtag('config', 'G-F10VJPLPD8');
-  </script>
-  <meta name="google-site-verification" content="DMmK1zFkjOBEKUOg5XdPD2vqs5RDKKBnuaEG8mjSMn4" />
-
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WATCHIT | {{ display_name }}'s Profile</title>
-  <meta name="description" content="Your WATCHIT profile — manage your watchlist and watch parties.">
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    crossorigin="anonymous">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Oswald:wght@200..700&display=swap"
-    rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-
-<body>
-    {% if user.is_authenticated %}
-    <form id="logout-form" method="POST" action="{% url 'logout' %}" class="d-none">{% csrf_token %}</form>
-    {% endif %}
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm" style="border-bottom: 1px solid #222;">
-    <div class="container-fluid px-lg-4 d-flex align-items-center">
-      <a class="navbar-brand" href="{% url 'base' %}">WATCHIT</a>
-
-      <div class="ms-auto me-2">
-        <form method="POST" action="{% url 'user_dashboard' %}" class="search-box">
-          {% csrf_token %}
-          <i class="fa fa-search search-icon"></i>
-          <input class="search-input" type="text" name="title" placeholder="Search movies...">
-        </form>
-      </div>
-
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto align-items-lg-center">
-          <li class="nav-item"><a class="nav-link" href="{% url 'join_watch_party' %}"><i
-                class="fas fa-users me-1"></i>Join Party</a></li>
-          <li class="nav-item d-lg-none">
-            <a class="nav-link active" href="{% url 'user' %}">Profile</a>
-          </li>
-          <li class="nav-item dropdown d-none d-lg-block">
-            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
-              data-bs-toggle="dropdown">
-              <div
-                class="profile-avatar-nav d-flex align-items-center justify-content-center bg-danger text-white rounded-circle"
-                style="width: 32px; height: 32px; font-size: 0.75rem; font-weight: 700;">
-                {{ display_name|first|upper }}
-              </div>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2"
-              style="background-color: #1a1a1a; border: 1px solid #333; border-radius: 10px; min-width: 180px;">
-              <li><a class="dropdown-item rounded-2 text-white" href="{% url 'user' %}"><i
-                    class="fas fa-user me-2 text-danger"></i>Profile</a></li>
-              <li>
-                <hr class="dropdown-divider border-secondary">
-              </li>
-              <li><a class="dropdown-item text-danger rounded-2" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
-                    class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-            </ul>
-          </li>
-          <li class="nav-item d-lg-none">
-            <a class="nav-link text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <!-- FLASH MESSAGES -->
-  {% if messages %}
-  <div style="padding-top: 80px; position: fixed; top: 0; left: 0; right: 0; z-index: 999;">
-    {% for message in messages %}
-    <div class="alert alert-dismissible fade show mb-0 text-center"
-      style="background: rgba(229,9,20,0.15); border: none; border-bottom: 1px solid rgba(229,9,20,0.3); color: white; border-radius: 0;">
-      {{ message }}
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <main>
-
-    <!-- ─── PROFILE HERO ─── -->
-    <section class="profile-hero-section">
-      <div class="profile-hero-bg"></div>
-      <div class="container-fluid px-lg-5 position-relative" style="z-index: 2;">
-        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-4 py-5"
-          style="padding-top: 110px !important;">
-
-          <!-- Avatar -->
-          <div class="profile-big-avatar flex-shrink-0">
-            <span>{{ display_name|first|upper }}</span>
-          </div>
-
-          <!-- Info -->
-          <div class="flex-grow-1 text-center text-md-start mb-md-2">
-            <p class="text-uppercase mb-1"
-              style="font-size: 0.75rem; letter-spacing: 3px; color: #e50914; font-weight: 600;">Member</p>
-            <h1 class="profile-username mb-0">{{ display_name }}</h1>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="d-flex gap-2 mb-md-2 flex-shrink-0">
-            <a href="{% url 'base' %}" class="btn btn-danger rounded-pill px-4 py-2 fw-bold"
-              style="font-size: 0.85rem;">
-              <i class="fas fa-play me-2"></i>Browse
-            </a>
-            <a href="{% url 'join_watch_party' %}" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold"
-              style="font-size: 0.85rem;">
-              <i class="fas fa-users me-2"></i>Join Party
-            </a>
-          </div>
-        </div>
-
-        <!-- Stats Bar -->
-        <div class="profile-stats-bar">
-          <div class="profile-stat">
-            <span class="stat-value">{{ watchlist|length }}</span>
-            <span class="stat-label">In Watchlist</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="profile-stat">
-            <span class="stat-value">{{ hosted_parties|length }}</span>
-            <span class="stat-label">Rooms Hosted</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="profile-stat">
-            <span class="stat-value">{{ joined_parties|length }}</span>
-            <span class="stat-label">Parties Joined</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="profile-stat">
-            <span class="stat-value">{{ public_parties|length }}</span>
-            <span class="stat-label">Global Rooms</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ─── PAGE BODY ─── -->
-    <div class="container-fluid px-lg-5 profile-body">
-
-      <!-- ─── ACTIVE ROOMS ─── -->
-      {% if hosted_parties or joined_parties %}
-      <section class="profile-section fade-in" style="animation-delay: 0.1s;">
-        <div class="profile-section-header mt-4">
-          <div class="d-flex align-items-center gap-3">
-            <div class="section-icon-blob bg-black">
-              <i class="fas fa-broadcast-tower"></i>
-            </div>
-            <div>
-              <h2 class="section-heading mb-0">Active Rooms</h2>
-              <p class="section-sub mb-0">Your live watch party rooms</p>
-            </div>
-          </div>
-          <span class="live-badge">
-            <span class="live-dot"></span>
-            LIVE
-          </span>
-        </div>
-
-        <div class="carousel-container mt-3">
-          <div class="carousel-scroll">
-            {% for party in hosted_parties %}
-            <div class="movie-unit">
-              <div class="premium-card excellence-card">
-                <img
-                  src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
-                  alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
-                  onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                <div class="premium-overlay flex-column">
-                  <div class="host-badge mb-auto mt-2">HOST</div>
-                  <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
-                    <i class="fas fa-sign-in-alt me-2"></i>Enter Room
-                  </a>
-                  <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100 no-loading"
-                    onsubmit="return confirm('Permanently delete this room?')">
-                    {% csrf_token %}
-                    <button type="submit" class="premium-btn premium-btn-danger">
-                      <i class="fas fa-trash-alt me-2"></i>Close Room
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div class="media-info text-center mt-2">
-                <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
-                <div class="media-meta d-flex align-items-center justify-content-center gap-1 mt-1">
-                  <span class="room-code-chip">{{ party.room_code }}</span>
-                  {% if party.is_private %}
-                  <i class="fas fa-lock text-danger" style="font-size: 0.7rem;" title="Private"></i>
-                  {% else %}
-                  <i class="fas fa-globe text-primary" style="font-size: 0.7rem;" title="Public"></i>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-            {% endfor %}
-
-            {% for party in joined_parties %}
-            <div class="movie-unit">
-              <div class="premium-card excellence-card">
-                <img
-                  src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
-                  alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
-                  onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                <div class="premium-overlay flex-column p-4 text-center">
-                  <span class="badge bg-secondary mb-auto rounded-pill px-2 py-1"
-                    style="font-size: 0.65rem; letter-spacing: 1px;">GUEST</span>
-                  <div class="mb-3">
-                    <div class="fw-bold text-white" style="font-size: 0.9rem;">{{ party.room_code }}</div>
-                    <small class="text-white-50">Host: {{ party.host.username }}</small>
-                  </div>
-                  <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 py-2">
-                    <i class="fas fa-bolt me-2"></i>Rejoin
-                  </a>
-                </div>
-              </div>
-              <div class="media-info text-center mt-2">
-                <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
-                <div class="media-meta d-flex align-items-center justify-content-center gap-1 mt-1">
-                  <span style="font-size: 0.75rem; color: #888;">w/ {{ party.host.username }}</span>
-                  {% if party.is_private %}
-                  <i class="fas fa-lock text-danger" style="font-size: 0.7rem;"></i>
-                  {% else %}
-                  <i class="fas fa-globe text-primary" style="font-size: 0.7rem;"></i>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- ─── GLOBAL PUBLIC PARTIES ─── -->
-      {% if public_parties %}
-      <section class="profile-section fade-in" style="animation-delay: 0.2s;">
-        <div class="profile-section-header mt-5">
-          <div class="d-flex align-items-center gap-3">
-            <div>
-              <h2 class="section-heading mb-0">Global Parties</h2>
-              <p class="section-sub mb-0">Join anyone's public watch room</p>
-            </div>
-          </div>
-          <span class="discover-badge">DISCOVER</span>
-        </div>
-
-        <div class="carousel-container mt-3">
-          <div class="carousel-scroll">
-            {% for party in public_parties %}
-            <div class="movie-unit">
-              <div class="premium-card excellence-card">
-                <img
-                  src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}https://critics.io/img/movies/poster-placeholder.png{% endif %}"
-                  alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
-                  onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                <div class="premium-overlay flex-column p-4 text-center">
-                  <span class="badge bg-danger mb-auto rounded-pill px-2 py-1"
-                    style="font-size: 0.65rem; letter-spacing: 1px;">PUBLIC</span>
-                  <div class="mb-3">
-                    <div class="fw-bold text-white mb-1"
-                      style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
-                      party.movie_title|default:party.room_code }}</div>
-                    <small class="text-white-50">Host: {{ party.host.username }}</small>
-                  </div>
-                  <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 py-2">
-                    <i class="fas fa-sign-in-alt me-2"></i>Join Party
-                  </a>
-                </div>
-              </div>
-              <div class="media-info text-center mt-2">
-                <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
-                <div class="media-meta">w/ {{ party.host.username|upper }}</div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </section>
-      {% else %}
-      <!-- No public parties — soft nudge -->
-      <section class="profile-section fade-in" style="animation-delay: 0.2s;">
-        <div class="profile-section-header">
-          <div class="d-flex align-items-center gap-3">
-            <div class="section-icon-blob" style="background: rgba(13,110,253,0.2); color: #4e8eff;">
-              <i class="fas fa-globe"></i>
-            </div>
-            <div>
-              <h2 class="section-heading mb-0 mt-5">Global Parties</h2>
-              <p class="section-sub mb-0">No active public rooms right now</p>
-            </div>
-          </div>
-        </div>
-        <div class="empty-state-inline">
-          <i class="fas fa-globe-americas"></i>
-          <p>No global parties available yet. <a href="{% url 'base' %}" class="text-danger fw-bold">Browse a movie</a>
-            and host one!</p>
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- ─── MY COLLECTION / WATCHLIST ─── -->
-      <section class="profile-section fade-in" style="animation-delay: 0.3s;">
-        <div class="profile-section-header">
-          <div class="d-flex align-items-center gap-3">
-            <div class="section-icon-blob" style="background: rgba(229,9,20,0.15); color: #e50914;">
-              <i class="fas fa-layer-group"></i>
-            </div>
-            <div>
-              <h2 class="section-heading mb-0">My Collection</h2>
-              <p class="section-sub mb-0">
-                {% if watchlist %}{{ watchlist|length }} title{{ watchlist|length|pluralize }} saved{% else %}Start
-                building your list{% endif %}
-              </p>
-            </div>
-          </div>
-          <a href="{% url 'base' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-            style="font-size: 0.8rem;">
-            Browse More <i class="fas fa-chevron-right ms-1"></i>
-          </a>
-        </div>
-
-        {% if watchlist %}
-        <div class="carousel-container mt-3">
-          <div class="carousel-scroll">
-            {% for item in watchlist %}
-            <div class="movie-unit">
-              <div class="premium-card excellence-card">
-                <img src="{{ item.poster }}" alt="{{ item.movie_title }}" loading="lazy"
-                  onerror="this.src='https://critics.io/img/movies/poster-placeholder.png'">
-                <div class="premium-overlay">
-                  <a href="{% url 'detail' item.imdb_id %}" class="premium-btn premium-btn-play">
-                    <i class="fas fa-play me-2"></i>Details
-                  </a>
-                  <a href="javascript:void(0);" onclick="openPrivacyModal('{{ item.imdb_id }}')"
-                    class="premium-btn premium-btn-party py-2">
-                    <i class="fas fa-users me-2"></i>Start Party
-                  </a>
-                  <form method="POST" action="{% url 'remove_from_watchlist' item.imdb_id %}"
-                    class="w-100 mt-2 no-loading">
-                    {% csrf_token %}
-                    <button type="submit" class="premium-btn premium-btn-remove py-1">
-                      <i class="fas fa-times me-2"></i>Remove
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div class="media-info text-center mt-2">
-                <div class="media-title">{{ item.movie_title }}</div>
-                <div class="media-meta">{{ item.movie_year }}</div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% else %}
-        <div class="empty-state">
-          <div class="empty-state-icon"><i class="fas fa-film"></i></div>
-          <h5 class="fw-bold mb-2">Your collection is empty</h5>
-          <p class="text-secondary mb-4">Add movies and shows to keep track of what you want to watch.</p>
-          <a href="{% url 'base' %}" class="btn btn-danger rounded-pill px-5 py-2 fw-bold">
-            <i class="fas fa-search me-2"></i>Discover Content
-          </a>
-        </div>
-        {% endif %}
-      </section>
-
-      <!-- ─── HOW IT WORKS (collapsed, subtle) ─── -->
-      <section class="profile-section fade-in mb-5" style="animation-delay: 0.4s;">
-        <div class="how-it-works-strip">
-          <div class="hiw-item">
-            <div class="hiw-icon"><i class="fas fa-search-plus"></i></div>
-            <div>
-              <div class="hiw-title">Find Content</div>
-              <div class="hiw-sub">Browse the full library</div>
-            </div>
-          </div>
-          <i class="fas fa-chevron-right hiw-arrow"></i>
-          <div class="hiw-item">
-            <div class="hiw-icon"><i class="fas fa-shield-alt"></i></div>
-            <div>
-              <div class="hiw-title">Choose Privacy</div>
-              <div class="hiw-sub">Private or public room</div>
-            </div>
-          </div>
-          <i class="fas fa-chevron-right hiw-arrow"></i>
-          <div class="hiw-item">
-            <div class="hiw-icon"><i class="fas fa-share-alt"></i></div>
-            <div>
-              <div class="hiw-title">Share the Code</div>
-              <div class="hiw-sub">Auto-generated room code</div>
-            </div>
-          </div>
-          <i class="fas fa-chevron-right hiw-arrow"></i>
-          <div class="hiw-item">
-            <div class="hiw-icon"><i class="fas fa-comments"></i></div>
-            <div>
-              <div class="hiw-title">Watch Together</div>
-              <div class="hiw-sub">Synced playback + chat</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </div><!-- /.profile-body -->
-  </main>
-
-  <footer class="text-center py-4" style="border-top: 1px solid #1f1f1f; color: #555; font-size: 0.8rem;">
-    &copy; {{ year|date:"Y" }} WATCHIT. All Rights Reserved.
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous"></script>
-
-  <script>
-    // Search box toggle
-    document.querySelector(".search-icon").addEventListener("click", function () {
-      document.querySelector(".search-box").classList.toggle("active");
-    });
-
-    // Privacy modal
-    let currentImdbId = null;
-    function openPrivacyModal(imdbId) {
-      currentImdbId = imdbId;
-      const modal = new bootstrap.Modal(document.getElementById('privacyModal'));
-      modal.show();
-    }
-    function selectPrivacy(isPrivate) {
-      if (currentImdbId) {
-        window.location.href = `/party/create/${currentImdbId}/?is_private=${isPrivate}`;
-      }
-    }
-  </script>
-
-  <!-- Privacy Modal -->
-  <div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content"
-        style="background: linear-gradient(145deg, #1a1a1a, #0d0d0d); border: 1px solid #2a2a2a; border-radius: 16px; color: white;">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt text-danger me-2"></i>Choose Room Type</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-4">
-          <div class="d-flex flex-column gap-3">
-            <div class="privacy-option rounded-3 p-3" onclick="selectPrivacy(true)"
-              style="cursor:pointer; background: rgba(229,9,20,0.07); border: 1px solid rgba(229,9,20,0.2); transition: all 0.2s;">
-              <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center bg-danger rounded-circle text-white"
-                  style="width:46px;height:46px;flex-shrink:0;">
-                  <i class="fas fa-lock"></i>
-                </div>
-                <div>
-                  <h6 class="mb-1 fw-bold">Private Room</h6>
-                  <small class="text-white-50">Only people with the code can join.</small>
-                </div>
-              </div>
-            </div>
-            <div class="privacy-option rounded-3 p-3" onclick="selectPrivacy(false)"
-              style="cursor:pointer; background: rgba(13,110,253,0.07); border: 1px solid rgba(13,110,253,0.2); transition: all 0.2s;">
-              <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center bg-primary rounded-circle text-white"
-                  style="width:46px;height:46px;flex-shrink:0;">
-                  <i class="fas fa-globe"></i>
-                </div>
-                <div>
-                  <h6 class="mb-1 fw-bold">Public Room</h6>
-                  <small class="text-white-50">Visible to everyone and joinable by anyone.</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+{% block content %}
   <style>
     /* ── Profile Hero ── */
     .profile-hero-section {
@@ -717,6 +224,344 @@
     }
   </style>
 
-</body>
+  <!-- FLASH MESSAGES -->
+  {% if messages %}
+  <div style="padding-top: 80px; position: fixed; top: 0; left: 0; right: 0; z-index: 999;">
+    {% for message in messages %}
+    <div class="alert alert-dismissible fade show mb-0 text-center"
+      style="background: rgba(229,9,20,0.15); border: none; border-bottom: 1px solid rgba(229,9,20,0.3); color: white; border-radius: 0;">
+      {{ message }}
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-</html>
+  <main>
+
+    <!-- ─── PROFILE HERO ─── -->
+    <section class="profile-hero-section">
+      <div class="profile-hero-bg"></div>
+      <div class="container-fluid px-lg-5 position-relative" style="z-index: 2;">
+        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-4 py-5"
+          style="padding-top: 30px !important;">
+
+          <!-- Avatar -->
+          <div class="profile-big-avatar flex-shrink-0">
+            <span>{{ display_name|first|upper }}</span>
+          </div>
+
+          <!-- Info -->
+          <div class="flex-grow-1 text-center text-md-start mb-md-2">
+            <p class="text-uppercase mb-1"
+              style="font-size: 0.75rem; letter-spacing: 3px; color: #e50914; font-weight: 600;">Member</p>
+            <h1 class="profile-username mb-0">{{ display_name }}</h1>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="d-flex gap-2 mb-md-2 flex-shrink-0">
+            <a href="{% url 'base' %}" class="btn btn-danger rounded-pill px-4 py-2 fw-bold"
+              style="font-size: 0.85rem;">
+              <i class="fas fa-play me-2"></i>Browse
+            </a>
+            <a href="{% url 'join_watch_party' %}" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold"
+              style="font-size: 0.85rem;">
+              <i class="fas fa-users me-2"></i>Join Party
+            </a>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="profile-stats-bar">
+          <div class="profile-stat">
+            <span class="stat-value">{{ watchlist|length }}</span>
+            <span class="stat-label">In Watchlist</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="profile-stat">
+            <span class="stat-value">{{ hosted_parties|length }}</span>
+            <span class="stat-label">Rooms Hosted</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="profile-stat">
+            <span class="stat-value">{{ joined_parties|length }}</span>
+            <span class="stat-label">Parties Joined</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="profile-stat">
+            <span class="stat-value">{{ public_parties|length }}</span>
+            <span class="stat-label">Global Rooms</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── PAGE BODY ─── -->
+    <div class="container-fluid px-lg-5 profile-body">
+
+      <!-- ─── ACTIVE ROOMS ─── -->
+      {% if hosted_parties or joined_parties %}
+      <section class="profile-section fade-in" style="animation-delay: 0.1s;">
+        <div class="profile-section-header mt-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon-blob bg-black">
+              <i class="fas fa-broadcast-tower"></i>
+            </div>
+            <div>
+              <h2 class="section-heading mb-0">Active Rooms</h2>
+              <p class="section-sub mb-0">Your live watch party rooms</p>
+            </div>
+          </div>
+          <span class="live-badge">
+            <span class="live-dot"></span>
+            LIVE
+          </span>
+        </div>
+
+        <div class="carousel-container mt-3">
+          <div class="carousel-scroll">
+            {% for party in hosted_parties %}
+            <div class="movie-unit">
+              <div class="premium-card excellence-card">
+                <img
+                  src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}{% static 'img/poster-placeholder.svg' %}{% endif %}"
+                  alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                  onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
+                <div class="premium-overlay flex-column">
+                  <div class="host-badge mb-auto mt-2">HOST</div>
+                  <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Enter Room
+                  </a>
+                  <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100 no-loading"
+                    onsubmit="return confirm('Permanently delete this room?')">
+                    {% csrf_token %}
+                    <button type="submit" class="premium-btn premium-btn-danger">
+                      <i class="fas fa-trash-alt me-2"></i>Close Room
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div class="media-info text-center mt-2">
+                <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
+                <div class="media-meta d-flex align-items-center justify-content-center gap-1 mt-1">
+                  <span class="room-code-chip">{{ party.room_code }}</span>
+                  {% if party.is_private %}
+                  <i class="fas fa-lock text-danger" style="font-size: 0.7rem;" title="Private"></i>
+                  {% else %}
+                  <i class="fas fa-globe text-primary" style="font-size: 0.7rem;" title="Public"></i>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+
+            {% for party in joined_parties %}
+            <div class="movie-unit">
+              <div class="premium-card excellence-card">
+                <img
+                  src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}{% static 'img/poster-placeholder.svg' %}{% endif %}"
+                  alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                  onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
+                <div class="premium-overlay flex-column p-4 text-center">
+                  <span class="badge bg-secondary mb-auto rounded-pill px-2 py-1"
+                    style="font-size: 0.65rem; letter-spacing: 1px;">GUEST</span>
+                  <div class="mb-3">
+                    <div class="fw-bold text-white" style="font-size: 0.9rem;">{{ party.room_code }}</div>
+                    <small class="text-white-50">Host: {{ party.host.username }}</small>
+                  </div>
+                  <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 py-2">
+                    <i class="fas fa-bolt me-2"></i>Rejoin
+                  </a>
+                </div>
+              </div>
+              <div class="media-info text-center mt-2">
+                <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
+                <div class="media-meta d-flex align-items-center justify-content-center gap-1 mt-1">
+                  <span style="font-size: 0.75rem; color: #888;">w/ {{ party.host.username }}</span>
+                  {% if party.is_private %}
+                  <i class="fas fa-lock text-danger" style="font-size: 0.7rem;"></i>
+                  {% else %}
+                  <i class="fas fa-globe text-primary" style="font-size: 0.7rem;"></i>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ─── GLOBAL PUBLIC PARTIES ─── -->
+      {% if public_parties %}
+      <section class="profile-section fade-in" style="animation-delay: 0.2s;">
+        <div class="profile-section-header mt-5">
+          <div class="d-flex align-items-center gap-3">
+            <div>
+              <h2 class="section-heading mb-0">Global Parties</h2>
+              <p class="section-sub mb-0">Join anyone's public watch room</p>
+            </div>
+          </div>
+          <span class="discover-badge">DISCOVER</span>
+        </div>
+
+        <div class="carousel-container mt-3">
+          <div class="carousel-scroll">
+            {% for party in public_parties %}
+            <div class="movie-unit">
+              <div class="premium-card excellence-card">
+                <img
+                  src="{% if party.poster_url and party.poster_url != 'N/A' %}{{ party.poster_url }}{% else %}{% static 'img/poster-placeholder.svg' %}{% endif %}"
+                  alt="{{ party.movie_title|default:'Room' }}" loading="lazy"
+                  onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
+                <div class="premium-overlay flex-column p-4 text-center">
+                  <span class="badge bg-danger mb-auto rounded-pill px-2 py-1"
+                    style="font-size: 0.65rem; letter-spacing: 1px;">PUBLIC</span>
+                  <div class="mb-3">
+                    <div class="fw-bold text-white mb-1"
+                      style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+                      party.movie_title|default:party.room_code }}</div>
+                    <small class="text-white-50">Host: {{ party.host.username }}</small>
+                  </div>
+                  <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 py-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Join Party
+                  </a>
+                </div>
+              </div>
+              <div class="media-info text-center mt-2">
+                <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
+                <div class="media-meta">w/ {{ party.host.username|upper }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+      {% else %}
+      <!-- No public parties — soft nudge -->
+      <section class="profile-section fade-in" style="animation-delay: 0.2s;">
+        <div class="profile-section-header">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon-blob" style="background: rgba(13,110,253,0.2); color: #4e8eff;">
+              <i class="fas fa-globe"></i>
+            </div>
+            <div>
+              <h2 class="section-heading mb-0 mt-5">Global Parties</h2>
+              <p class="section-sub mb-0">No active public rooms right now</p>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state-inline">
+          <i class="fas fa-globe-americas"></i>
+          <p>No global parties available yet. <a href="{% url 'base' %}" class="text-danger fw-bold">Browse a movie</a>
+            and host one!</p>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ─── MY COLLECTION / WATCHLIST ─── -->
+      <section class="profile-section fade-in" style="animation-delay: 0.3s;">
+        <div class="profile-section-header">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon-blob" style="background: rgba(229,9,20,0.15); color: #e50914;">
+              <i class="fas fa-layer-group"></i>
+            </div>
+            <div>
+              <h2 class="section-heading mb-0">My Collection</h2>
+              <p class="section-sub mb-0">
+                {% if watchlist %}{{ watchlist|length }} title{{ watchlist|length|pluralize }} saved{% else %}Start
+                building your list{% endif %}
+              </p>
+            </div>
+          </div>
+          <a href="{% url 'base' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+            style="font-size: 0.8rem;">
+            Browse More <i class="fas fa-chevron-right ms-1"></i>
+          </a>
+        </div>
+
+        {% if watchlist %}
+        <div class="carousel-container mt-3">
+          <div class="carousel-scroll">
+            {% for item in watchlist %}
+            <div class="movie-unit">
+              <div class="premium-card excellence-card">
+                <img src="{{ item.poster }}" alt="{{ item.movie_title }}" loading="lazy"
+                  onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
+                <div class="premium-overlay">
+                  <a href="{% url 'detail' item.imdb_id %}" class="premium-btn premium-btn-play">
+                    <i class="fas fa-play me-2"></i>Details
+                  </a>
+                  <a href="javascript:void(0);" onclick="openPrivacyModal('{{ item.imdb_id }}')"
+                    class="premium-btn premium-btn-party py-2">
+                    <i class="fas fa-users me-2"></i>Start Party
+                  </a>
+                  <form method="POST" action="{% url 'remove_from_watchlist' item.imdb_id %}"
+                    class="w-100 mt-2 no-loading">
+                    {% csrf_token %}
+                    <button type="submit" class="premium-btn premium-btn-remove py-1">
+                      <i class="fas fa-times me-2"></i>Remove
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div class="media-info text-center mt-2">
+                <div class="media-title">{{ item.movie_title }}</div>
+                <div class="media-meta">{{ item.movie_year }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="fas fa-film"></i></div>
+          <h5 class="fw-bold mb-2">Your collection is empty</h5>
+          <p class="text-secondary mb-4">Add movies and shows to keep track of what you want to watch.</p>
+          <a href="{% url 'base' %}" class="btn btn-danger rounded-pill px-5 py-2 fw-bold">
+            <i class="fas fa-search me-2"></i>Discover Content
+          </a>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- ─── HOW IT WORKS (collapsed, subtle) ─── -->
+      <section class="profile-section fade-in mb-5" style="animation-delay: 0.4s;">
+        <div class="how-it-works-strip">
+          <div class="hiw-item">
+            <div class="hiw-icon"><i class="fas fa-search-plus"></i></div>
+            <div>
+              <div class="hiw-title">Find Content</div>
+              <div class="hiw-sub">Browse the full library</div>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right hiw-arrow"></i>
+          <div class="hiw-item">
+            <div class="hiw-icon"><i class="fas fa-shield-alt"></i></div>
+            <div>
+              <div class="hiw-title">Choose Privacy</div>
+              <div class="hiw-sub">Private or public room</div>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right hiw-arrow"></i>
+          <div class="hiw-item">
+            <div class="hiw-icon"><i class="fas fa-share-alt"></i></div>
+            <div>
+              <div class="hiw-title">Share the Code</div>
+              <div class="hiw-sub">Auto-generated room code</div>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right hiw-arrow"></i>
+          <div class="hiw-item">
+            <div class="hiw-icon"><i class="fas fa-comments"></i></div>
+            <div>
+              <div class="hiw-title">Watch Together</div>
+              <div class="hiw-sub">Synced playback + chat</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /.profile-body -->
+  </main>
+{% endblock %}
