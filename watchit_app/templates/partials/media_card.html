@@ -1,0 +1,52 @@
+{% load static %}
+{% comment %}
+  One title card. Expects `item`: an OMDb-style dict (imdbID, Title, Poster, Year,
+  optional Type / imdbRating). Uses `watchlist_ids` and `user` from the page context.
+{% endcomment %}
+<article class="mcard">
+    <a href="{% url 'detail' item.imdbID %}" class="mcard-poster" aria-label="{{ item.Title }}">
+        <img src="{% if item.Poster and item.Poster != 'N/A' %}{{ item.Poster }}{% else %}{% static 'img/poster-placeholder.svg' %}{% endif %}"
+            alt="" loading="lazy" onerror="this.onerror=null; this.src='{% static 'img/poster-placeholder.svg' %}'">
+        {% if item.imdbRating and item.imdbRating != 'N/A' %}
+        <span class="mcard-rating"><i class="fas fa-star"></i>{{ item.imdbRating }}</span>
+        {% endif %}
+        <span class="mcard-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+    </a>
+
+    <div class="mcard-actions">
+        <button type="button" class="mcard-icon no-loading" onclick="openPrivacyModal('{{ item.imdbID }}')"
+            title="Start a watch party" aria-label="Start a watch party for {{ item.Title }}">
+            <i class="fas fa-users"></i>
+        </button>
+        {% if user.is_authenticated %}
+        {% if item.imdbID in watchlist_ids %}
+        <form method="POST" action="{% url 'remove_from_watchlist' item.imdbID %}" class="no-loading">
+            {% csrf_token %}
+            <button type="submit" class="mcard-icon is-saved" title="Remove from My List"
+                aria-label="Remove {{ item.Title }} from My List">
+                <i class="fas fa-check"></i>
+            </button>
+        </form>
+        {% else %}
+        <form method="POST" action="{% url 'add_to_watchlist' %}" class="no-loading">
+            {% csrf_token %}
+            <input type="hidden" name="imdb_id" value="{{ item.imdbID }}">
+            <input type="hidden" name="title" value="{{ item.Title }}">
+            <input type="hidden" name="year" value="{{ item.Year }}">
+            <input type="hidden" name="poster" value="{{ item.Poster }}">
+            <button type="submit" class="mcard-icon" title="Add to My List" aria-label="Add {{ item.Title }} to My List">
+                <i class="fas fa-plus"></i>
+            </button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="mcard-info">
+        <h3 class="mcard-title" title="{{ item.Title }}">{{ item.Title }}</h3>
+        <div class="mcard-meta">
+            {% if item.Year and item.Year != 'N/A' %}<span>{{ item.Year }}</span>{% endif %}
+            {% if item.Type == 'series' %}<span>Series</span>{% elif item.Type == 'movie' %}<span>Movie</span>{% endif %}
+        </div>
+    </div>
+</article>

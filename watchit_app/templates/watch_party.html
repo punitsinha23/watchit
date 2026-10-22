@@ -120,14 +120,9 @@
 
     /* Mobile specific chat refinements */
     @media (max-width: 767px) {
-        #chat-section {
-            padding-left: 5px !important;
-            padding-right: 5px !important;
-        }
-
         #chat-messages {
-            height: 300px !important;
-            font-size: 0.8rem;
+            height: 280px !important;
+            font-size: 0.9rem;
         }
 
         .card-header,
@@ -184,18 +179,24 @@
     <div class="row" style="overflow-x: hidden;">
 
         <!-- ================= PLAYER SECTION ================= -->
-        <div id="video-section" class="col-9 col-md-8 col-lg-9">
+        <div id="video-section" class="col-12 col-lg-9">
 
             <div
                 class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-2 gap-2">
-                <h4 class="text-white m-0">
-                    Room:
-                    <span class="text-danger fw-bold">{{ party.room_code }}</span>
-                </h4>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h4 class="text-white m-0">
+                        Room:
+                        <span class="text-danger fw-bold">{{ party.room_code }}</span>
+                    </h4>
+                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill no-loading js-copy-invite"
+                        data-room-code="{{ party.room_code }}">
+                        <i class="fas fa-link me-1"></i><span>Copy invite link</span>
+                    </button>
+                </div>
                 <div class="d-flex align-items-center gap-3">
                     <div class="text-secondary room-info-small">
-                        <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-                        Expires in 24h
+                        <i class="fas fa-clock text-warning me-1"></i>
+                        <span id="expires-in" data-created="{{ party.created_at|date:'U' }}">Expires in 24h</span>
                     </div>
                     <span class="badge bg-secondary" id="active-viewers">Loading...</span>
                 </div>
@@ -210,46 +211,51 @@
 
             <!-- HOST CONTROLS -->
             {% if is_host %}
-            <div
-                class="d-flex flex-wrap gap-3 align-items-center mt-3 p-3 rounded bg-dark border border-secondary host-controls-mobile">
+            <div class="mt-3 p-3 rounded bg-dark border border-secondary host-controls-mobile">
+                <span class="badge bg-danger mb-2">HOST CONTROLS</span>
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md">
+                        <label for="source-select" class="form-label small text-secondary mb-1">Source</label>
+                        <select id="source-select" class="form-select bg-black text-white border-secondary">
+                            <option value="embedmaster" {% if party.current_source == 'embedmaster' %}selected{% endif %}>EmbedMaster</option>
+                            <option value="vidsrc" {% if party.current_source == 'vidsrc' %}selected{% endif %}>Vidsrc (XYZ)</option>
+                            <option value="vidsrcto" {% if party.current_source == 'vidsrcto' %}selected{% endif %}>Vidsrc (TO)</option>
+                            <option value="vidsrcme" {% if party.current_source == 'vidsrcme' %}selected{% endif %}>Vidsrc (ME)</option>
+                        </select>
+                    </div>
 
-                <span class="badge bg-danger">HOST CONTROLS</span>
+                    {% if movie.Type == 'series' %}
+                    <div class="col-5 col-md-2">
+                        <label for="season-select" class="form-label small text-secondary mb-1">Season</label>
+                        <select id="season-select" class="form-select bg-black text-white border-secondary">
+                            {% for i in "x"|rjust:movie.totalSeasons %}
+                            <option value="{{ forloop.counter }}" {% if forloop.counter == party.current_season %}selected{% endif %}>
+                                Season {{ forloop.counter }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <select id="source-select" class="form-select bg-black text-white border-secondary">
-                    <option value="embedmaster" {% if party.current_source == 'embedmaster' %}selected{% endif %}>
-                        EmbedMaster</option>
-                    <option value="vidsrc" {% if party.current_source == 'vidsrc' %}selected{% endif %}>Vidsrc (XYZ)
-                    </option>
-                    <option value="vidsrcto" {% if party.current_source == 'vidsrcto' %}selected{% endif %}>Vidsrc (TO)
-                    </option>
-                    <option value="vidsrcme" {% if party.current_source == 'vidsrcme' %}selected{% endif %}>Vidsrc (ME)
-                    </option>
-                </select>
+                    <div class="col-7 col-md">
+                        <label for="episode-select" class="form-label small text-secondary mb-1">Episode</label>
+                        <select id="episode-select" class="form-select bg-black text-white border-secondary">
+                            {% for ep in season_data.Episodes %}
+                            <option value="{{ ep.Episode }}" {% if ep.Episode|add:0 == party.current_episode %}selected{% endif %}>
+                                Ep {{ ep.Episode }}: {{ ep.Title }}
+                            </option>
+                            {% empty %}
+                            <option>No episodes</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
 
-                {% if movie.Type == 'series' %}
-                <select id="season-select" class="form-select bg-black text-white border-secondary">
-                    {% for i in "x"|rjust:movie.totalSeasons %}
-                    <option value="{{ forloop.counter }}" {% if forloop.counter == party.current_season %}selected{% endif %}>
-                        Season {{ forloop.counter }}
-                    </option>
-                    {% endfor %}
-                </select>
-
-                <select id="episode-select" class="form-select bg-black text-white border-secondary">
-                    {% for ep in season_data.Episodes %}
-                    <option value="{{ ep.Episode }}" {% if ep.Episode|add:0 == party.current_episode %}selected{% endif %}>
-                        Ep {{ ep.Episode }}: {{ ep.Title }}
-                    </option>
-                    {% empty %}
-                    <option>No episodes</option>
-                    {% endfor %}
-                </select>
-                {% endif %}
-
-                <button id="update-btn" class="btn btn-success btn-sm no-loading">
-                    Sync to All
-                </button>
-
+                    <div class="col-12 col-md-auto">
+                        <button id="update-btn" class="btn btn-success w-100 no-loading">
+                            <i class="fas fa-sync-alt me-1"></i>Sync to All
+                        </button>
+                    </div>
+                </div>
             </div>
             {% else %}
             <div class="mt-3 p-2 bg-dark rounded text-center text-secondary small">
@@ -271,7 +277,7 @@
         </div>
 
         <!-- ================= CHAT SECTION ================= -->
-        <div id="chat-section" class="col-3 col-md-4 col-lg-3">
+        <div id="chat-section" class="col-12 col-lg-3 mt-4 mt-lg-0">
 
             {% if is_host %}
             <!-- Enhanced Join Requests Notification -->
@@ -358,15 +364,13 @@
 
         hideChatBtn?.addEventListener('click', () => {
             chatSection.classList.add('chat-hidden-state');
-            videoSection.classList.remove('col-lg-9', 'col-md-8');
-            videoSection.classList.add('col-lg-12', 'col-md-12');
+            videoSection.classList.replace('col-lg-9', 'col-lg-12');
             setTimeout(() => showChatBtn.classList.remove('d-none'), 300);
         });
 
         showChatBtn?.addEventListener('click', () => {
             showChatBtn.classList.add('d-none');
-            videoSection.classList.remove('col-lg-12', 'col-md-12');
-            videoSection.classList.add('col-lg-9', 'col-md-8');
+            videoSection.classList.replace('col-lg-12', 'col-lg-9');
             chatSection.classList.remove('chat-hidden-state');
         });
 
@@ -379,8 +383,21 @@
             source: "{{ party.current_source|default:'embedmaster' }}"
         };
 
-        console.log("DEBUG: Initial State", currentState);
-        console.log("DEBUG: Config", { ROOM_CODE, IMDB_ID, TYPE, IS_HOST });
+
+        /* ================= EXPIRY COUNTDOWN ================= */
+
+        const expiresEl = document.getElementById("expires-in");
+        if (expiresEl) {
+            const expiresAt = (parseInt(expiresEl.dataset.created, 10) + 24 * 3600) * 1000;
+            const renderExpiry = () => {
+                const mins = Math.max(0, Math.floor((expiresAt - Date.now()) / 60000));
+                expiresEl.textContent = mins <= 0
+                    ? "Expired"
+                    : `Expires in ${Math.floor(mins / 60)}h ${mins % 60}m`;
+            };
+            renderExpiry();
+            setInterval(renderExpiry, 30000);
+        }
 
         /* ================= CSRF ================= */
 
@@ -476,7 +493,6 @@
                 episode: episodeSelect ? (parseInt(episodeSelect.value) || 1) : 1
             };
 
-            console.log("DEBUG: Syncing state", state);
             updatePlayer(state);
 
             try {
@@ -488,11 +504,14 @@
                     },
                     body: JSON.stringify(state)
                 });
-                const data = await res.json();
-                console.log("DEBUG: Sync response", data);
+                if (!res.ok) {
+                    // e.g. 403 (not the host / CSRF), 400 (invalid source), 404 (room expired)
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.error || `Server returned ${res.status}`);
+                }
             } catch (e) {
                 console.error("Sync error:", e);
-                alert("Failed to sync: " + e.message);
+                alert("Couldn't sync this change to the party: " + e.message);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -518,7 +537,7 @@
 
                 /* viewer count */
                 if (viewerBadge && data.viewers !== undefined) {
-                    viewerBadge.textContent = `${data.viewers} Viewer(s)`;
+                    viewerBadge.textContent = `${data.viewers} ${data.viewers === 1 ? "viewer" : "viewers"}`;
                 }
 
                 /* pending requests (host only) */

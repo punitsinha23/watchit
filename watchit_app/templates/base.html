@@ -17,6 +17,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}WATCHIT{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         crossorigin="anonymous">
@@ -106,316 +107,163 @@
 
     {% block content %}
 
-    <div id="heroCarousel" class="carousel slide fade-in" data-bs-ride="carousel">
-        <div class="carousel-inner">
+    <!-- ================= FEATURED HERO ================= -->
+    <section id="featureHero" class="fh" aria-roledescription="carousel" aria-label="Featured titles">
+        <div class="fh-slides">
+            {% for slide in featured %}
+            <article class="fh-slide{% if forloop.first %} is-active{% endif %}" aria-roledescription="slide"
+                aria-label="{{ forloop.counter }} of {{ featured|length|add:1 }}: {{ slide.title }}"
+                {% if not forloop.first %}aria-hidden="true"{% endif %}>
+                {% if slide.poster %}
+                <!-- Blurred poster shows through if the backdrop image fails to load -->
+                <div class="fh-fallback" style="background-image: url('{{ slide.poster }}');"></div>
+                {% endif %}
+                <div class="fh-backdrop" style="background-image: url('{{ slide.backdrop }}');"></div>
+                <div class="fh-shade"></div>
 
-            <div class="carousel-item active">
-                <div class="hero-section"
-                    style="background-image:url('https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg');">
-                    <div class="hero-content">
-                        <h1>Breaking Bad</h1>
-                        <p class="lead mb-4">A high school chemistry teacher diagnosed with inoperable lung cancer turns
-                            to manufacturing and selling methamphetamine in order to secure his family's future.</p>
-                        <a href="{% url 'detail' 'tt0903747' %}" class="hero-btn-primary"><i class="fas fa-play me-2"></i> Watch Now</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <div class="hero-section"
-                    style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/fs/415b2e58808319.5bf89df796f80.jpg');">
-                    <div class="hero-content">
-                        <h1>Stranger Things</h1>
-                        <p class="lead mb-4">When a young boy disappears, his mother, a police chief and his friends
-                            must confront terrifying supernatural forces in order to get him back.</p>
-                        <a href="{% url 'detail' 'tt0944947' %}" class="hero-btn-primary"><i class="fas fa-play me-2"></i> Watch Now</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <div class="hero-section" style="background-image:url('https://wallpaperaccess.com/full/1091809.png');">
-                    <div class="hero-content">
-                        <h1>Rick and Morty</h1>
-                        <p class="lead mb-4">An animated series that follows the exploits of a super scientist and his
-                            not-so-bright grandson.</p>
-                        <a href="{% url 'detail' 'tt3032476' %}" class="hero-btn-primary"><i class="fas fa-play me-2"></i> Watch Now</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <div class="hero-section"
-                    style="background-image:url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=2059&auto=format&fit=crop');">
-                    <div class="hero-content">
-                        <div class="badge bg-danger mb-3 px-3 py-2 rounded-pill shadow-sm">NEW FEATURE</div>
-                        <h1 class="display-3 fw-bold">Global Watch Parties</h1>
-                        <p class="lead mb-4">Join active public rooms and watch with people from around the world. No
-                            invite
-                            needed!</p>
-                        <div class="d-flex flex-wrap gap-3">
-                            <a href="{% url 'user' %}#global-parties" class="hero-btn-primary" style="background: linear-gradient(45deg, #ff00cc, #333399); box-shadow: 0 10px 20px rgba(255, 0, 204, 0.3);">
-                                <i class="fas fa-globe me-2"></i> Discover Now
-                            </a>
-                            <a href="{% url 'base' %}" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold d-flex align-items-center" style="border-width: 2px;">
-                                <i class="fas fa-users me-2"></i> Host a Public Room
-                            </a>
+                <div class="fh-inner">
+                    <div class="fh-copy">
+                        <div class="fh-eyebrow">
+                            <span class="fh-tag"><i class="fas fa-fire me-1"></i>Featured {{ slide.type }}</span>
+                            {% if slide.year %}<span>{{ slide.year }}</span>{% endif %}
+                            {% if slide.seasons %}<span class="fh-seasons">{{ slide.seasons }} season{{ slide.seasons|pluralize }}</span>{% endif %}
+                            {% if slide.rated %}<span class="fh-rated">{{ slide.rated }}</span>{% endif %}
                         </div>
-                    </div>
-                </div>
-            </div>
 
-        </div>
-    </div>
+                        <h1 class="fh-title">{{ slide.title }}</h1>
 
-    <!-- Recently Released Movies Scroller -->
-    <div class="container-fluid mt-5 px-lg-4 profile-body">
-        <div class="profile-section-header">
-            <div class="d-flex align-items-center gap-3">
-                <div class="section-icon-blob" style="background: rgba(229,9,20,0.15); color: #e50914;">
-                    <i class="fas fa-fire"></i>
-                </div>
-                <div>
-                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Recently Released</h2>
-                    <p class="section-sub mb-0">The newest additions to the platform</p>
-                </div>
-            </div>
-            <span class="live-badge" style="background: rgba(229,9,20,0.15); color: #ff4d4d; border: 1px solid rgba(229,9,20,0.3);">
-                NEW
-            </span>
-        </div>
-        <div class="carousel-container" data-category="recent_movies" data-page="1">
-            <div class="carousel-scroll">
-                {% for movie in recent_movies %}
-                <div class="movie-unit fade-in visible">
-                    <div class="premium-card">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                            onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
-                        <div class="premium-overlay">
-                            <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
-                                <i class="fas fa-play me-2"></i>Play
+                        <div class="fh-meta">
+                            {% if slide.rating %}
+                            <span class="fh-rating" title="IMDb rating"><i class="fas fa-star"></i>{{ slide.rating }}</span>
+                            {% endif %}
+                            {% for genre in slide.genres %}<span class="fh-genre">{{ genre }}</span>{% endfor %}
+                        </div>
+
+                        {% if slide.plot %}<p class="fh-plot">{{ slide.plot }}</p>{% endif %}
+
+                        <div class="fh-actions">
+                            <a href="{% url 'detail' slide.imdb_id %}" class="fh-btn fh-btn-primary">
+                                <i class="fas fa-play"></i>Play
                             </a>
-                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ movie.imdbID }}')"
-                                class="premium-btn premium-btn-play"
-                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                <i class="fas fa-users me-2"></i>Party
-                            </a>
-                            {% if movie.imdbID in watchlist_ids %}
-                            <form method="POST" action="{% url 'remove_from_watchlist' movie.imdbID %}"
-                                class="d-inline w-100">
+                            <button type="button" class="fh-btn fh-btn-glass no-loading"
+                                onclick="openPrivacyModal('{{ slide.imdb_id }}')">
+                                <i class="fas fa-users"></i>Watch Party
+                            </button>
+                            {% if user.is_authenticated %}
+                            {% if slide.imdb_id in watchlist_ids %}
+                            <form method="POST" action="{% url 'remove_from_watchlist' slide.imdb_id %}" class="no-loading">
                                 {% csrf_token %}
-                                <button type="submit" class="premium-btn premium-btn-remove">
-                                    <i class="fas fa-times me-2"></i>Remove
+                                <button type="submit" class="fh-btn fh-btn-icon is-saved" title="Remove from My List"
+                                    aria-label="Remove {{ slide.title }} from My List">
+                                    <i class="fas fa-check"></i>
                                 </button>
                             </form>
                             {% else %}
-                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
+                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="no-loading">
                                 {% csrf_token %}
-                                <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
-                                <input type="hidden" name="title" value="{{ movie.Title }}">
-                                <input type="hidden" name="year" value="{{ movie.Year }}">
-                                <input type="hidden" name="poster" value="{{ movie.Poster }}">
-                                <button type="submit" class="premium-btn premium-btn-list">
-                                    <i class="fas fa-plus me-2"></i>My List
+                                <input type="hidden" name="imdb_id" value="{{ slide.imdb_id }}">
+                                <input type="hidden" name="title" value="{{ slide.title }}">
+                                <input type="hidden" name="year" value="{{ slide.year }}">
+                                <input type="hidden" name="poster" value="{{ slide.poster }}">
+                                <button type="submit" class="fh-btn fh-btn-icon" title="Add to My List"
+                                    aria-label="Add {{ slide.title }} to My List">
+                                    <i class="fas fa-plus"></i>
                                 </button>
                             </form>
                             {% endif %}
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="media-info text-center">
-                        <div class="media-title">{{ movie.Title }}</div>
-                        <div class="media-meta">{{ movie.Year }}</div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
 
-    <!-- Popular Movies Scroller -->
-    <div class="container-fluid mt-5 px-lg-4 profile-body">
-        <div class="profile-section-header">
-            <div class="d-flex align-items-center gap-3">
-                <div class="section-icon-blob" style="background: rgba(13,110,253,0.15); color: #4e8eff;">
-                    <i class="fas fa-film"></i>
+                    {% if slide.poster %}
+                    <a href="{% url 'detail' slide.imdb_id %}" class="fh-poster" tabindex="-1" aria-hidden="true">
+                        <img src="{{ slide.poster }}" alt="" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+                    </a>
+                    {% endif %}
                 </div>
-                <div>
-                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Popular Movies</h2>
-                    <p class="section-sub mb-0">What everyone is watching right now</p>
-                </div>
-            </div>
-            <span class="discover-badge">TRENDING</span>
-        </div>
-        <div class="carousel-container" data-category="popular_movies" data-page="1">
-            <div class="carousel-scroll">
-                {% for movie in movies %}
-                <div class="movie-unit fade-in visible">
-                    <div class="premium-card">
-                        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" loading="lazy"
-                            onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
-                        <div class="premium-overlay">
-                            <a href="{% url 'detail' movie.imdbID %}" class="premium-btn premium-btn-play">
-                                <i class="fas fa-play me-2"></i>Play
-                            </a>
-                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ movie.imdbID }}')"
-                                class="premium-btn premium-btn-play"
-                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                <i class="fas fa-users me-2"></i>Party
-                            </a>
-                            {% if movie.imdbID in watchlist_ids %}
-                            <form method="POST" action="{% url 'remove_from_watchlist' movie.imdbID %}"
-                                class="d-inline w-100">
-                                {% csrf_token %}
-                                <button type="submit" class="premium-btn premium-btn-remove">
-                                    <i class="fas fa-times me-2"></i>Remove
-                                </button>
-                            </form>
-                            {% else %}
-                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                                {% csrf_token %}
-                                <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
-                                <input type="hidden" name="title" value="{{ movie.Title }}">
-                                <input type="hidden" name="year" value="{{ movie.Year }}">
-                                <input type="hidden" name="poster" value="{{ movie.Poster }}">
-                                <button type="submit" class="premium-btn premium-btn-list">
-                                    <i class="fas fa-plus me-2"></i>My List
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="media-info text-center">
-                        <div class="media-title">{{ movie.Title }}</div>
-                        <div class="media-meta">{{ movie.Year }}</div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+            </article>
+            {% endfor %}
 
-    <!-- Popular Shows Scroller -->
-    <div class="container-fluid mt-5 px-lg-4 profile-body">
-        <div class="profile-section-header">
-            <div class="d-flex align-items-center gap-3">
-                <div class="section-icon-blob" style="background: rgba(255,193,7,0.15); color: #ffca2c;">
-                    <i class="fas fa-tv"></i>
+            <!-- Watch party promo -->
+            <article class="fh-slide fh-slide-promo{% if not featured %} is-active{% endif %}" aria-roledescription="slide"
+                aria-label="{{ featured|length|add:1 }} of {{ featured|length|add:1 }}: Global Watch Parties"
+                {% if featured %}aria-hidden="true"{% endif %}>
+                <div class="fh-backdrop"
+                    style="background-image: url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=2059&auto=format&fit=crop');">
                 </div>
-                <div>
-                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Popular Shows</h2>
-                    <p class="section-sub mb-0">Binge-worthy series to start today</p>
-                </div>
-            </div>
-        </div>
-        <div class="carousel-container" data-category="home_shows" data-page="1">
-            <div class="carousel-scroll">
-                {% for show in shows %}
-                <div class="movie-unit fade-in visible">
-                    <div class="premium-card">
-                        <img src="{% if show.Poster %}{{ show.Poster }}{% else %}{% static 'img/poster-placeholder.svg' %}{% endif %}"
-                            alt="{{ show.Title }}" loading="lazy"
-                            onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
-                        <div class="premium-overlay">
-                            <a href="{% url 'detail' show.imdbID %}" class="premium-btn premium-btn-play">
-                                <i class="fas fa-play me-2"></i>Play
-                            </a>
-                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ show.imdbID }}')"
-                                class="premium-btn premium-btn-play"
-                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                <i class="fas fa-users me-2"></i>Party
-                            </a>
-                            {% if show.imdbID in watchlist_ids %}
-                            <form method="POST" action="{% url 'remove_from_watchlist' show.imdbID %}"
-                                class="d-inline w-100">
-                                {% csrf_token %}
-                                <button type="submit" class="premium-btn premium-btn-remove">
-                                    <i class="fas fa-times me-2"></i>Remove
-                                </button>
-                            </form>
-                            {% else %}
-                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                                {% csrf_token %}
-                                <input type="hidden" name="imdb_id" value="{{ show.imdbID }}">
-                                <input type="hidden" name="title" value="{{ show.Title }}">
-                                <input type="hidden" name="year" value="{{ show.Year }}">
-                                <input type="hidden" name="poster" value="{{ show.Poster }}">
-                                <button type="submit" class="premium-btn premium-btn-list">
-                                    <i class="fas fa-plus me-2"></i>My List
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="media-info text-center">
-                        <div class="media-title">{{ show.Title }}</div>
-                        <div class="media-meta">{{ show.Year }}</div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+                <div class="fh-shade fh-shade-promo"></div>
 
-    <!-- Popular Anime Scroller -->
-    <div class="container-fluid mt-5 mb-5 px-lg-4 profile-body">
-        <div class="profile-section-header">
-            <div class="d-flex align-items-center gap-3">
-                <div class="section-icon-blob" style="background: rgba(111,66,193,0.15); color: #d63384;">
-                    <i class="fas fa-dragon"></i>
-                </div>
-                <div>
-                    <h2 class="section-heading mb-0 text-uppercase" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px;">Popular Anime</h2>
-                    <p class="section-sub mb-0">Top-rated anime series and movies</p>
-                </div>
-            </div>
-        </div>
-        <div class="carousel-container" data-category="popular_anime" data-page="1">
-            <div class="carousel-scroll">
-                {% for anime in Animes %}
-                <div class="movie-unit fade-in visible">
-                    <div class="premium-card">
-                        <img src="{{ anime.Poster }}" alt="{{ anime.Title }}" loading="lazy"
-                            onerror="this.src='{% static 'img/poster-placeholder.svg' %}'">
-                        <div class="premium-overlay">
-                            <a href="{% url 'detail' anime.imdbID %}" class="premium-btn premium-btn-play">
-                                <i class="fas fa-play me-2"></i>Play
+                <div class="fh-inner">
+                    <div class="fh-copy">
+                        <div class="fh-eyebrow">
+                            <span class="fh-tag fh-tag-promo"><i class="fas fa-bolt me-1"></i>New feature</span>
+                        </div>
+                        <h1 class="fh-title">Global Watch Parties</h1>
+                        <p class="fh-plot">Watch in sync with friends or strangers, with live chat. Host a private room
+                            and share an invite link, or drop into a public room &mdash; no invite needed.</p>
+                        <div class="fh-actions">
+                            <a href="{% url 'user' %}#global-parties" class="fh-btn fh-btn-promo">
+                                <i class="fas fa-globe"></i>Browse public rooms
                             </a>
-                            <a href="javascript:void(0);" onclick="openPrivacyModal('{{ anime.imdbID }}')"
-                                class="premium-btn premium-btn-play"
-                                style="background: linear-gradient(45deg, #ff00cc, #333399);">
-                                <i class="fas fa-users me-2"></i>Party
+                            <a href="#home-rows" class="fh-btn fh-btn-glass no-loading">
+                                <i class="fas fa-users"></i>Host a room
                             </a>
-                            {% if anime.imdbID in watchlist_ids %}
-                            <form method="POST" action="{% url 'remove_from_watchlist' anime.imdbID %}"
-                                class="d-inline w-100">
-                                {% csrf_token %}
-                                <button type="submit" class="premium-btn premium-btn-remove">
-                                    <i class="fas fa-times me-2"></i>Remove
-                                </button>
-                            </form>
-                            {% else %}
-                            <form method="POST" action="{% url 'add_to_watchlist' %}" class="d-inline w-100">
-                                {% csrf_token %}
-                                <input type="hidden" name="imdb_id" value="{{ anime.imdbID }}">
-                                <input type="hidden" name="title" value="{{ anime.Title }}">
-                                <input type="hidden" name="year" value="{{ anime.Year }}">
-                                <input type="hidden" name="poster" value="{{ anime.Poster }}">
-                                <button type="submit" class="premium-btn premium-btn-list">
-                                    <i class="fas fa-plus me-2"></i>My List
-                                </button>
-                            </form>
-                            {% endif %}
                         </div>
                     </div>
-                    <div class="media-info text-center">
-                        <div class="media-title">{{ anime.Title }}</div>
-                        <div class="media-meta">{{ anime.Year }}</div>
-                    </div>
                 </div>
-                {% endfor %}
-            </div>
+            </article>
         </div>
-    </div>
+
+        <!-- Slide tabs with progress + pause control -->
+        <div class="fh-controls">
+        <div class="fh-tabs" role="tablist" aria-label="Choose featured title">
+            {% for slide in featured %}
+            <button type="button" class="fh-tab no-loading{% if forloop.first %} is-active{% endif %}" role="tab"
+                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-slide="{{ forloop.counter0 }}">
+                <span class="fh-tab-label">{{ slide.title }}</span>
+                <span class="fh-tab-bar"><span class="fh-tab-fill"></span></span>
+            </button>
+            {% endfor %}
+            <button type="button" class="fh-tab no-loading{% if not featured %} is-active{% endif %}" role="tab"
+                aria-selected="{% if featured %}false{% else %}true{% endif %}" data-slide="{{ featured|length }}">
+                <span class="fh-tab-label">Watch Parties</span>
+                <span class="fh-tab-bar"><span class="fh-tab-fill"></span></span>
+            </button>
+        </div>
+        <button type="button" class="fh-toggle no-loading" aria-label="Pause slideshow" title="Pause slideshow">
+            <i class="fas fa-pause"></i>
+        </button>
+        </div>
+    </section>
+
+    <!-- ================= TITLE ROWS ================= -->
+    <main id="home-rows" class="home-body">
+        {% for row in home_rows %}
+        <section class="row-section" aria-labelledby="row-{{ forloop.counter }}">
+            <header class="row-head">
+                <span class="row-icon accent-{{ row.accent }}"><i class="fas {{ row.icon }}"></i></span>
+                <div class="row-heading">
+                    <h2 id="row-{{ forloop.counter }}">{{ row.title }}</h2>
+                    <p>{{ row.subtitle }}</p>
+                </div>
+                {% if row.badge %}<span class="row-badge accent-{{ row.accent }}">{{ row.badge }}</span>{% endif %}
+            </header>
+            <div class="carousel-container"{% if row.category %} data-category="{{ row.category }}" data-page="1"{% endif %}>
+                <div class="carousel-scroll">
+                    {% for item in row.items %}
+                    {% include 'partials/media_card.html' %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% empty %}
+        <section class="row-section">
+            <p class="text-secondary text-center py-5 mb-0">
+                <i class="fas fa-film me-2"></i>Titles couldn't be loaded right now. Please try again in a moment.
+            </p>
+        </section>
+        {% endfor %}
+    </main>
 
     {% endblock %}
 
@@ -445,10 +293,20 @@
         </div>
     </div>
 
-    <footer class="text-center py-4 text-muted border-top border-secondary mt-5">
-        <div class="container">
-            <p class="mb-0">© 2024 WATCHIT. All Rights Reserved.</p>
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <div>
+                <a href="{% url 'base' %}" class="footer-brand">WATCHIT</a>
+                <p class="footer-tagline">Watch together, from anywhere.</p>
+            </div>
+            <nav class="footer-links" aria-label="Footer">
+                <a href="{% url 'base' %}">Home</a>
+                <a href="{% url 'join_watch_party' %}">Join a Party</a>
+                {% if user.is_authenticated %}<a href="{% url 'user' %}">My Profile</a>{% else %}<a href="{% url 'signup' %}">Sign Up</a>{% endif %}
+                <a href="{% url 'about' %}">About</a>
+            </nav>
         </div>
+        <div class="footer-bottom">© {% now "Y" %} WATCHIT. All rights reserved.</div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -504,6 +362,7 @@
     <script id="watchit-config" type="application/json">{
         "addToWatchlistUrl": "{% url 'add_to_watchlist' %}",
         "trialStatusUrl": "{% url 'trial_status' %}",
+        "authenticated": {% if user.is_authenticated %}true{% else %}false{% endif %},
         "trialEnabled": {% if not user.is_authenticated and request.path != '/accounts/login/' and request.path != '/signup/' and '/verify/' not in request.path and '/reset-password/' not in request.path and request.path != '/forgot-password/' %}true{% else %}false{% endif %},
         "posterPlaceholder": "{% static 'img/poster-placeholder.svg' %}"
     }</script>

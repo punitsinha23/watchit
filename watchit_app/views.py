@@ -103,7 +103,9 @@ def join_watch_party(request):
 
         party.pending_participants.add(request.user)
         return redirect('waiting_room', room_code=room_code)
-    return render(request, 'join_party.html', {'public_parties': public_parties})
+    # Invite links point here as /party/join/?code=XXXXXX
+    prefill_code = request.GET.get('code', '').strip().upper()[:6]
+    return render(request, 'join_party.html', {'public_parties': public_parties, 'prefill_code': prefill_code})
 
 @login_required
 def waiting_room(request, room_code):
@@ -474,6 +476,42 @@ recent_releases = [
     "Megalopolis", "The Wild Robot", "Smile 2"
 ]
 
+# Hero slides on the home page. Titles, ratings and plots come from OMDb by ID,
+# so the text always matches the title the buttons open.
+FEATURED = [
+    {'imdb_id': 'tt0903747',  # Breaking Bad
+     'backdrop': 'https://www.sonypictures.com/sites/default/files/banner-images/2023-12/breakingbad_banner_2572x1100.jpg'},
+    {'imdb_id': 'tt4574334',  # Stranger Things
+     'backdrop': 'https://mir-s3-cdn-cf.behance.net/project_modules/fs/415b2e58808319.5bf89df796f80.jpg'},
+    {'imdb_id': 'tt3032476',  # Better Call Saul
+     'backdrop': 'https://www.sonypictures.com/sites/default/files/banner-images/2022-03/bettercallsaul_banner_2572x1100_s6.jpg'},
+]
+
+
+def _featured_slides(results):
+    """Merge OMDb data into FEATURED; slides whose lookup failed are skipped."""
+    slides = []
+    for item, data in zip(FEATURED, results):
+        if not data:
+            continue
+        has = lambda key: data.get(key) not in (None, '', 'N/A')
+        genres = data.get('Genre', '').split(', ')[:3] if has('Genre') else []
+        slides.append({
+            'imdb_id': item['imdb_id'],
+            'backdrop': item['backdrop'],
+            'title': data.get('Title'),
+            'type': 'Series' if data.get('Type') == 'series' else 'Movie',
+            'year': data.get('Year') if has('Year') else '',
+            'seasons': data.get('totalSeasons') if has('totalSeasons') else '',
+            'rating': data.get('imdbRating') if has('imdbRating') else '',
+            'rated': data.get('Rated') if has('Rated') else '',
+            'genres': genres,
+            'plot': data.get('Plot') if has('Plot') else '',
+            'poster': data.get('Poster') if has('Poster') else '',
+        })
+    return slides
+
+
 def base(request):
     LIMIT = 10  # Initial load: 10 items for fast loading, more via lazy load
     
@@ -483,20 +521,41 @@ def base(request):
             request.session['trial_start_time'] = time.time()
     
     rows = [keyword[:LIMIT], shows[:LIMIT], animes[:LIMIT], recent_releases[:LIMIT]]
-    results = fetch_omdb_many([{'title': t} for row in rows for t in row])
+    # One batch for the hero slides and all four rows
+    results = fetch_omdb_many(
+        [{'imdb_id': f['imdb_id']} for f in FEATURED] + [{'title': t} for row in rows for t in row]
+    )
+    featured, results = _featured_slides(results[:len(FEATURED)]), results[len(FEATURED):]
     movies, shows_list, anime_list, recent_movies = (
         [data for data in results[i * LIMIT:(i + 1) * LIMIT] if data] for i in range(len(rows))
     )
 
     watchlist_ids = set()
+    home_rows = []
     if request.user.is_authenticated:
-        watchlist_ids = set(Watchlist.objects.filter(user=request.user).values_list('imdb_id', flat=True))
+        saved = list(Watchlist.objects.filter(user=request.user))
+        watchlist_ids = {w.imdb_id for w in saved}
+        if saved:
+            home_rows.append({
+                'title': 'My List', 'subtitle': 'Saved for later', 'icon': 'fa-bookmark', 'accent': 'green',
+                'items': [{'imdbID': w.imdb_id, 'Title': w.movie_title, 'Year': w.movie_year, 'Poster': w.poster}
+                          for w in saved[:20]],
+            })
+
+    home_rows += [
+        {'title': 'Recently Released', 'subtitle': 'The newest additions to the platform', 'icon': 'fa-fire',
+         'accent': 'red', 'badge': 'New', 'category': 'recent_movies', 'items': recent_movies},
+        {'title': 'Popular Movies', 'subtitle': 'What everyone is watching right now', 'icon': 'fa-film',
+         'accent': 'blue', 'badge': 'Trending', 'category': 'popular_movies', 'items': movies},
+        {'title': 'Popular Shows', 'subtitle': 'Binge-worthy series to start today', 'icon': 'fa-tv',
+         'accent': 'yellow', 'category': 'home_shows', 'items': shows_list},
+        {'title': 'Popular Anime', 'subtitle': 'Top-rated anime series and movies', 'icon': 'fa-dragon',
+         'accent': 'pink', 'category': 'popular_anime', 'items': anime_list},
+    ]
 
     return render(request, 'base.html', {
-        'movies': movies,
-        'shows': shows_list,
-        'Animes': anime_list,
-        'recent_movies': recent_movies,
+        'featured': featured,
+        'home_rows': [row for row in home_rows if row['items']],
         'watchlist_ids': watchlist_ids,
     })
 
@@ -662,13 +721,16 @@ def detail_view(request, imdb_id):
     if movie_data.get('Type') == 'series':
         season_data = fetch_omdb_data(imdb_id=imdb_id, season=1) or {}
 
-    all_recs = top_100_movies + anime_ids
-    recommendations = []
-
-    rec_ids = random.sample(all_recs, min(len(all_recs), 12))
-    for data in fetch_omdb_many([{'imdb_id': rec_id} for rec_id in rec_ids]):
-        if data and data.get('Poster') != 'N/A':
+    # Recommend from the curated lists of the same kind (series vs movies)
+    pool = shows + animes if movie_data.get('Type') == 'series' else keyword + recent_releases
+    rec_titles = random.sample(pool, min(len(pool), 14))
+    recommendations, seen = [], {imdb_id}
+    for data in fetch_omdb_many([{'title': t} for t in rec_titles]):
+        # different list entries can resolve to the same title (e.g. "Money Heist" / "La Casa de Papel")
+        if data and data.get('Poster') not in (None, '', 'N/A') and data.get('imdbID') not in seen:
+            seen.add(data.get('imdbID'))
             recommendations.append(data)
+    recommendations = recommendations[:12]
 
     watchlist_ids = set()
     if request.user.is_authenticated:
@@ -774,6 +836,8 @@ def fetch_more_items(request):
                 'Title': data.get('Title'),
                 'Poster': data.get('Poster'),
                 'Year': data.get('Year'),
+                'Type': data.get('Type'),
+                'imdbRating': data.get('imdbRating'),
                 'url': destination_url
             })
 

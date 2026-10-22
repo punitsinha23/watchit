@@ -218,3 +218,105 @@ class SharedLayoutRenderTests(TestCase):
         response = self.client.post(reverse('user_dashboard'), {'title': 'Found'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="privacyModal"', count=1)
+
+
+class UiFixTests(TestCase):
+    MOVIE = {'Response': 'True', 'Title': 'Some Film', 'Type': 'movie', 'imdbID': 'tt0137523',
+             'Year': '1999', 'Director': 'N/A', 'Actors': 'Somebody', 'Plot': 'A plot.'}
+
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(username='viewer', email='v@example.com', password='password123')
+        self.client.login(username='viewer', password='password123')
+
+    def test_invite_link_prefills_join_form(self):
+        response = self.client.get(reverse('join_watch_party') + '?code=ab12cd')
+        self.assertContains(response, 'value="AB12CD"')
+
+    @patch('watchit_app.views._fetch_omdb_api', return_value=None)
+    @patch('watchit_app.views.fetch_tmdb_id_from_imdb', return_value=None)
+    @patch('watchit_app.views.fetch_omdb_data')
+    def test_detail_has_primary_actions_and_hides_na(self, fetch, _tmdb, _api):
+        fetch.return_value = dict(self.MOVIE)
+        response = self.client.get(reverse('detail', args=['tt0137523']))
+        self.assertContains(response, 'Start Watch Party')
+        self.assertContains(response, 'name="imdb_id" value="tt0137523"')
+        self.assertNotContains(response, 'Director:')
+        self.assertContains(response, 'Cast:')
+
+    @patch('watchit_app.views.fetch_omdb_data', return_value=None)
+    def test_party_room_is_responsive_and_has_invite_button(self, _fetch):
+        WatchParty.objects.create(room_code='UI0001', host=self.user, imdb_id='tt0137523', movie_title='Some Film')
+        response = self.client.get(reverse('party_room', args=['UI0001']))
+        self.assertContains(response, 'id="chat-section" class="col-12 col-lg-3')
+        self.assertContains(response, 'data-room-code="UI0001"')
+
+
+class FeaturedHeroTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    @staticmethod
+    def fake_api(imdb_id=None, title=None, season=None):
+        names = {'tt0903747': 'Breaking Bad', 'tt4574334': 'Stranger Things', 'tt3032476': 'Better Call Saul'}
+        if imdb_id in names:
+            return {'Response': 'True', 'Title': names[imdb_id], 'imdbID': imdb_id, 'Type': 'series',
+                    'Year': '2016–2025', 'imdbRating': '8.6', 'Genre': 'Drama, Fantasy, Horror, Mystery',
+                    'Plot': 'A plot.', 'Poster': 'https://example.com/p.jpg', 'totalSeasons': '5', 'Rated': 'N/A'}
+        return None
+
+    def test_slides_link_to_the_title_they_show(self):
+        with patch('watchit_app.views._fetch_omdb_api', side_effect=self.fake_api):
+            response = self.client.get(reverse('base'))
+        slides = response.context['featured']
+        self.assertEqual([s['title'] for s in slides], ['Breaking Bad', 'Stranger Things', 'Better Call Saul'])
+        self.assertContains(response, reverse('detail', args=['tt4574334']))
+        self.assertNotContains(response, reverse('detail', args=['tt0944947']))  # old wrong link (Game of Thrones)
+        self.assertEqual(slides[1]['genres'], ['Drama', 'Fantasy', 'Horror'])
+        self.assertEqual(slides[1]['rated'], '')  # N/A is dropped
+        self.assertContains(response, 'role="tab"', count=4)  # 3 titles + watch party promo
+
+    @patch('watchit_app.views._fetch_omdb_api', return_value=None)
+    def test_hero_still_renders_when_omdb_is_down(self, _api):
+        response = self.client.get(reverse('base'))
+        self.assertEqual(response.context['featured'], [])
+        self.assertContains(response, 'Global Watch Parties')
+        self.assertContains(response, 'fh-slide fh-slide-promo is-active')
+
+
+class CardAndRowTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    @staticmethod
+    def fake_api(imdb_id=None, title=None, season=None):
+        return {'Response': 'True', 'Title': title or imdb_id, 'imdbID': f'tt{abs(hash(title or imdb_id)) % 10**7:07d}',
+                'Type': 'movie', 'Year': '2020', 'imdbRating': '7.9', 'Poster': 'N/A'}
+
+    def test_home_rows_use_shared_card(self):
+        with patch('watchit_app.views._fetch_omdb_api', side_effect=self.fake_api):
+            response = self.client.get(reverse('base'))
+        self.assertContains(response, 'class="mcard"')
+        self.assertContains(response, '<i class="fas fa-star"></i>7.9')
+        self.assertContains(response, 'img/poster-placeholder.svg')  # N/A poster -> local placeholder
+        self.assertNotContains(response, 'src="N/A"')
+        self.assertEqual([r['title'] for r in response.context['home_rows']],
+                         ['Recently Released', 'Popular Movies', 'Popular Shows', 'Popular Anime'])
+
+    def test_my_list_row_for_logged_in_users(self):
+        from account_app.models import Watchlist
+        user = User.objects.create_user(username='u', password='password123')
+        Watchlist.objects.create(user=user, imdb_id='tt0111161', movie_title='Saved Film', movie_year='1994')
+        self.client.login(username='u', password='password123')
+        with patch('watchit_app.views._fetch_omdb_api', return_value=None):
+            response = self.client.get(reverse('base'))
+        rows = response.context['home_rows']
+        self.assertEqual(rows[0]['title'], 'My List')
+        self.assertContains(response, 'Saved Film')
+        self.assertContains(response, 'title="Remove from My List"')
+
+    def test_fetch_more_includes_rating_and_type(self):
+        with patch('watchit_app.views._fetch_omdb_api', side_effect=self.fake_api):
+            data = self.client.get('/fetch-more/?category=popular_movies&page=2').json()
+        self.assertEqual(data['items'][0]['imdbRating'], '7.9')
+        self.assertEqual(data['items'][0]['Type'], 'movie')

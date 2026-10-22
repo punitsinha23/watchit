@@ -128,11 +128,11 @@
       border-radius: 12px;
       padding: 1.2rem 1.5rem;
       font-size: 0.88rem;
-      color: #666;
+      color: #9a9a9a;
       margin-top: 1rem;
     }
 
-    .empty-state-inline i {
+    .empty-state-inline > i {
       font-size: 1.5rem;
       color: rgba(255, 255, 255, 0.1);
       flex-shrink: 0;
@@ -332,6 +332,10 @@
                   <a href="{% url 'party_room' party.room_code %}" class="premium-btn premium-btn-play w-100 mb-2">
                     <i class="fas fa-sign-in-alt me-2"></i>Enter Room
                   </a>
+                  <button type="button" class="premium-btn premium-btn-list w-100 mb-2 no-loading js-copy-invite"
+                    data-room-code="{{ party.room_code }}">
+                    <i class="fas fa-link me-2"></i><span>Copy Invite</span>
+                  </button>
                   <form method="POST" action="{% url 'delete_party' party.room_code %}" class="w-100 no-loading"
                     onsubmit="return confirm('Permanently delete this room?')">
                     {% csrf_token %}
@@ -345,6 +349,11 @@
                 <div class="media-title">{{ party.movie_title|default:party.room_code }}</div>
                 <div class="media-meta d-flex align-items-center justify-content-center gap-1 mt-1">
                   <span class="room-code-chip">{{ party.room_code }}</span>
+                  <button type="button" class="btn btn-link p-0 text-white-50 no-loading js-copy-invite"
+                    data-room-code="{{ party.room_code }}" title="Copy invite link" aria-label="Copy invite link"
+                    style="font-size: 0.75rem;">
+                    <i class="fas fa-link"></i><span class="visually-hidden">Copy invite link</span>
+                  </button>
                   {% if party.is_private %}
                   <i class="fas fa-lock text-danger" style="font-size: 0.7rem;" title="Private"></i>
                   {% else %}
@@ -451,10 +460,13 @@
             </div>
           </div>
         </div>
-        <div class="empty-state-inline">
+        <div class="empty-state-inline flex-wrap">
           <i class="fas fa-globe-americas"></i>
-          <p>No global parties available yet. <a href="{% url 'base' %}" class="text-danger fw-bold">Browse a movie</a>
-            and host one!</p>
+          <p class="mb-0 flex-grow-1">Nobody is hosting a public room right now. Be the first &mdash; pick something
+            and choose <strong>Public Room</strong>.</p>
+          <a href="{% url 'base' %}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+            <i class="fas fa-play me-1"></i>Host a public party
+          </a>
         </div>
       </section>
       {% endif %}
