@@ -148,7 +148,8 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # watchit_app migration 0011.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        # DatabaseCache that degrades to "no cache" instead of a 500 if the table is missing
+        'BACKEND': 'watchit.cache.SafeDatabaseCache',
         'LOCATION': 'watchit_cache',
         'OPTIONS': {'MAX_ENTRIES': 20000},
     }

@@ -320,3 +320,16 @@ class CardAndRowTests(TestCase):
             data = self.client.get('/fetch-more/?category=popular_movies&page=2').json()
         self.assertEqual(data['items'][0]['imdbRating'], '7.9')
         self.assertEqual(data['items'][0]['Type'], 'movie')
+
+
+class CacheOutageTests(TestCase):
+    """Production 500: the cache table was missing because `migrate` hadn't run."""
+
+    def test_pages_work_when_cache_table_is_missing(self):
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute('DROP TABLE watchit_cache')  # rolled back after the test
+        with patch('watchit_app.views._fetch_omdb_api', return_value=None), self.assertLogs('watchit.cache', 'ERROR'):
+            self.assertEqual(self.client.get(reverse('base')).status_code, 200)
+            self.assertEqual(self.client.get('/fetch-more/?category=popular_movies&page=2').status_code, 200)
+            self.assertEqual(self.client.get('/api/episodes/tt0903747/1/').status_code, 200)
