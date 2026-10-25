@@ -325,6 +325,10 @@ class CardAndRowTests(TestCase):
 class CacheOutageTests(TestCase):
     """Production 500: the cache table was missing because `migrate` hadn't run."""
 
+    def setUp(self):
+        from django.core.cache import caches
+        caches['default']._outage_logged = False  # the cache object is shared between tests
+
     def test_pages_work_when_cache_table_is_missing(self):
         from django.db import connection
         with connection.cursor() as cursor:
@@ -333,3 +337,16 @@ class CacheOutageTests(TestCase):
             self.assertEqual(self.client.get(reverse('base')).status_code, 200)
             self.assertEqual(self.client.get('/fetch-more/?category=popular_movies&page=2').status_code, 200)
             self.assertEqual(self.client.get('/api/episodes/tt0903747/1/').status_code, 200)
+
+    def test_outage_still_caches_in_memory(self):
+        """Without the table, OMDb results are still cached so each visit doesn't re-call the API."""
+        from django.db import connection
+        from .views import fetch_omdb_many
+        with connection.cursor() as cursor:
+            cursor.execute('DROP TABLE watchit_cache')
+        cache.clear()
+        lookups = [{'title': 'Alpha'}, {'title': 'Beta'}]
+        with patch('watchit_app.views._fetch_omdb_api', side_effect=lambda **kw: {'Title': kw['title']}) as api:
+            fetch_omdb_many(lookups)
+            fetch_omdb_many(lookups)
+        self.assertEqual(api.call_count, 2)  # only the first round hit OMDb
